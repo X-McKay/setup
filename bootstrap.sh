@@ -9,8 +9,10 @@ asdf_upgrade() {
 
 asdf_install_latest() {
   for lang in "$@"; do
-    asdf plugin-add "$lang"
-    asdf_upgrade "$lang"
+    if $lang not in $("asdf plugin list"); then
+      asdf plugin-add "$lang"
+      asdf_upgrade "$lang"
+    fi
   done
 }
 
@@ -44,6 +46,10 @@ copy_configuration_files() {
   echo "Copying configuration files..."
   echo '- - - - - - - - - - - - - - - - - - - - - - - - -'
   # Refresh information about underlying system
+  cp -a bashrc $tmpdir/
+  cp -a env_vars.sh $tmpdir/
+  cp -a gitconfig $tmpdir/
+  cp -a tool-versions $tmpdir/
   source "$tmpdir/env_vars.sh"
 
   # Copy relevant configuration files
@@ -51,12 +57,12 @@ copy_configuration_files() {
     mv "$tmpdir/bashrc"  "$HOME/.bashrc"
     mv "$tmpdir/gitconfig"  "$HOME/.gitconfig"
     mv "$tmpdir/tool-versions"  "$HOME/.tool-versions"
-  elif 
+  elif [[ `uname -s` == "Linux" ]]; then
     # Linux
     mv "$tmpdir/bashrc"  "$HOME/.bashrc"
     mv "$tmpdir/gitconfig"  "$HOME/.gitconfig"
     mv "$tmpdir/tool-versions"  "$HOME/.tool-versions"
-  else [[ `uname -s` =~ "MINGW" ]]; then
+  else
     echo "ERROR: Unsupported platform - '$current_platform'"
     exit 1
   fi

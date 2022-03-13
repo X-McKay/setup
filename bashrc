@@ -33,8 +33,6 @@ setup_darwin(){
         export SSL_CERT_FILE="$cert_file"
       fi
     fi
-  fi
-
   else
     echo "Not a Mac, incorrectly triggered setup_darwin()"
     exit 1
@@ -46,7 +44,6 @@ setup_linux(){
   # Clipboard integration
   if [[ `uname -s` == "Linux" ]]; then
     alias pbcopy='xclip -selection c'
-
   else
     echo "Not Linux, incorrectly triggered setup_linux()"
     exit 1
