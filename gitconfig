@@ -1,0 +1,18 @@
+[color]
+  branch = auto
+  diff = auto
+  status = auto
+[init]
+	templatedir = ~/.git_template
+[user]
+  name = X-McKay
+  email = aldmckay@gmail.com
+[github]
+	user = X-McKay
+  email = aldmckay@gmail.com
+[push]
+	default = matching
+[credential]
+	helper = cache --timeout=3600000
+[commit]
+	gpgsign = true
