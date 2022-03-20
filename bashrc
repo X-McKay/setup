@@ -1,22 +1,22 @@
 # .bashrc
 
 # Source global definitions
-if [[ `uname -s` != "Darwin" ]]; then
-  if [ -f /etc/bashrc ]; then
-    . /etc/bashrc
-  fi
-fi
+# if [[ `uname -s` != "Darwin" ]]; then
+#   if [ -f /etc/bashrc ]; then
+#     . /etc/bashrc
+#   fi
+# fi
 
-if [ -f "$HOME/.profile" ]; then
-  . "$HOME/.profile"
-fi
+# if [ -f "$HOME/.profile" ]; then
+#   . "$HOME/.profile"
+# fi
 
 # Enable Bash Completion from Homebrew
-if [[ -n `which brew 2> /dev/null` ]]; then
-  if [ -f "$(brew --prefix)/etc/bash_completion" ]; then
-    . "$(brew --prefix)/etc/bash_completion"
-  fi
-fi
+# if [[ -n `which brew 2> /dev/null` ]]; then
+#   if [ -f "$(brew --prefix)/etc/bash_completion" ]; then
+#     . "$(brew --prefix)/etc/bash_completion"
+#   fi
+# fi
 
 setup_darwin(){
   # Enable Bash Colors in OSX
@@ -118,6 +118,4 @@ alias ...="cd ../../../"
 alias ....="cd ../../../../"
 alias resrc="source ~/.bashrc"
 
-
-
-
+setup_asdf

@@ -1,4 +1,4 @@
-# Additional helps for specific tools
+# Additional bashrc helpers for specific tools
 
 # Terminal tools
 alias term="zellij"

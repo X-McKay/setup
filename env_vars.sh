@@ -9,17 +9,19 @@ get_platform() {
     # Determine Platform
     uname_output=`uname -s`
     if [[ "$uname_output" =~ "Linux" ]]; then
-    current_platform="linux"
-    echo "Platform: Linux"
+        current_platform="linux"
+        echo "Platform: Linux"
 
     elif [[ "$uname_output" =~ "Darwin" ]]; then
-    current_platform="darwin"
-    echo "Platform: Mac"
+        current_platform="darwin"
+        echo "Platform: Mac"
 
     else
-    echo "ERROR: Unsupported platform - '$uname_output'"
-    exit 1
+        echo "ERROR: Unsupported platform - '$uname_output'"
+        exit 1
     fi
+
+    export current_platform=$current_platform
     echo '-------------------------------------------------'
     echo ""
     echo ""
@@ -32,14 +34,15 @@ get_cpu_info() {
 
     # Determine CPU
     if [[ "$current_platform" == "linux" ]]; then
-        if [[ -e "/proc/cpuinfo" ]]; then
-            # Linux
-            num_cpus=`cat /proc/cpuinfo | grep processor | wc -l`
-            cpu_vendor=`cat /proc/cpuinfo | grep "Vendor ID:" | grep -o "\w\+$" | head -1`
-        elif [[ -n `which lscpu 2> /dev/null` ]]; then
-            # Linux Alternative
+        if [[ -n `which lscpu 2> /dev/null` ]]; then
+            # Linux 
             num_cpus=`lscpu | grep -i "CPU(s):" | awk '{print $2}'`
             cpu_vendor=`lscpu | grep "Vendor ID:" | grep -o "\w\+$" | head -1`
+        elif [[ -e "/proc/cpuinfo" ]]; then
+            # Linux Alternative
+            num_cpus=`cat /proc/cpuinfo | grep processor | wc -l`
+            cpu_vendor=`cat /proc/cpuinfo | grep "Vendor ID:" | grep -o "\w\+$" | head -1`
+
         else
             # Currently focusing on Ubuntu
             echo "ERROR: Unable to determine CPU for Linux platform"
@@ -70,16 +73,16 @@ setup_build_info() {
     echo "Setting up build info..."
     echo '- - - - - - - - - - - - - - - - - - - - - - - - -'
 
-
+    
     # Determine OS and build info
-    if [[ "$my_platform" == "linux" ]]; then
+    if [[ "$current_platform" == "linux" ]]; then
         # Linux - checking for lsb_release
         if [[ -z `which lsb_release 2> /dev/null` ]]; then
             if [[ -n `which apt-get 2> /dev/null` ]]; then 
-            sudo apt-get install -y lsb
+                sudo apt-get install -y lsb
             else
-            echo "ERROR: Unknown package manager in use!!"
-            exit 1
+                echo "ERROR: Unknown package manager in use!!"
+                exit 1
             fi
         fi
 

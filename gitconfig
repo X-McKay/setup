@@ -14,5 +14,3 @@
 	default = matching
 [credential]
 	helper = cache --timeout=3600000
-[commit]
-	gpgsign = true
