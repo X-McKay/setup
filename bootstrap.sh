@@ -219,18 +219,30 @@ install_packages() {
     if [[ "$pkg_fmt" == "deb" ]]; then
 
       set -x
-      if [[ -n `which add-apt-repository 2> /dev/null` ]]; then
-        sudo add-apt-repository ppa:openjdk-r/ppa
 
-        if [[ -z `ls /etc/apt/sources.list.d/ 2> /dev/null | grep "oracle"` ]]; then
-          # Virtualbox
-          codename=`lsb_release -c -s`
-          wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
-          sudo add-apt-repository -y "deb https://download.virtualbox.org/virtualbox/debian ${codename} contrib"
-        fi
+      # if [[ -n `which add-apt-repository 2> /dev/null` ]]; then
+      #   sudo add-apt-repository ppa:openjdk-r/ppa
 
-        sudo apt-get update
-      fi
+      #   if [[ -z `ls /etc/apt/sources.list.d/ 2> /dev/null | grep "oracle"` ]]; then
+      #     # Virtualbox
+      #     codename=`lsb_release -c -s`
+      #     wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
+      #     sudo add-apt-repository -y "deb https://download.virtualbox.org/virtualbox/debian ${codename} contrib"
+      #   fi
+      # if [[ -n `which add-apt-repository 2> /dev/null` ]]; then
+      #   sudo add-apt-repository ppa:openjdk-r/ppa
+
+      #   if [[ -z `ls /etc/apt/sources.list.d/ 2> /dev/null | grep "oracle"` ]]; then
+      #     # Virtualbox
+      #     codename=`lsb_release -c -s`
+      #     wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
+      #     sudo add-apt-repository -y "deb https://download.virtualbox.org/virtualbox/debian ${codename} contrib"
+      #   fi
+
+      #   sudo apt-get update
+      # fi
+      #   sudo apt-get update
+      # fi
 
       sudo apt-get upgrade -y
 
@@ -238,8 +250,8 @@ install_packages() {
 
       # Install baseline linux packages
       sudo $install_method binutils ca-certificates cmake curl dnsmasq docker-compose docker.io \
-                            git wget xclip snap virtualbox zlib1g-dev openssh-server libedit-dev \
-                            python-dev libreadline-dev bzip2 libssl-dev libffi-dev uuid-dev
+                            git wget xclip snap zlib1g-dev openssh-server libedit-dev \
+                            python-dev libreadline-dev bzip2 libssl-dev libffi-dev uuid-dev #virtualbox
 
       # Allow SSH
       sudo ufw allow ssh

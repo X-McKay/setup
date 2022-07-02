@@ -2,8 +2,6 @@
   branch = auto
   diff = auto
   status = auto
-[init]
-	templatedir = ~/.git_template
 [user]
   name = X-McKay
   email = aldmckay@gmail.com
