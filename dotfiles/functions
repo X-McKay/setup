@@ -2,28 +2,27 @@
 
 # Clone or update via Git
 function git_clone_or_update() {
-    if [[ -n $(command -v iftop 2> /dev/null) ]]; then
-        if [[ -d "${2}" ]]; then
-            cd "${2}" || exit
-            git pull
-            cd - || exit
-        else
-            git clone "${1}" "${2}"
-        fi
+  if [[ -n $(command -v git 2>/dev/null) ]]; then
+    if [[ -d "${2}" ]]; then
+      cd "${2}" || exit
+      git pull
+      cd - || exit
     else
-        echo_error "Git is not installed, please install and revisit."
+      git clone "${1}" "${2}"
     fi
+  else
+    echo_error "Git is not installed, please install and revisit."
+  fi
 }
 
-
 # Install SSH Agent
-function setup_ssh_agent () {
+function setup_ssh_agent() {
   # SSH-Agent for not needing to input passwords every time
-  if which ssh-agent > /dev/null; then
+  if [[ -n $(command -v ssh-agent 2>/dev/null) ]]; then
     if test -f "$HOME/.ssh/id_rsa"; then
-      if [[ -n "$SSH_AGENT_PID" ]]; then
-        ssh_agent_pid=$(ps x | awk '{ print $1 }' | grep "^${SSH_AGENT_PID}$")
-        if [[ "$ssh_agent_pid" != "$SSH_AGENT_PID" ]]; then
+      if [[ -n "${SSH_AGENT_PID}" ]]; then
+        ssh_agent_pid_check=$(ps x | awk '{ print $1 }' | grep "^${SSH_AGENT_PID}$")
+        if [[ "$ssh_agent_pid_check" != "${SSH_AGENT_PID}" ]]; then
           unset SSH_AGENT_PID
           unset SSH_AUTH_SOCK
         fi
@@ -40,17 +39,18 @@ function setup_ssh_agent () {
 
 # ASDF related installs
 function install_asdf() {
-  if [[ -z $(which asdf 2> /dev/null) ]]; then
+  if [[ -n $(command -v asdf 2>/dev/null) ]]; then
     export ASDF_HOME="$HOME/.asdf"
     git_clone_or_update "https://github.com/asdf-vm/asdf.git" "$ASDF_HOME"
     cd "$ASDF_HOME" || exit
     git checkout "$(git describe --abbrev=0 --tags)"
+    # shellcheck disable=SC1091
     . asdf.sh
-    cd -
+    cd - || exit
   fi
 }
 
-
+# Upgrade ASDF
 function asdf_upgrade() {
   echo "asdf_upgrade"
   version=$(asdf list-all "$1" | grep -o "^[0-9.]\+$" | sort -V | tail -1)

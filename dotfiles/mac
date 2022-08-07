@@ -1,18 +1,17 @@
 #!/bin/bash
 
-
+# Check platform compatibility
 if [[ $(uname -s) != "darwin" ]]; then
-    echo_error "Platform incompatible with .mac"
-    exit 1
-fi 
+  echo_error "Platform incompatible with .mac"
+  exit 1
+fi
 
-  
 # Export SSL_CERT_FILE on Darwin
 if [[ -z "$SSL_CERT_FILE" ]]; then
-    cert_file="/usr/local/opt/curl-ca-bundle/share/ca-bundle.crt"
-    if test -e "$cert_file"; then
-        export SSL_CERT_FILE="$cert_file"
-    fi
+  cert_file="/usr/local/opt/curl-ca-bundle/share/ca-bundle.crt"
+  if test -e "$cert_file"; then
+    export SSL_CERT_FILE="$cert_file"
+  fi
 fi
 
 # Get CPU Information

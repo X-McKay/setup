@@ -1,7 +1,5 @@
 #!/bin/bash
 # shellcheck disable=SC2034
-# shellcheck disable=SC1090
-
 
 # Bash colors
 black=$'\e[0;30m'
@@ -12,15 +10,16 @@ blue=$'\e[0;34m'
 purple=$'\e[0;35m'
 cyan=$'\e[0;36m'
 white=$'\e[0;37m'
-end=$'\e[0m' 
+end=$'\e[0m'
 
 # Function to source dotfiles
-function source_dotfile(){
-    if test -f "${HOME}/${1}"; then
-        source "${HOME}/${1}"
-    else
-        echo -e "Could not find ${red}${1}${end}"
-    fi
+function source_dotfile() {
+  if test -f "${HOME}/${1}"; then
+    # shellcheck disable=SC1090
+    source "${HOME}/${1}"
+  else
+    echo -e "Could not find ${red}${1}${end}"
+  fi
 }
 
 # Standard coloring
