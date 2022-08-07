@@ -1,9 +1,7 @@
-# - id: shfmt
-#   name: shfmt
-#   description: Shell source code formatter (native install)
-#   language: golang
-#   additional_dependencies: [mvdan.cc/sh/v3/cmd/shfmt@v3.5.1]
-#   entry: shfmt
-#   args: [-w, -s]
-#   types: [shell]
-#   stages: [commit, merge-commit, push, manual]
+---
+- id: shfmt
+  name: Format bash shell scripts
+  description: Format bash scripts to a canonical format using the shfmt tool.
+  entry: hooks/shfmt.sh
+  language: script
+  types: [shell]

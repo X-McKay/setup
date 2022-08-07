@@ -8,6 +8,12 @@ repos:
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-added-large-files
+
+  # - repo: https://github.com/detailyang/pre-commit-shell
+  #   rev: 1.0.5
+  #   hooks:
+  #     - id: shell-lint
+
   - repo: https://github.com/cisagov/pre-commit-shfmt
     rev: v0.0.2
     hooks:
@@ -15,8 +21,3 @@ repos:
         args:
           - -i
           - '2'
-
-  # - repo: https://github.com/pecigonzalo/pre-commit-shfmt
-  #   rev: v2.1.0
-  #   hooks:
-  #     - id: shell-fmt
