@@ -42,6 +42,7 @@
   types:
     - file
     - shell
+    - sh
   exclude_types:
     - zsh
   args:
