@@ -1,53 +1,9 @@
-- id: shell-fmt
+- id: shfmt
   name: shfmt
-  description: Rewrites all shell scripts to a canonical format.
-  entry: shfmt
-  language: system
-  types:
-    - file
-    - shell
-  exclude_types:
-    - zsh
-  args:
-    - -w
-    - -s
-    - -l
-    - -i
-    - "4"
-
-- id: shell-fmt-docker
-  name: shfmt
-  description: Rewrites all shell scripts to a canonical format.
-  entry: mvdan/shfmt:v3
-  language: docker_image
-  types:
-    - file
-    - shell
-  exclude_types:
-    - zsh
-  args:
-    - -w
-    - -s
-    - -l
-    - -i
-    - "4"
-
-- id: shell-fmt-go
-  name: shfmt
-  description: Rewrites all shell scripts to a canonical format.
+  description: Shell source code formatter (native install)
   language: golang
-  additional_dependencies:
-    - mvdan.cc/sh/v3/cmd/shfmt@v3.5.1
+  additional_dependencies: [mvdan.cc/sh/v3/cmd/shfmt@v3.5.1]
   entry: shfmt
-  types:
-    - file
-    - shell
-    - sh
-  exclude_types:
-    - zsh
-  args:
-    - -w
-    - -s
-    - -l
-    - -i
-    - "4"
+  args: [-w, -s]
+  types: [shell]
+  stages: [commit, merge-commit, push, manual]
