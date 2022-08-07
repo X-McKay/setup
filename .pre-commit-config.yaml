@@ -9,10 +9,15 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
 
-  - repo: https://github.com/cisagov/pre-commit-shfmt
-    rev: v0.0.2
+  - repo: https://github.com/detailyang/pre-commit-shell
+    rev: 1.0.5
     hooks:
-      - id: shfmt
-        args:
-          - -i
-          - '2'
+      - id: shell-lint
+
+  # - repo: https://github.com/cisagov/pre-commit-shfmt
+  #   rev: v0.0.2
+  #   hooks:
+  #     - id: shfmt
+  #       args:
+  #         - -i
+  #         - '2'
