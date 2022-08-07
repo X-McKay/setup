@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Prefer English and UTF-8
+export LC_ALL="en_US.UTF-8"
+export LANG="en_US.UTF-8"
+
+if [[ -d "${ASDF_HOME}" ]];then
+    # shellcheck disable=SC1091
+    . "${ASDF_HOME}/asdf.sh"
+    if test -f "${ASDF_HOME}/completions/asdf.bash"; then
+        # shellcheck disable=SC1091
+        . "${ASDF_HOME}/completions/asdf.bash"
+    elif test -f "${ASDF_HOME}/etc/bash_completion.d/asdf.bash"; then
+        # shellcheck disable=SC1091
+        . "${ASDF_HOME}/etc/bash_completion.d/asdf.bash"
+    fi
+fi

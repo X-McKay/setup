@@ -33,7 +33,7 @@ clone the repository by runnung:
 To kick-off the bootstrap set-up run:
 
 ```bash
-    ./bootstrap.sh
+    bin/bootstrap
 ```
 
 <br>

@@ -1,0 +1,36 @@
+#!/bin/bash
+# shellcheck source=~/.util
+# shellcheck disable=SC1090
+
+# Check for files being sourced
+if test -f "${HOME}/.util"; then
+    # shellcheck disable=SC1091
+    source "${HOME}/.util"
+fi
+
+# Set platform env variable
+uname_output=$(uname -s)
+if [[ "$uname_output" =~ 'Linux' ]]; then
+    platform="linux"
+    # shellcheck disable=SC2154
+    echo -e "${green}${platform}${end} environment detected"
+elif [[ "$uname_output" =~ 'Darwin' ]]; then
+    platform="darwin"
+    # shellcheck disable=SC2154
+    echo -e "${green}${platform}${end} environment detected"
+else
+    # shellcheck disable=SC2154
+    echo -e "Unsupported environment: ${red}${platform}${end}"
+    exit 1
+fi
+
+export PLATFORM=$platform
+
+# Source platform specific dotfile
+if [[ "$PLATFORM" == "linux" ]]; then
+    source_dotfile ".linux"
+elif [[ "$PLATFORM" == "darwin" ]]; then
+    source_dotfile ".darwin"
+else
+    echo -e "Unable to source platform specific functionality for: ${red}${platform}${end}"
+fi

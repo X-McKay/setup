@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# General settings
+# function linux_settings(){
+#     # Clipboard integration
+#     if [[ $(uname -s) == "Linux" ]]; then
+#         alias pbcopy='xclip -selection c'
+#     else
+#         echo "Platform incompatible with .linux"
+#         exit 1
+#     fi
+# }
+
+
+# Determine CPU
+if [[ "$PLATFORM" == "linux" ]]; then
+    if [[ -n $(which lscpu 2> /dev/null) ]]; then
+        # Linux 
+        num_cpus=$(lscpu | grep -i "CPU(s):" | awk '{print $2}')
+        cpu_vendor=$(lscpu | grep "Vendor ID:" | grep -o "\w\+$" | head -1)
+    elif [[ -e "/proc/cpuinfo" ]]; then
+        # Linux Alternative - Need to revisit
+        # num_cpus=$(cat /proc/cpuinfo | grep processor | wc -l)
+        # cpu_vendor=$(cat /proc/cpuinfo | grep "Vendor ID:" | grep -o "\w\+$" | head -1)
+        echo_warn "Functionality in development"
+    else
+        # Currently focusing on Ubuntu
+        echo_error "Unable to determine CPU for Linux platform"
+        exit 1
+    fi
+else
+    echo_error "Platform incompatible with .linux"
+    exit 1
+fi
+
+export CPU_COUNT=$num_cpus
+export CPU_VENDOR=$cpu_vendor

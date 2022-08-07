@@ -1,0 +1,3 @@
+shellcheck 0.7.0
+shfmt 3.5.1
+pre-commit 2.19.0

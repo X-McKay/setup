@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# General QOL
+alias clr="clear"
+alias o="open ."
+alias ut="uptime"
+alias resrc="source ~/.bashrc"
+alias ldir="ls -al | grep ^d"
+
+# Navigation shortcuts
+alias ..="cd .."
+alias ...="cd ../../../"
+alias ....="cd ../../../../"
+
+# Networking related aliases
+alias flush="sudo killall -HUP mDNSResponder"
+alias ip="curl icanhazip.com"
+
+# Root aliases
+alias root='sudo -i'
+alias su='sudo -i'
+
+
+# Terminal plugin EXA
+if [[ -n $(command -v exa 2> /dev/null) ]]; then
+    alias ls="exa"
+    alias ll="exa -al"
+fi
+
+# Terminal plugin BAT
+if [[ -n $(command -v bat 2> /dev/null) ]]; then
+    alias cat="bat"
+fi
+
+# Terminal plugin GTOP
+if [[ -n $(command -v gtop 2> /dev/null) ]]; then
+    alias top="gtop"
+fi
+
+# Terminal plugin IFTOP
+if [[ -n $(command -v iftop 2> /dev/null) ]]; then
+    alias iftop="sudo iftop"
+fi
