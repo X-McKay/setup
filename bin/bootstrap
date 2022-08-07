@@ -1,0 +1,42 @@
+#!/bin/bash 
+set -e
+
+# Source bash utilities from dotfile
+if test -f "$HOME/.util"; then
+    # shellcheck disable=SC1091
+    source "$HOME/.util"
+elif test -f "./dotfiles/util"; then
+    # shellcheck disable=SC1091
+    source "./dotfiles/util"
+fi
+
+# Specify backup location
+BACKUP_DIR="${HOME}/.dotfile_backup"
+BACKUP_DATE=$(date +'%Y-%m-%d-%H-%M-%S')
+BACKUP_PATH="${BACKUP_DIR}/${BACKUP_DATE}"
+mkdir -p "${BACKUP_PATH}"
+PWD=$(pwd)
+
+# Ensure default shell is bash
+if [[ "${SHELL}" != "/bin/bash" ]]; then
+    echo_warn "Setting shell to bash"
+    chsh -s /bin/bash
+fi
+
+# Backup existing dotfile
+for file in ${HOME}/.{util,exports,aliases,system,functions,bashrc,bash_profile,tool-versions,gitconfig,linux,mac,install}; do
+    if test -f "${file}"; then
+        echo_warn "Backing up ${file} to ${BACKUP_PATH}"
+        mv -f "${file}" "${BACKUP_PATH}"
+    else
+        echo_warn "Did not find existing instance of ${file}, skipping"
+    fi
+done
+
+
+# Install dotfiles to $HOME
+for file in ${PWD}/dotfiles/{util,exports,aliases,system,functions,bashrc,bash_profile,tool-versions,gitconfig,linux,mac,install}; do
+  dotfile_name=$(basename .${file} suffix)
+  echo_ok "Copying dotfile ${dotfile_name} to ${HOME}/.${dotfile_name}"
+  cp "${file}" "${HOME}/.${dotfile_name}"
+done
