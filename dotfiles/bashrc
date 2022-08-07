@@ -3,9 +3,8 @@
 
 # Source dotfiles
 for file in ~/.{util,aliases,exports,system,functions}; do
-    [ -r "${file}" ] && [ -f "$file" ] && source "${file}";
-done;
+  [ -r "${file}" ] && [ -f "$file" ] && source "${file}"
+done
 unset file
 
-echo "Mini test"
-
+echo -e "testing"
