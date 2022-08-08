@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Pull from bashrc
-if [ ir ~/.bashrc ]; then
-    source ~/.bashrc
+if [ -r ~/.bashrc ]; then
+  # shellcheck disable=SC1090
+  source ~/.bashrc
 fi
