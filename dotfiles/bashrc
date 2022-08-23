@@ -1,8 +1,17 @@
 #!/bin/bash
 # shellcheck disable=SC1090
+# shellcheck disable=SC1091
 
 # Source dotfiles
 for file in ~/.{util,aliases,exports,system,functions}; do
   [ -r "${file}" ] && [ -f "$file" ] && source "${file}"
 done
 unset file
+
+source /etc/profile.d/bash_completion.sh
+
+. "${HOME}"/.asdf/asdf.sh
+. "${HOME}"/.asdf/completions/asdf.bash
+
+bind 'set show-all-if-ambiguous on'
+bind 'TAB:menu-complete'

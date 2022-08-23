@@ -24,7 +24,7 @@ if [[ "${SHELL}" != "/bin/bash" ]]; then
 fi
 
 # Backup existing dotfile
-for file in ${HOME}/.{util,exports,aliases,system,functions,bashrc,bash_profile,tool-versions,gitconfig,linux,mac,install}; do
+for file in ${HOME}/.{util,exports,aliases,system,functions,bashrc,bash_profile,tool-versions,gitconfig,linux,mac}; do
   if test -f "${file}"; then
     echo_warn "Backing up ${file} to ${BACKUP_PATH}"
     mv -f "${file}" "${BACKUP_PATH}"
@@ -34,7 +34,7 @@ for file in ${HOME}/.{util,exports,aliases,system,functions,bashrc,bash_profile,
 done
 
 # Install dotfiles to $HOME
-for file in ${PWD}/dotfiles/{util,exports,aliases,system,functions,bashrc,bash_profile,tool-versions,gitconfig,linux,mac,install}; do
+for file in ${PWD}/dotfiles/{util,exports,aliases,system,functions,bashrc,bash_profile,tool-versions,gitconfig,linux,mac}; do
   dotfile_name=$(basename ."${file}" suffix)
   echo_ok "Copying dotfile ${dotfile_name} to ${HOME}/.${dotfile_name}"
   cp "${file}" "${HOME}/.${dotfile_name}"

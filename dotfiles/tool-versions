@@ -4,3 +4,4 @@ terraform 1.0.10
 shellcheck 0.7.0
 shfmt 3.5.1
 pre-commit 2.19.0
+rust 1.61.0
