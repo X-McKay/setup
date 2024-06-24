@@ -1,5 +1,0 @@
-shellcheck 0.7.0
-shfmt 3.5.1
-pre-commit 2.19.0
-python 3.10.6
-poetry 1.4.1

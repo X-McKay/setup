@@ -1,0 +1,73 @@
+#!/bin/bash
+# shellcheck disable=SC2034
+
+# Bash colors
+black=$'\e[0;30m'
+red=$'\e[0;31m'
+green=$'\e[0;32m'
+yellow=$'\e[0;33m'
+blue=$'\e[0;34m'
+purple=$'\e[0;35m'
+cyan=$'\e[0;36m'
+white=$'\e[0;37m'
+end=$'\e[0m'
+
+# Terminal colors
+PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\[\033[1;31m\]\$\[\033[0m\] '
+
+
+# Function to source dotfiles
+function source_dotfile() {
+  if test -f "${HOME}/${1}"; then
+    # shellcheck disable=SC1090
+    source "${HOME}/${1}"
+  else
+    echo -e "Could not find ${red}${1}${end}"
+  fi
+}
+
+# Install SSH Agent
+function setup_ssh_agent() {
+  # SSH-Agent for not needing to input passwords every time
+  if [[ -n $(command -v ssh-agent 2>/dev/null) ]]; then
+    if test -f "$HOME/.ssh/id_rsa"; then
+      if [[ -n "${SSH_AGENT_PID}" ]]; then
+        ssh_agent_pid_check=$(ps x | awk '{ print $1 }' | grep "^${SSH_AGENT_PID}$")
+        if [[ "$ssh_agent_pid_check" != "${SSH_AGENT_PID}" ]]; then
+          unset SSH_AGENT_PID
+          unset SSH_AUTH_SOCK
+        fi
+      fi
+
+      if [[ -z "$SSH_AGENT_PID" ]]; then
+        eval "$(ssh-agent -s)"
+        ssh-add "$HOME/.ssh/id_rsa"
+      fi
+    fi
+  fi
+
+}
+
+# Standard coloring
+function echo_error() { echo -e "${red}[ERROR] ${1}${end}"; }
+function echo_warn() { echo -e "${yellow}[WARNING] ${1}${end}"; }
+function echo_ok() { echo -e "${green}[OK] ${1}${end}"; }
+
+# Set platform env variable
+uname_output=$(uname -s)
+if [[ "$uname_output" =~ 'Linux' ]]; then
+    platform="linux"
+    num_cpus=$(lscpu | grep -i "CPU(s):" | awk '{print $2}')
+    cpu_vendor=$(lscpu | grep "Vendor ID:" | grep -o "\w\+$" | head -1)
+    # shellcheck disable=SC2154
+    echo -e "${green}${platform}${end} environment detected"
+else
+    # shellcheck disable=SC2154
+    echo -e "Unsupported environment: ${red}${platform}${end}"
+    exit 1
+fi
+
+# Exporting env. vars
+export CPU_COUNT=$num_cpus
+export CPU_VENDOR=$cpu_vendor
+export PLATFORM=$platform
