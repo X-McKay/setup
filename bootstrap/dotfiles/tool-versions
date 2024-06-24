@@ -1,0 +1,5 @@
+python 3.12.4
+pre-commit 3.7.1
+cmake 3.29.6
+shellcheck 0.7.0
+shfmt 3.5.1
