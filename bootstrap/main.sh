@@ -1,55 +1,99 @@
 #!/bin/bash
 
+# Get the directory where the script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+# Initialize variables for error handling
+current_command=""
+last_command=""
+
+# Logging function
+log() {
+  local level=$1
+  local message=$2
+  local timestamp
+  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  echo "[$timestamp] [$level] $message" | tee -a "$HOME/.setup.log"
+}
+
+# Error handling
+set -e
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+trap 'if [ $? -ne 0 ]; then log "ERROR" "Command failed: $last_command"; fi' EXIT
+
 # Ensure default shell is bash
 if [[ "${SHELL}" != "/bin/bash" ]]; then
-  echo_warn "Setting shell to bash"
+  log "INFO" "Setting shell to bash"
   chsh -s /bin/bash
 fi
 
-# Ensure gum is installed
-if ! command -v gum &>/dev/null; then
-  echo "gum is not installed. Please install it from https://github.com/charmbracelet/gum"
-  exit 1
-fi
-
-# Function to display menu using gum
+# Function to display menu using gum if available, otherwise use select
 show_menu() {
-  options=("Update and Install Basic Packages" "Copy Dotfiles" "Install ASDF" "Install Docker" "Update and Install Extra Packages" "Exit")
-  choice=$(gum choose "${options[@]}")
+  options=(
+    "Update and Install Basic Packages"
+    "Copy Dotfiles"
+    "Install mise"
+    "Install Docker"
+    "Update and Install Extra Packages"
+    "Install gum"
+    "Install System Monitoring Tools"
+    "Setup Backup and Recovery"
+    "Exit"
+  )
+  if command -v gum &>/dev/null; then
+    choice=$(gum choose "${options[@]}")
+  else
+    log "INFO" "gum is not installed. Using basic menu."
+    select opt in "${options[@]}"; do
+      choice="$opt"
+      break
+    done
+  fi
   echo "$choice"
 }
 
 # Function to handle selection
 handle_selection() {
+  log "INFO" "Processing selection: $1"
   case "$1" in
   "Update and Install Basic Packages")
-    ./scripts/basic_apt_installs.sh
+    "$SCRIPT_DIR/scripts/basic_apt_installs.sh"
     ;;
   "Copy Dotfiles")
-    ./scripts/copy_dotfiles.sh
+    "$SCRIPT_DIR/scripts/copy_dotfiles.sh"
     ;;
-  "Install ASDF")
-    ./scripts/install_asdf.sh
+  "Install mise")
+    "$SCRIPT_DIR/scripts/install_mise.sh"
     ;;
   "Install Docker")
-    ./scripts/install_docker.sh
+    "$SCRIPT_DIR/scripts/install_docker.sh"
     ;;
   "Update and Install Extra Packages")
-    ./scripts/extra_apt_installs.sh
+    "$SCRIPT_DIR/scripts/extra_apt_installs.sh"
+    ;;
+  "Install gum")
+    "$SCRIPT_DIR/scripts/install_gum.sh"
+    ;;
+  "Install System Monitoring Tools")
+    "$SCRIPT_DIR/scripts/install_monitoring.sh"
+    ;;
+  "Setup Backup and Recovery")
+    "$SCRIPT_DIR/scripts/setup_backup.sh"
     ;;
   "Exit")
-    echo "Exiting..."
+    log "INFO" "Exiting setup script"
     exit 0
     ;;
   *)
-    echo "Invalid option: $1"
+    log "ERROR" "Invalid option: $1"
     ;;
   esac
 }
 
 # Main loop
+log "INFO" "Starting setup script"
 while true; do
   choice=$(show_menu)
-  echo "You selected: $choice" # Debugging output
+  log "INFO" "Selected option: $choice"
   handle_selection "$choice"
 done

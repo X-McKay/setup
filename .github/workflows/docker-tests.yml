@@ -1,0 +1,42 @@
+# yamllint disable rule:truthy
+---
+# shellcheck disable=all
+name: Docker Tests
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "bootstrap/**"
+      - ".github/workflows/**"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "bootstrap/**"
+      - ".github/workflows/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./bootstrap/tests/Dockerfile
+          push: false
+          load: true
+          tags: bootstrap-tests:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run tests
+        run: docker run --rm bootstrap-tests:latest

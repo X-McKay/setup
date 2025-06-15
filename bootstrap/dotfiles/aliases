@@ -20,24 +20,23 @@ alias ip="curl icanhazip.com"
 alias root='sudo -i'
 alias su='sudo -i'
 
-
 # Terminal plugin EXA
-if [[ -n $(command -v exa 2> /dev/null) ]]; then
-    alias ls="exa"
-    alias ll="exa -al"
+if [[ -n $(command -v exa 2>/dev/null) ]]; then
+  alias ls="exa"
+  alias ll="exa -al"
 fi
 
 # Terminal plugin BAT
-if [[ -n $(command -v bat 2> /dev/null) ]]; then
-    alias cat="bat"
+if [[ -n $(command -v bat 2>/dev/null) ]]; then
+  alias cat="bat"
 fi
 
 # Terminal plugin GTOP
-if [[ -n $(command -v gtop 2> /dev/null) ]]; then
-    alias top="gtop"
+if [[ -n $(command -v gtop 2>/dev/null) ]]; then
+  alias top="gtop"
 fi
 
 # Terminal plugin IFTOP
-if [[ -n $(command -v iftop 2> /dev/null) ]]; then
-    alias iftop="sudo iftop"
+if [[ -n $(command -v iftop 2>/dev/null) ]]; then
+  alias iftop="sudo iftop"
 fi

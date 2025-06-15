@@ -1,6 +1,7 @@
+---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v0.7.1
+    rev: v4.5.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -8,11 +9,22 @@ repos:
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: detect-private-key
+      - id: check-added-large-files
+      - id: check-json
 
-  - repo: https://github.com/detailyang/pre-commit-shell
-    rev: 1.0.5
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.5
     hooks:
-      - id: shell-lint
+      - id: shellcheck
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.33.0
+    hooks:
+      - id: yamllint
+        args:
+          - --strict
+          - --format
+          - parsable
 
   - repo: https://github.com/cisagov/pre-commit-shfmt
     rev: v0.0.2
@@ -23,6 +35,6 @@ repos:
           - '2'
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.16.1
+    rev: v8.18.1
     hooks:
       - id: gitleaks

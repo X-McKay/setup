@@ -119,3 +119,6 @@ bower_components
 
 # Project Files
 exclude/
+
+# Ignore act binary
+bin/act
