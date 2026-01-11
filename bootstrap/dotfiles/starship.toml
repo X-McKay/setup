@@ -1,0 +1,170 @@
+# ----------------------------------------
+# Al's Starship Configuration
+# GitHub Dark High Contrast Theme
+# ----------------------------------------
+
+# Prompt format
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$rust\
+$python\
+$nodejs\
+$golang\
+$docker_context\
+$kubernetes\
+$cmd_duration\
+$line_break\
+$character"""
+
+# Disable newline at start
+add_newline = false
+
+# ----------------------------------------
+# Color Palette (GitHub Dark High Contrast)
+# ----------------------------------------
+
+palette = "github_dark_high_contrast"
+
+[palettes.github_dark_high_contrast]
+bg = "#0a0c10"
+fg = "#f0f3f6"
+fg_dim = "#9ea7b3"
+red = "#ff9492"
+green = "#26cd4d"
+yellow = "#f0b72f"
+blue = "#71b7ff"
+magenta = "#cb9eff"
+cyan = "#39c5cf"
+
+# ----------------------------------------
+# Prompt Character
+# ----------------------------------------
+
+[character]
+success_symbol = "[❯](green)"
+error_symbol = "[❯](red)"
+vimcmd_symbol = "[❮](magenta)"
+
+# ----------------------------------------
+# Directory
+# ----------------------------------------
+
+[directory]
+style = "blue bold"
+truncation_length = 4
+truncate_to_repo = true
+format = "[$path]($style)[$read_only]($read_only_style) "
+read_only = " 󰌾"
+read_only_style = "red"
+
+[directory.substitutions]
+"~/git" = "󰊢 "
+"~/Documents" = "󰈙 "
+"~/Downloads" = " "
+
+# ----------------------------------------
+# Git
+# ----------------------------------------
+
+[git_branch]
+symbol = " "
+style = "magenta"
+format = "[$symbol$branch(:$remote_branch)]($style) "
+
+[git_status]
+style = "fg_dim"
+format = '([$all_status$ahead_behind]($style) )'
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?${count}"
+stashed = "*"
+modified = "!${count}"
+staged = "+${count}"
+renamed = "»"
+deleted = "✘"
+
+# ----------------------------------------
+# Languages
+# ----------------------------------------
+
+[rust]
+symbol = " "
+style = "red"
+format = "[$symbol($version)]($style) "
+
+[python]
+symbol = " "
+style = "yellow"
+format = '[${symbol}${pyenv_prefix}(${version})(\($virtualenv\))]($style) '
+
+[nodejs]
+symbol = " "
+style = "green"
+format = "[$symbol($version)]($style) "
+
+[golang]
+symbol = " "
+style = "cyan"
+format = "[$symbol($version)]($style) "
+
+# ----------------------------------------
+# Infrastructure
+# ----------------------------------------
+
+[docker_context]
+symbol = " "
+style = "blue"
+format = "[$symbol$context]($style) "
+only_with_files = true
+
+[kubernetes]
+symbol = "☸ "
+style = "cyan"
+format = '[$symbol$context(\($namespace\))]($style) '
+disabled = true
+
+# ----------------------------------------
+# Command Duration
+# ----------------------------------------
+
+[cmd_duration]
+min_time = 2000
+style = "fg_dim"
+format = "[took $duration]($style) "
+
+# ----------------------------------------
+# Username & Hostname (SSH only)
+# ----------------------------------------
+
+[username]
+style_user = "green bold"
+style_root = "red bold"
+format = "[$user]($style)@"
+show_always = false
+
+[hostname]
+style = "green bold"
+format = "[$hostname]($style):"
+ssh_only = true
+
+# ----------------------------------------
+# Disabled modules (uncomment to enable)
+# ----------------------------------------
+
+[aws]
+disabled = true
+
+[gcloud]
+disabled = true
+
+[azure]
+disabled = true
+
+[package]
+disabled = true

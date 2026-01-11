@@ -2,11 +2,52 @@
 # shellcheck disable=SC1090
 # shellcheck disable=SC1091
 
-# Prefer English and UTF-8
+# ----------------------------------------
+# Environment Variables
+# ----------------------------------------
+
+# Locale
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
 
-# Configure mise completions
-if command -v mise &>/dev/null; then
-  eval "$(mise activate bash)"
+# Default editor
+export EDITOR="vim"
+export VISUAL="vim"
+
+# Pager
+export PAGER="less"
+export LESS="-R"
+
+# Man pager (use bat if available)
+if command -v bat &>/dev/null; then
+  export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+elif command -v batcat &>/dev/null; then
+  export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
 fi
+
+# fzf defaults
+export FZF_DEFAULT_OPTS="
+  --height 40%
+  --layout=reverse
+  --border
+  --color=bg+:#161b22,bg:#0a0c10,spinner:#71b7ff,hl:#71b7ff
+  --color=fg:#f0f3f6,header:#71b7ff,info:#f0b72f,pointer:#cb9eff
+  --color=marker:#26cd4d,fg+:#f0f3f6,prompt:#71b7ff,hl+:#71b7ff
+"
+
+# Use fd for fzf if available
+if command -v fd &>/dev/null; then
+  export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+elif command -v fdfind &>/dev/null; then
+  export FZF_DEFAULT_COMMAND='fdfind --type f --hidden --follow --exclude .git'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+
+# XDG directories
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+
+# Starship config location
+export STARSHIP_CONFIG="$HOME/.config/starship.toml"

@@ -1,0 +1,154 @@
+# ============================================================================
+# Project Justfile Template
+# Run 'just' to see available commands
+# ============================================================================
+
+# Default recipe - show available commands
+default:
+    @just --list
+
+# ============================================================================
+# Development
+# ============================================================================
+
+# Run the development server
+dev:
+    @echo "Starting development server..."
+    # npm run dev
+    # cargo run
+    # python manage.py runserver
+
+# Run tests
+test *args:
+    @echo "Running tests..."
+    # npm test {{args}}
+    # cargo test {{args}}
+    # pytest {{args}}
+
+# Run tests in watch mode
+test-watch:
+    @echo "Running tests in watch mode..."
+    # npm run test:watch
+    # cargo watch -x test
+
+# Lint the codebase
+lint:
+    @echo "Running linter..."
+    # npm run lint
+    # cargo clippy
+    # ruff check .
+
+# Format code
+fmt:
+    @echo "Formatting code..."
+    # npm run format
+    # cargo fmt
+    # ruff format .
+
+# Check formatting without modifying
+fmt-check:
+    @echo "Checking formatting..."
+    # npm run format:check
+    # cargo fmt --check
+    # ruff format --check .
+
+# ============================================================================
+# Build
+# ============================================================================
+
+# Build the project
+build:
+    @echo "Building..."
+    # npm run build
+    # cargo build --release
+
+# Clean build artifacts
+clean:
+    @echo "Cleaning..."
+    # rm -rf node_modules dist
+    # cargo clean
+    # rm -rf __pycache__ .pytest_cache
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+
+# Install dependencies
+install:
+    @echo "Installing dependencies..."
+    # npm install
+    # cargo fetch
+
+# Update dependencies
+update:
+    @echo "Updating dependencies..."
+    # npm update
+    # cargo update
+
+# ============================================================================
+# Docker
+# ============================================================================
+
+# Build docker image
+docker-build:
+    docker build -t myapp .
+
+# Run docker container
+docker-run:
+    docker run -it --rm myapp
+
+# Start docker compose stack
+docker-up:
+    docker compose up -d
+
+# Stop docker compose stack
+docker-down:
+    docker compose down
+
+# View docker logs
+docker-logs:
+    docker compose logs -f
+
+# ============================================================================
+# Git Helpers
+# ============================================================================
+
+# Show git status
+status:
+    git status -sb
+
+# Quick commit with message
+commit msg:
+    git add -A
+    git commit -m "{{msg}}"
+
+# Push to origin
+push:
+    git push
+
+# Pull from origin
+pull:
+    git pull --rebase
+
+# ============================================================================
+# Utility
+# ============================================================================
+
+# Show project info
+info:
+    @echo "Project: $(basename $(pwd))"
+    @echo "Branch: $(git branch --show-current 2>/dev/null || echo 'not a git repo')"
+    @echo "Last commit: $(git log -1 --format='%s' 2>/dev/null || echo 'n/a')"
+
+# Open project in browser (if applicable)
+open:
+    # xdg-open http://localhost:3000
+    @echo "Not configured"
+
+# Generate a UUID
+uuid:
+    @uuidgen | tr '[:upper:]' '[:lower:]'
+
+# Show disk usage of current directory
+size:
+    @du -sh .

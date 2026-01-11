@@ -1,0 +1,57 @@
+# ============================================================================
+# Test Dockerfile for Setup Repository
+# Build:  docker build -f Dockerfile.test -t setup-test .
+# Run:    docker run -it --rm setup-test
+# ============================================================================
+
+FROM ubuntu:24.04
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install base packages needed for setup scripts
+RUN apt-get update && apt-get install -y \
+    bash \
+    curl \
+    wget \
+    git \
+    sudo \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    fontconfig \
+    locales \
+    xclip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up locale
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Create test user with sudo access
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Set working directory
+WORKDIR /home/testuser/setup
+
+# Copy the entire repository
+COPY --chown=testuser:testuser . .
+
+# Switch to test user
+USER testuser
+ENV HOME=/home/testuser
+ENV PATH="/home/testuser/.local/bin:/home/testuser/.cargo/bin:${PATH}"
+
+# Create necessary directories
+RUN mkdir -p ~/.local/bin ~/.config ~/.local/share/fonts
+
+# Install Rust (needed for some tools and the CLI)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+# Default command - interactive shell
+CMD ["/bin/bash"]

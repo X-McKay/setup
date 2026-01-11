@@ -1,56 +1,140 @@
 #!/bin/bash
+set -e
 
-# Ensure gum is installed
-if ! command -v gum &>/dev/null; then
-  echo "gum is not installed. Please install it from https://github.com/charmbracelet/gum"
-  exit 1
-fi
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+DOTFILES_DIR="$SCRIPT_DIR/../dotfiles"
 
-# List of files to copy to ~/.bootstrap
-bootstrap_files=("exports" "aliases" "util")
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+NC='\033[0m'
 
-# List of files to copy to home directory
-home_files=("bashrc" "bash_profile" "tmux.conf" "gitconfig" "tool-versions")
+info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+success() { echo -e "${GREEN}[OK]${NC} $1"; }
+warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Function to backup existing files
-backup_files() {
-  local src_files=("$@")
-  # shellcheck disable=SC2155
-  local backup_dir=~/.bootstrap_back/$(date +'%Y%m%d_%H%M%S')
-  mkdir -p "$backup_dir"
-  for file in "${src_files[@]}"; do
-    if [ -f ~/."$file" ]; then
-      cp ~/."$file" "$backup_dir/"
-    fi
-  done
-  gum style --foreground 212 --bold "Backup of existing files completed: $backup_dir"
+# Files to copy to home directory (as dotfiles)
+HOME_DOTFILES=(
+  "bashrc:.bashrc"
+  "bash_profile:.bash_profile"
+  "tmux.conf:.tmux.conf"
+  "gitconfig:.gitconfig"
+  "tool-versions:.tool-versions"
+  "aliases:.aliases"
+  "exports:.exports"
+  "util:.util"
+)
+
+# Files to copy to ~/.config/
+CONFIG_FILES=(
+  "starship.toml:starship.toml"
+  "ghostty:ghostty"
+  "lazygit:lazygit"
+)
+
+# Backup directory
+BACKUP_DIR="$HOME/.dotfiles_backup/$(date +'%Y%m%d_%H%M%S')"
+
+# Function to backup a file
+backup_file() {
+  local target="$1"
+  local backup_path
+  if [ -e "$target" ]; then
+    mkdir -p "$BACKUP_DIR"
+    backup_path="$BACKUP_DIR/$(basename "$target")"
+    cp -r "$target" "$backup_path"
+    return 0
+  fi
+  return 1
 }
 
-# Backup existing dotfiles
-gum style --foreground 212 --bold "Backing up existing dotfiles..."
-backup_files "${bootstrap_files[@]}" "${home_files[@]}"
+# Function to copy a file/directory
+copy_item() {
+  local src="$1"
+  local dest="$2"
 
-# Copy files to ~/.bootstrap
-gum style --foreground 212 --bold "Copying files to ~/.bootstrap..."
-mkdir -p ~/.bootstrap
-for file in "${bootstrap_files[@]}"; do
-  if cp ./dotfiles/"$file" ~/.bootstrap/; then
-    gum style --foreground 212 --bold "Copied $file to ~/.bootstrap/"
+  # Ensure parent directory exists
+  mkdir -p "$(dirname "$dest")"
+
+  if [ -d "$src" ]; then
+    # It's a directory, copy recursively
+    cp -r "$src" "$dest"
   else
-    gum style --foreground 9 --bold "Failed to copy $file to ~/.bootstrap/" >&2
+    # It's a file
+    cp "$src" "$dest"
+  fi
+}
+
+# Main
+main() {
+  echo ""
+  echo "========================================"
+  echo "  Dotfiles Installer"
+  echo "========================================"
+  echo ""
+
+  # Verify dotfiles directory exists
+  if [ ! -d "$DOTFILES_DIR" ]; then
+    error "Dotfiles directory not found: $DOTFILES_DIR"
     exit 1
   fi
-done
 
-# Copy files to home directory
-gum style --foreground 212 --bold "Copying files to home directory..."
-for file in "${home_files[@]}"; do
-  if cp ./dotfiles/"$file" ~/."$file"; then
-    gum style --foreground 212 --bold "Copied $file to ~/"
-  else
-    gum style --foreground 9 --bold "Failed to copy $file to ~/" >&2
-    exit 1
+  info "Backing up existing dotfiles to $BACKUP_DIR"
+
+  # Copy home dotfiles
+  info "Copying dotfiles to home directory..."
+  for mapping in "${HOME_DOTFILES[@]}"; do
+    src="${mapping%%:*}"
+    dest_name="${mapping##*:}"
+    src_path="$DOTFILES_DIR/$src"
+    dest_path="$HOME/$dest_name"
+
+    if [ -e "$src_path" ]; then
+      backup_file "$dest_path" && info "  Backed up existing $dest_name"
+      copy_item "$src_path" "$dest_path"
+      success "  $dest_name"
+    else
+      warn "  Source not found: $src"
+    fi
+  done
+
+  # Copy config files
+  info "Copying config files to ~/.config/..."
+  mkdir -p "$HOME/.config"
+
+  for mapping in "${CONFIG_FILES[@]}"; do
+    src="${mapping%%:*}"
+    dest_name="${mapping##*:}"
+    src_path="$DOTFILES_DIR/$src"
+    dest_path="$HOME/.config/$dest_name"
+
+    if [ -e "$src_path" ]; then
+      backup_file "$dest_path" && info "  Backed up existing $dest_name"
+      copy_item "$src_path" "$dest_path"
+      success "  ~/.config/$dest_name"
+    else
+      warn "  Source not found: $src"
+    fi
+  done
+
+  echo ""
+  echo "========================================"
+  success "Dotfiles installed successfully!"
+  echo "========================================"
+  echo ""
+
+  if [ -d "$BACKUP_DIR" ]; then
+    info "Backups saved to: $BACKUP_DIR"
   fi
-done
 
-gum style --foreground 212 --bold "Dotfiles copied and sourced successfully."
+  echo ""
+  info "Run 'source ~/.bashrc' to apply changes"
+  echo ""
+}
+
+# Run
+main "$@"

@@ -1,0 +1,206 @@
+---
+# Al's Lazygit Configuration
+# GitHub Dark High Contrast Theme
+
+gui:
+  # Theme - GitHub Dark High Contrast
+  theme:
+    activeBorderColor:
+      - "#71b7ff"  # blue
+      - bold
+    inactiveBorderColor:
+      - "#7a828e"  # gray
+    searchingActiveBorderColor:
+      - "#f0b72f"  # yellow
+      - bold
+    optionsTextColor:
+      - "#71b7ff"  # blue
+    selectedLineBgColor:
+      - "#161b22"  # bg highlight
+    selectedRangeBgColor:
+      - "#161b22"
+    cherryPickedCommitBgColor:
+      - "#39c5cf"  # cyan
+    cherryPickedCommitFgColor:
+      - "#0a0c10"  # bg
+    unstagedChangesColor:
+      - "#ff9492"  # red
+    defaultFgColor:
+      - "#f0f3f6"  # fg
+
+  # Window settings
+  showFileTree: true
+  showListFooter: true
+  showRandomTip: false
+  showCommandLog: true
+  showBottomLine: true
+  showPanelJumps: true
+  nerdFontsVersion: "3"
+
+  # Border style
+  border: rounded
+
+  # Commit length warning
+  commitLength:
+    show: true
+
+  # Mouse support
+  mouseEvents: true
+
+  # Skip confirmations for common actions
+  skipDiscardChangeWarning: false
+  skipStashWarning: false
+
+git:
+  # Paging
+  paging:
+    colorArg: always
+    pager: delta --dark --paging=never
+
+  # Commit settings
+  commit:
+    signOff: false
+    autoFetch: true
+    autoRefresh: true
+
+  # Branch settings
+  branchLogCmd: >-
+    git log --graph --color=always --abbrev-commit
+    --decorate --date=relative --pretty=medium {{branchName}} --
+  allBranchesLogCmd: >-
+    git log --graph --all --color=always --abbrev-commit
+    --decorate --date=relative --pretty=medium
+
+  # Merge/rebase
+  merging:
+    manualCommit: false
+    args: ""
+
+  # Pull
+  pull:
+    mode: "rebase"
+
+  # Auto fetch interval (0 = disabled)
+  autoFetch: true
+  autoRefresh: true
+  fetchAll: true
+
+os:
+  # Use default editor from $EDITOR
+  editPreset: ""
+
+keybinding:
+  universal:
+    quit: "q"
+    quit-alt1: "<c-c>"
+    return: "<esc>"
+    togglePanel: "<tab>"
+    prevItem: "<up>"
+    nextItem: "<down>"
+    prevPage: "<pgup>"
+    nextPage: "<pgdown>"
+    scrollLeft: "<left>"
+    scrollRight: "<right>"
+    gotoTop: "<"
+    gotoBottom: ">"
+    prevBlock: "<s-tab>"
+    nextBlock: "<tab>"
+    nextMatch: "n"
+    prevMatch: "N"
+    startSearch: "/"
+    optionMenu: "?"
+    edit: "e"
+    openFile: "o"
+    copyToClipboard: "<c-o>"
+    refresh: "R"
+
+  status:
+    checkForUpdate: "u"
+    recentRepos: "<enter>"
+    allBranchesLogGraph: "a"
+
+  files:
+    commitChanges: "c"
+    commitChangesWithoutHook: "w"
+    amendLastCommit: "A"
+    commitChangesWithEditor: "C"
+    findBaseCommitForFixup: "<c-f>"
+    confirmDiscard: "d"
+    ignoreFile: "i"
+    refreshFiles: "r"
+    stashAllChanges: "s"
+    viewStashOptions: "S"
+    toggleStagedAll: "a"
+    viewResetOptions: "D"
+    fetch: "f"
+    toggleTreeView: "`"
+    openMergeTool: "M"
+    openStatusFilter: "<c-b>"
+
+  branches:
+    createPullRequest: "o"
+    viewPullRequestOptions: "O"
+    copyPullRequestURL: "<c-y>"
+    checkoutBranchByName: "c"
+    forceCheckoutBranch: "F"
+    rebaseBranch: "r"
+    renameBranch: "R"
+    mergeIntoCurrentBranch: "M"
+    viewGitFlowOptions: "i"
+    fastForward: "f"
+    createTag: "T"
+    pushTag: "P"
+    setUpstream: "u"
+    fetchRemote: "f"
+
+  commits:
+    squashDown: "s"
+    renameCommit: "r"
+    renameCommitWithEditor: "R"
+    viewResetOptions: "g"
+    markCommitAsFixup: "f"
+    createFixupCommit: "F"
+    squashAboveCommits: "S"
+    moveDownCommit: "<c-j>"
+    moveUpCommit: "<c-k>"
+    amendToCommit: "A"
+    resetCommitAuthor: "a"
+    pickCommit: "p"
+    revertCommit: "t"
+    cherryPickCopy: "C"
+    pasteCommits: "V"
+    tagCommit: "T"
+    checkoutCommit: "<space>"
+    resetCherryPick: "<c-R>"
+    copyCommitMessageToClipboard: "<c-y>"
+    openLogMenu: "<c-l>"
+
+  stash:
+    popStash: "g"
+    renameStash: "r"
+
+  submodules:
+    init: "i"
+    update: "u"
+    bulkMenu: "b"
+
+# Custom commands
+customCommands:
+  - key: "<c-p>"
+    command: "git push"
+    context: "global"
+    description: "Push to remote"
+
+  - key: "<c-P>"
+    command: "git push --force-with-lease"
+    context: "global"
+    description: "Force push (with lease)"
+
+  - key: "b"
+    command: "git branch -d {{.SelectedLocalBranch.Name}}"
+    context: "localBranches"
+    description: "Delete branch"
+    prompts:
+      - type: "confirm"
+        title: "Delete branch"
+        body: "Are you sure you want to delete {{.SelectedLocalBranch.Name}}?"

@@ -1,0 +1,97 @@
+# ----------------------------------------
+# Al's Ghostty Configuration
+# GitHub Dark High Contrast Theme
+# ----------------------------------------
+
+# Font -----------------------------------
+font-family = "JetBrainsMono Nerd Font"
+font-size = 12
+font-thicken = true
+
+# Fallback fonts for symbols
+font-family-bold = "JetBrainsMono Nerd Font"
+font-family-italic = "JetBrainsMono Nerd Font"
+font-family-bold-italic = "JetBrainsMono Nerd Font"
+
+# Window ---------------------------------
+window-padding-x = 8
+window-padding-y = 8
+window-decoration = true
+window-theme = ghostty
+
+# Cursor ---------------------------------
+cursor-style = block
+cursor-style-blink = false
+shell-integration-features = cursor
+
+# Scrollback -----------------------------
+scrollback-limit = 50000
+
+# Mouse ----------------------------------
+mouse-hide-while-typing = true
+copy-on-select = clipboard
+
+# Shell integration ----------------------
+shell-integration = bash
+
+# ----------------------------------------
+# GitHub Dark High Contrast Colors
+# ----------------------------------------
+
+background = 0a0c10
+foreground = f0f3f6
+cursor-color = 71b7ff
+cursor-text = 0a0c10
+selection-background = f0f3f6
+selection-foreground = 0a0c10
+
+# Normal colors (0-7)
+palette = 0=#7a828e
+palette = 1=#ff9492
+palette = 2=#26cd4d
+palette = 3=#f0b72f
+palette = 4=#71b7ff
+palette = 5=#cb9eff
+palette = 6=#39c5cf
+palette = 7=#d9dee3
+
+# Bright colors (8-15)
+palette = 8=#9ea7b3
+palette = 9=#ffb1af
+palette = 10=#4ae168
+palette = 11=#f7c843
+palette = 12=#91cbff
+palette = 13=#dbb7ff
+palette = 14=#56d4dd
+palette = 15=#ffffff
+
+# ----------------------------------------
+# Keybindings
+# ----------------------------------------
+
+# Avoid conflicts with tmux (C-a prefix)
+# Use Super (Cmd/Win) for Ghostty actions
+
+keybind = super+c=copy_to_clipboard
+keybind = super+v=paste_from_clipboard
+keybind = super+shift+c=copy_to_clipboard
+keybind = super+shift+v=paste_from_clipboard
+
+keybind = super+t=new_tab
+keybind = super+w=close_surface
+keybind = super+n=new_window
+
+keybind = super+1=goto_tab:1
+keybind = super+2=goto_tab:2
+keybind = super+3=goto_tab:3
+keybind = super+4=goto_tab:4
+keybind = super+5=goto_tab:5
+
+keybind = super+equal=increase_font_size:1
+keybind = super+minus=decrease_font_size:1
+keybind = super+0=reset_font_size
+
+keybind = super+shift+enter=toggle_fullscreen
+
+# Quick reload config
+keybind = super+shift+comma=reload_config

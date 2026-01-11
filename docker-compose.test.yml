@@ -1,0 +1,83 @@
+---
+# Docker Compose for Testing Setup Repository
+#
+# Usage:
+#   docker compose -f docker-compose.test.yml build
+#   docker compose -f docker-compose.test.yml run --rm test
+#
+# Or use the justfile:
+#   just docker-test
+
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    stdin_open: true
+    tty: true
+    volumes:
+      # Mount the repo for live editing (optional, comment out for clean test)
+      # - .:/home/testuser/setup
+      # Persist installed tools between runs (optional)
+      - test-local:/home/testuser/.local
+      - test-config:/home/testuser/.config
+    environment:
+      - TERM=xterm-256color
+      - TEST_MODE=1
+
+  # Quick test - just run the install script
+  quick-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    command: >
+      bash -c "
+        echo '=== Testing Modern CLI Install ===' &&
+        cd /home/testuser/setup/bootstrap/scripts &&
+        ./install_modern_cli.sh &&
+        echo '' &&
+        echo '=== Verifying installations ===' &&
+        which starship && starship --version &&
+        which zoxide && zoxide --version &&
+        which lazygit && lazygit --version | head -1 &&
+        which just && just --version &&
+        which glow && glow --version &&
+        which btm && btm --version &&
+        which gh && gh --version | head -1 &&
+        which eza && eza --version | head -1 &&
+        which bat || which batcat &&
+        which fd || which fdfind &&
+        which fzf && fzf --version &&
+        which hyperfine && hyperfine --version &&
+        which jq && jq --version &&
+        which yq && yq --version &&
+        which tldr &&
+        echo '' &&
+        echo '=== All tools installed successfully! ==='
+      "
+    environment:
+      - TERM=xterm-256color
+
+  # Test dotfiles copy
+  dotfiles-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    command: >
+      bash -c "
+        echo '=== Testing Dotfiles Copy ===' &&
+        cd /home/testuser/setup/bootstrap/scripts &&
+        ./copy_dotfiles.sh &&
+        echo '' &&
+        echo '=== Verifying dotfiles ===' &&
+        ls -la ~/.bashrc ~/.tmux.conf ~/.aliases ~/.exports &&
+        ls -la ~/.config/starship.toml ~/.config/ghostty/ ~/.config/lazygit/ &&
+        echo '' &&
+        echo '=== Dotfiles copied successfully! ==='
+      "
+    environment:
+      - TERM=xterm-256color
+
+volumes:
+  test-local:
+  test-config:

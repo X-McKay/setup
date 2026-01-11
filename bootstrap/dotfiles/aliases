@@ -1,42 +1,174 @@
 #!/bin/bash
 
+# ----------------------------------------
+# Al's Shell Aliases
+# ----------------------------------------
+
 # General QOL
 alias clr="clear"
-alias o="open ."
+alias c="clear"
+alias o="xdg-open ."
 alias ut="uptime"
 alias resrc="source ~/.bashrc"
-alias ldir="ls -al | grep ^d"
+alias path='echo $PATH | tr ":" "\n"'
 
 # Navigation shortcuts
 alias ..="cd .."
-alias ...="cd ../../../"
-alias ....="cd ../../../../"
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
 
-# Networking related aliases
-alias flush="sudo killall -HUP mDNSResponder"
-alias ip="curl icanhazip.com"
-
-# Root aliases
-alias root='sudo -i'
-alias su='sudo -i'
-
-# Terminal plugin EXA
-if [[ -n $(command -v exa 2>/dev/null) ]]; then
-  alias ls="exa"
-  alias ll="exa -al"
+# Directory listing with eza (modern ls)
+if command -v eza &>/dev/null; then
+  alias ls="eza --icons"
+  alias ll="eza -la --icons --git"
+  alias la="eza -a --icons"
+  alias lt="eza -T --icons --level=2"
+  alias ldir="eza -D --icons"
+elif command -v exa &>/dev/null; then
+  # Fallback to exa if still installed
+  alias ls="exa --icons"
+  alias ll="exa -la --icons --git"
+  alias la="exa -a --icons"
+  alias lt="exa -T --icons --level=2"
+else
+  alias ll="ls -la"
+  alias la="ls -a"
+  alias ldir="ls -al | grep ^d"
 fi
 
-# Terminal plugin BAT
-if [[ -n $(command -v bat 2>/dev/null) ]]; then
-  alias cat="bat"
+# Better cat with bat
+if command -v bat &>/dev/null; then
+  alias cat="bat --paging=never"
+elif command -v batcat &>/dev/null; then
+  alias cat="batcat --paging=never"
 fi
 
-# Terminal plugin GTOP
-if [[ -n $(command -v gtop 2>/dev/null) ]]; then
-  alias top="gtop"
+# Better top with htop or btop
+if command -v btop &>/dev/null; then
+  alias top="btop"
+elif command -v htop &>/dev/null; then
+  alias top="htop"
 fi
 
-# Terminal plugin IFTOP
-if [[ -n $(command -v iftop 2>/dev/null) ]]; then
+# Network monitoring
+if command -v iftop &>/dev/null; then
   alias iftop="sudo iftop"
+fi
+
+# Networking
+alias ip="curl -s icanhazip.com"
+localip() { hostname -I | awk '{print $1}'; }
+alias ports="sudo ss -tulanp"
+
+# Grep with color
+alias grep="grep --color=auto"
+alias egrep="egrep --color=auto"
+alias fgrep="fgrep --color=auto"
+
+# Safety nets
+alias rm="rm -i"
+alias mv="mv -i"
+alias cp="cp -i"
+
+# Git shortcuts (lazygit preferred, but these are handy)
+alias g="git"
+alias gs="git status"
+alias ga="git add"
+alias gc="git commit"
+alias gp="git push"
+alias gl="git pull"
+alias gd="git diff"
+alias gco="git checkout"
+alias gb="git branch"
+alias glog="git log --oneline --graph --decorate -15"
+
+# Lazygit
+if command -v lazygit &>/dev/null; then
+  alias lg="lazygit"
+fi
+
+# Zoxide shortcuts
+if command -v zoxide &>/dev/null; then
+  alias cd="z"
+  alias cdi="zi"
+fi
+
+# Tmux
+alias ta="tmux attach -t"
+alias tl="tmux list-sessions"
+alias tn="tmux new -s"
+alias tk="tmux kill-session -t"
+
+# Docker
+alias dk="docker"
+alias dkps="docker ps"
+alias dkpsa="docker ps -a"
+alias dkimg="docker images"
+alias dkrm="docker rm"
+alias dkrmi="docker rmi"
+
+# Docker Compose
+alias dkc="docker compose"
+alias dkcu="docker compose up -d"
+alias dkcd="docker compose down"
+alias dkcl="docker compose logs -f"
+
+# System
+alias df="df -h"
+alias du="du -h"
+alias free="free -h"
+
+# Quick edit configs
+alias vbash='${EDITOR:-vim} ~/.bashrc'
+alias valias='${EDITOR:-vim} ~/.aliases'
+alias vtmux='${EDITOR:-vim} ~/.tmux.conf'
+alias vgit='${EDITOR:-vim} ~/.gitconfig'
+alias vstar='${EDITOR:-vim} ~/.config/starship.toml'
+
+# Just task runner
+if command -v just &>/dev/null; then
+  alias j="just"
+  alias jl="just --list"
+fi
+
+# Glow markdown
+if command -v glow &>/dev/null; then
+  alias md="glow"
+  alias readme="glow README.md"
+fi
+
+# Bottom system monitor
+if command -v btm &>/dev/null; then
+  alias btm="btm --color gruvbox"
+fi
+
+# GitHub CLI shortcuts
+if command -v gh &>/dev/null; then
+  alias ghpr="gh pr create"
+  alias ghprl="gh pr list"
+  alias ghprv="gh pr view"
+  alias ghprc="gh pr checkout"
+  alias ghis="gh issue list"
+  alias ghic="gh issue create"
+  alias ghiv="gh issue view"
+  alias ghrc="gh repo clone"
+  alias ghrv="gh repo view --web"
+fi
+
+# Hyperfine benchmarking
+if command -v hyperfine &>/dev/null; then
+  alias bench="hyperfine"
+  alias benchw="hyperfine --warmup 3" # With warmup runs
+fi
+
+# jq/yq data processing
+if command -v jq &>/dev/null; then
+  alias jqc="jq -C" # Colorized output
+  alias jqs="jq -S" # Sort keys
+fi
+
+# tldr - simplified man pages
+if command -v tldr &>/dev/null; then
+  alias help="tldr" # Quick help
 fi
