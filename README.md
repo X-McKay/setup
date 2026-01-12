@@ -2,46 +2,127 @@
 
 A Rust CLI tool for setting up and maintaining a development environment on Ubuntu. Includes modern CLI tools, dotfiles management, system monitoring, and backup configuration.
 
+## Table of Contents
+
+- [System Requirements](#system-requirements)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Available Components](#available-components)
+- [Features](#features)
+- [Testing](#testing)
+- [Development](#development)
+- [Directory Structure](#directory-structure)
+
 ## System Requirements
 
 - Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
 - Rust toolchain (for building from source)
 - Git
+- sudo access (for system packages)
 
 ## Quick Start
 
-### Build the CLI
-
 ```bash
-cd cli
-cargo build --release
-```
+# Clone the repository
+git clone https://github.com/X-McKay/setup.git
+cd setup
 
-### Run Interactive Mode
+# Build the CLI
+cd cli && cargo build --release && cd ..
 
-```bash
+# Run interactive mode
 ./cli/target/release/setup
+
+# Or install everything at once
+./cli/target/release/setup install --all -y
 ```
 
-### Install Specific Components
+## Installation
+
+### Building from Source
+
+1. **Install Rust** (if not already installed):
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   source ~/.cargo/env
+   ```
+
+2. **Clone and build**:
+   ```bash
+   git clone https://github.com/X-McKay/setup.git
+   cd setup/cli
+   cargo build --release
+   ```
+
+3. **Optional: Add to PATH**:
+   ```bash
+   sudo cp target/release/setup /usr/local/bin/
+   ```
+
+### Alternative: Bash Installation
+
+For environments without Rust, use the standalone bash script:
 
 ```bash
-# Install all components
-./cli/target/release/setup install --all
+./bootstrap/scripts/install_modern_cli.sh
+```
+
+## Usage
+
+### Interactive Mode
+
+Run without arguments to get an interactive menu:
+
+```bash
+setup
+```
+
+### Install Components
+
+```bash
+# Install all components (non-interactive)
+setup install --all -y
 
 # Install specific component
-./cli/target/release/setup install mise
-./cli/target/release/setup install docker
-./cli/target/release/setup install tools
+setup install mise
+setup install docker
+setup install tools
+
+# Install multiple components
+setup install apt tools mise starship
 ```
 
-## Available Commands
+### Manage Dotfiles
 
-### `setup install [component]`
+```bash
+setup dotfiles sync      # Sync dotfiles from repo to home
+setup dotfiles sync -f   # Force sync (overwrite without prompting)
+setup dotfiles diff      # Show differences between repo and installed
+setup dotfiles list      # List managed dotfiles and their status
+setup dotfiles backup    # Backup current dotfiles before syncing
+```
 
-Install system components. Without arguments, shows interactive selection.
+### Check System Status
 
-**Components:**
+```bash
+setup check tools        # Check which tools are installed
+setup check dotfiles     # Check dotfile sync status
+setup check system       # Check system info
+setup check all          # Check everything
+```
+
+### Update Components
+
+```bash
+setup update system      # apt update/upgrade
+setup update mise        # Update mise and managed tools
+setup update rust        # Update Rust toolchain and cargo packages
+setup update dotfiles    # Sync dotfiles from repo
+```
+
+## Available Components
+
 | Component | Description |
 |-----------|-------------|
 | `apt` | Basic system packages (curl, git, build-essential, etc.) |
@@ -50,68 +131,38 @@ Install system components. Without arguments, shows interactive selection.
 | `docker` | Docker and adds user to docker group |
 | `monitoring` | System monitoring (htop, netdata, fail2ban, logwatch) + health checks |
 | `backup` | Backup utilities (rsync, timeshift) + automated backup scripts |
-| `starship` | Starship prompt |
-| `zoxide` | Smarter cd command |
+| `starship` | Starship cross-shell prompt |
+| `zoxide` | Smarter cd command that learns your habits |
 | `lazygit` | Terminal UI for git |
-| `just` | Task runner |
-| `glow` | Markdown renderer |
+| `just` | Modern task runner |
+| `glow` | Terminal markdown renderer |
 | `bottom` | System monitor (btm) |
 | `gh` | GitHub CLI |
-| `hyperfine` | Command benchmarking |
+| `hyperfine` | Command-line benchmarking tool |
 | `jq` | JSON processor |
 | `yq` | YAML processor |
 | `tldr` | Simplified man pages |
-
-### `setup dotfiles <action>`
-
-Manage dotfiles synchronization.
-
-```bash
-setup dotfiles sync      # Sync dotfiles from repo to home
-setup dotfiles diff      # Show differences
-setup dotfiles list      # List managed dotfiles
-setup dotfiles backup    # Backup current dotfiles
-```
-
-### `setup check [category]`
-
-Check system status.
-
-```bash
-setup check tools        # Check installed tools
-setup check dotfiles     # Check dotfile sync status
-setup check system       # Check system info
-setup check all          # Check everything
-```
-
-### `setup update [component]`
-
-Update installed components.
-
-```bash
-setup update system      # apt update/upgrade
-setup update mise        # Update mise and tools
-setup update rust        # Update Rust toolchain and cargo packages
-setup update dotfiles    # Sync dotfiles
-```
+| `neovim` | Neovim editor with sensible defaults |
+| `tpm` | Tmux Plugin Manager |
+| `ssh-keys` | Generate ED25519 SSH keys (interactive) |
+| `gpg` | Generate GPG keys for commit signing (interactive) |
 
 ## Features
 
 ### Modern CLI Tools
 
-The setup installs a curated set of modern CLI tools:
+The setup installs a curated set of modern CLI replacements:
 
-- **eza** - Modern ls replacement with icons and git status
-- **bat** - Cat with syntax highlighting
-- **fd** - Fast, user-friendly find alternative
-- **ripgrep** - Fast grep alternative
-- **fzf** - Fuzzy finder
-- **delta** - Beautiful git diffs
-- **zoxide** - Smarter cd that learns your habits
-- **starship** - Cross-shell prompt
-- **lazygit** - Terminal UI for git
-- **just** - Modern task runner
-- **bottom** - System monitor
+| Tool | Replaces | Description |
+|------|----------|-------------|
+| `eza` | `ls` | Modern ls with icons and git status |
+| `bat` | `cat` | Cat with syntax highlighting |
+| `fd` | `find` | Fast, user-friendly find |
+| `ripgrep` | `grep` | Fast recursive search |
+| `fzf` | - | Fuzzy finder for files, history, etc. |
+| `delta` | `diff` | Beautiful git diffs |
+| `zoxide` | `cd` | Smarter cd that learns your habits |
+| `bottom` | `top` | Beautiful system monitor |
 
 See [docs/TOOLS.md](docs/TOOLS.md) for detailed usage of each tool.
 
@@ -127,8 +178,8 @@ The `monitoring` component installs and configures:
 - **logwatch** - Log analysis and reporting
 - **fail2ban** - Intrusion prevention
 
-Plus automated health checks:
-- Daily health reports at midnight
+Automated health checks:
+- Daily health reports at midnight via cron
 - Reports stored in `~/.monitoring/health_report.log`
 - Manual check: `/usr/local/bin/check_monitoring.sh`
 
@@ -137,72 +188,166 @@ Plus automated health checks:
 The `backup` component sets up:
 
 - **rsync** - File synchronization
-- **timeshift** - System snapshots (handled by Timeshift's built-in scheduler)
+- **timeshift** - System snapshots (uses Timeshift's built-in scheduler)
 - **duplicity** - Encrypted incremental backups
 
 Automated backup scripts:
-- `~/.backup/backup.sh` - Daily backup at 2 AM
+- `~/.backup/backup.sh` - Daily backup at 2 AM via cron
 - `~/.backup/restore.sh` - Restore from backup
 - 7-day retention policy for config and system backups
 
 ### Dotfiles Management
 
 Managed dotfiles include:
-- `.bashrc`, `.bash_profile`, `.aliases`, `.exports`, `.util`
-- `.tmux.conf`
-- `.gitconfig`
-- `.tool-versions` (for mise)
-- `~/.config/starship.toml`
-- `~/.config/ghostty/config`
-- `~/.config/lazygit/config.yml`
+
+| File | Description |
+|------|-------------|
+| `.bashrc` | Bash configuration |
+| `.bash_profile` | Login shell config |
+| `.aliases` | Shell aliases |
+| `.exports` | Environment variables |
+| `.util` | Utility functions |
+| `.tmux.conf` | Tmux configuration |
+| `.gitconfig` | Git configuration |
+| `.tool-versions` | Mise tool versions |
+| `.config/starship.toml` | Starship prompt config |
+| `.config/ghostty/config` | Ghostty terminal config |
+| `.config/lazygit/config.yml` | Lazygit config |
+| `.config/nvim/init.lua` | Neovim config (created by neovim component) |
+
+## Testing
+
+### Docker Integration Tests
+
+Run the full test suite in a Docker container (simulates a fresh Ubuntu install):
+
+```bash
+# Run tests
+./tests/docker/run_tests.sh
+
+# Or manually
+docker build -f tests/docker/Dockerfile -t setup-test .
+docker run --rm setup-test
+```
+
+The Docker tests:
+- Run as a non-root user (`testuser`) to simulate real usage
+- Test all installable components
+- Verify binaries are installed to correct locations
+- Test dotfiles synchronization
+
+### What's Tested
+
+| Category | Tests |
+|----------|-------|
+| CLI | Help, version commands |
+| APT | curl, git, wget, unzip |
+| Tools | ripgrep, fd, fzf, bat, eza, delta |
+| Utilities | jq, yq, starship, zoxide, lazygit, just |
+| Apps | glow, bottom, gh, hyperfine, tldr |
+| Dev | mise, neovim, tpm |
+| Config | Dotfiles sync |
+
+### Skipped Tests
+
+Some components require systemd or user interaction and are skipped in Docker:
+- Docker (requires privileged mode)
+- Monitoring/Backup (require systemd)
+- SSH/GPG keys (require user input)
+
+## Development
+
+### Prerequisites
+
+- Rust 1.70+
+- Docker (for running tests)
+- pre-commit (for git hooks)
+
+### Setup Development Environment
+
+```bash
+# Install pre-commit hooks
+pip install pre-commit
+pre-commit install
+
+# Build in debug mode
+cd cli
+cargo build
+
+# Run tests
+cargo test
+
+# Run clippy
+cargo clippy
+```
+
+### CI/CD
+
+The repository includes GitHub Actions workflows:
+
+- **CI** (`ci.yml`): Runs on push/PR
+  - Rust formatting check
+  - Clippy linting
+  - Build verification
+  - Unit tests
+  - ShellCheck for bash scripts
+  - Docker integration tests
+
+- **Release** (`release.yml`): Runs on version tags
+  - Builds release binary
+  - Creates GitHub release with tarball
+
+### Pre-commit Hooks
+
+The repository uses pre-commit hooks for:
+- YAML/JSON validation
+- Shell script linting (shellcheck)
+- Shell formatting (shfmt)
+- Security checks (gitleaks)
+- Large file prevention
+
+### Conventional Commits
+
+Commit messages follow the format: `type(scope): description`
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
 
 ## Directory Structure
 
 ```
 .
-├── cli/                    # Rust CLI source
+├── cli/                        # Rust CLI source
 │   ├── src/
-│   │   ├── commands/       # CLI commands
-│   │   ├── config/         # Configuration handling
-│   │   ├── system/         # System operations
-│   │   └── ui/             # User interface
+│   │   ├── commands/           # CLI commands (install, dotfiles, check, update)
+│   │   ├── config/             # Configuration handling
+│   │   ├── system/             # System operations (packages.rs)
+│   │   └── ui/                 # User interface (prompts)
 │   └── Cargo.toml
 ├── bootstrap/
-│   ├── dotfiles/           # Dotfile templates
+│   ├── dotfiles/               # Dotfile templates
 │   ├── scripts/
-│   │   ├── copy_dotfiles.sh      # Fallback dotfiles script
-│   │   └── install_modern_cli.sh # Standalone bash installer
+│   │   ├── copy_dotfiles.sh    # Fallback dotfiles script
+│   │   └── install_modern_cli.sh  # Standalone bash installer
 │   └── templates/
-│       └── justfile        # Project justfile template
+│       └── justfile            # Project justfile template
+├── tests/
+│   └── docker/
+│       ├── Dockerfile          # Test container definition
+│       ├── test_installs.sh    # Integration test script
+│       └── run_tests.sh        # Test runner
+├── .github/
+│   └── workflows/
+│       ├── ci.yml              # CI workflow
+│       └── release.yml         # Release automation
 ├── docs/
-│   └── TOOLS.md            # Tool usage guide
+│   └── TOOLS.md                # Tool usage guide
+├── CHANGELOG.md                # Version history
 └── README.md
 ```
 
-## Git Workflow
+## License
 
-### Pre-commit Configuration
-
-The repository uses pre-commit hooks for:
-- YAML/JSON validation
-- Shell script linting (shellcheck)
-- Code formatting (shfmt)
-- Security checks
-- Large file prevention
-
-### Conventional Commits
-
-Commit messages must follow the format: `type(scope): description`
-
-Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
-
-## Alternative: Bash Installation
-
-For environments without Rust, use the standalone bash script:
-
-```bash
-./bootstrap/scripts/install_modern_cli.sh
-```
+MIT
 
 ## Credits
 
