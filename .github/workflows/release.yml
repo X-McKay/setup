@@ -1,0 +1,51 @@
+---
+name: Release
+
+"on":
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-action@stable
+
+      - name: Build release binary
+        working-directory: cli
+        run: cargo build --release
+
+      - name: Create tarball
+        run: |
+          mkdir -p release
+          cp cli/target/release/setup release/
+          cp README.md release/
+          tar -czvf setup-linux-x86_64.tar.gz -C release .
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Setup ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## Setup CLI ${{ steps.version.outputs.VERSION }}
+
+            Download the tarball and extract to run the setup CLI.
+            See CHANGELOG.md for release details.
+          files: |
+            setup-linux-x86_64.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

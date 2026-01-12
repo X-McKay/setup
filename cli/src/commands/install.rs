@@ -57,6 +57,14 @@ pub enum Component {
     Yq,
     /// tldr simplified man pages
     Tldr,
+    /// Neovim editor with sensible defaults
+    Neovim,
+    /// Tmux plugin manager
+    Tpm,
+    /// Generate SSH keys
+    SshKeys,
+    /// Setup GPG keys
+    Gpg,
 }
 
 impl Component {
@@ -77,8 +85,11 @@ impl Component {
             Component::Jq,
             Component::Yq,
             Component::Tldr,
+            Component::Neovim,
+            Component::Tpm,
             Component::Monitoring,
             Component::Backup,
+            // Note: SshKeys and Gpg are not in --all as they require user input
         ]
     }
 
@@ -101,6 +112,10 @@ impl Component {
             Component::Jq => "jq JSON Processor",
             Component::Yq => "yq YAML Processor",
             Component::Tldr => "tldr Man Pages",
+            Component::Neovim => "Neovim Editor",
+            Component::Tpm => "Tmux Plugin Manager",
+            Component::SshKeys => "SSH Key Generation",
+            Component::Gpg => "GPG Key Setup",
         }
     }
 }
@@ -170,6 +185,10 @@ fn install_component(component: &Component) -> Result<()> {
         Component::Jq => packages::install_jq(),
         Component::Yq => packages::install_yq(),
         Component::Tldr => packages::install_tldr(),
+        Component::Neovim => packages::install_neovim(),
+        Component::Tpm => packages::install_tpm(),
+        Component::SshKeys => packages::setup_ssh_keys(),
+        Component::Gpg => packages::setup_gpg(),
     };
 
     pb.finish_and_clear();

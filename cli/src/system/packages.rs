@@ -25,6 +25,14 @@ fn run_sudo(cmd: &str, args: &[&str]) -> Result<String> {
     run_command("sudo", &sudo_args)
 }
 
+/// Install apt packages (handles argument passing correctly)
+fn apt_install(packages: &[&str]) -> Result<()> {
+    let mut args = vec!["install", "-y"];
+    args.extend(packages);
+    run_sudo("apt", &args)?;
+    Ok(())
+}
+
 // ============================================================================
 // Install functions
 // ============================================================================
@@ -50,7 +58,7 @@ pub fn install_apt_packages() -> Result<()> {
         "jq",
     ];
 
-    run_sudo("apt", &["install", "-y", &packages.join(" ")])?;
+    apt_install(&packages)?;
     Ok(())
 }
 
@@ -59,7 +67,7 @@ pub fn install_extra_tools() -> Result<()> {
 
     let packages = ["ripgrep", "fd-find", "fzf", "tree", "htop", "ncdu"];
 
-    run_sudo("apt", &["install", "-y", &packages.join(" ")])?;
+    apt_install(&packages)?;
 
     // Install eza (replacement for exa)
     install_eza()?;
@@ -183,7 +191,7 @@ pub fn install_monitoring() -> Result<()> {
     ];
 
     run_sudo("apt", &["update"])?;
-    run_sudo("apt", &["install", "-y", &packages.join(" ")])?;
+    apt_install(&packages)?;
 
     // Configure services
     configure_logwatch()?;
@@ -286,7 +294,7 @@ pub fn install_backup() -> Result<()> {
     let packages = ["rsync", "rdiff-backup", "duplicity", "timeshift"];
 
     run_sudo("apt", &["update"])?;
-    run_sudo("apt", &["install", "-y", &packages.join(" ")])?;
+    apt_install(&packages)?;
 
     // Create backup directory structure and scripts
     create_backup_structure()?;
@@ -781,6 +789,258 @@ pub fn install_tldr() -> Result<()> {
     )?;
 
     Ok(())
+}
+
+pub fn install_neovim() -> Result<()> {
+    // Install neovim
+    if !which::which("nvim").is_ok() {
+        // Try apt first for stable version
+        if run_sudo("apt", &["install", "-y", "neovim"]).is_err() {
+            // Fall back to AppImage for latest
+            let home = dirs::home_dir().expect("Could not find home directory");
+            let bin_dir = home.join(".local").join("bin");
+            fs::create_dir_all(&bin_dir)?;
+
+            run_command(
+                "sh",
+                &[
+                    "-c",
+                    &format!(
+                        "curl -Lo {}/nvim https://github.com/neovim/neovim/releases/latest/download/nvim.appimage && chmod +x {}/nvim",
+                        bin_dir.display(),
+                        bin_dir.display()
+                    ),
+                ],
+            )?;
+        }
+    }
+
+    // Create neovim config directory
+    let home = dirs::home_dir().expect("Could not find home directory");
+    let nvim_config = home.join(".config").join("nvim");
+    fs::create_dir_all(&nvim_config)?;
+
+    // Create a sensible init.lua if it doesn't exist
+    let init_lua = nvim_config.join("init.lua");
+    if !init_lua.exists() {
+        let config = r#"-- Sensible Neovim defaults
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.mouse = 'a'
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.hlsearch = false
+vim.opt.wrap = false
+vim.opt.breakindent = true
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
+vim.opt.termguicolors = true
+vim.opt.signcolumn = 'yes'
+vim.opt.updatetime = 250
+vim.opt.timeoutlen = 300
+vim.opt.splitright = true
+vim.opt.splitbelow = true
+vim.opt.inccommand = 'split'
+vim.opt.cursorline = true
+vim.opt.scrolloff = 10
+vim.opt.clipboard = 'unnamedplus'
+vim.opt.undofile = true
+
+-- Set leader key
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
+
+-- Basic keymaps
+vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+vim.keymap.set('n', '<leader>w', '<cmd>w<CR>', { desc = 'Save' })
+vim.keymap.set('n', '<leader>q', '<cmd>q<CR>', { desc = 'Quit' })
+
+-- Window navigation
+vim.keymap.set('n', '<C-h>', '<C-w>h')
+vim.keymap.set('n', '<C-j>', '<C-w>j')
+vim.keymap.set('n', '<C-k>', '<C-w>k')
+vim.keymap.set('n', '<C-l>', '<C-w>l')
+"#;
+        fs::write(&init_lua, config)?;
+    }
+
+    Ok(())
+}
+
+pub fn install_tpm() -> Result<()> {
+    let home = dirs::home_dir().expect("Could not find home directory");
+    let tpm_dir = home.join(".tmux").join("plugins").join("tpm");
+
+    if tpm_dir.exists() {
+        return Ok(());
+    }
+
+    // Clone TPM
+    run_command(
+        "git",
+        &[
+            "clone",
+            "https://github.com/tmux-plugins/tpm",
+            tpm_dir.to_str().unwrap(),
+        ],
+    )?;
+
+    // Add TPM config to tmux.conf if not present
+    let tmux_conf = home.join(".tmux.conf");
+    if tmux_conf.exists() {
+        let content = fs::read_to_string(&tmux_conf)?;
+        if !content.contains("tmux-plugins/tpm") {
+            let tpm_config = r#"
+
+# TPM (Tmux Plugin Manager)
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+
+# Initialize TPM (keep this line at the very bottom)
+run '~/.tmux/plugins/tpm/tpm'
+"#;
+            let mut file = fs::OpenOptions::new().append(true).open(&tmux_conf)?;
+            use std::io::Write;
+            file.write_all(tpm_config.as_bytes())?;
+        }
+    }
+
+    Ok(())
+}
+
+pub fn setup_ssh_keys() -> Result<()> {
+    let home = dirs::home_dir().expect("Could not find home directory");
+    let ssh_dir = home.join(".ssh");
+    let key_path = ssh_dir.join("id_ed25519");
+
+    // Check if key already exists
+    if key_path.exists() {
+        println!("SSH key already exists at {}", key_path.display());
+        return Ok(());
+    }
+
+    // Create .ssh directory with proper permissions
+    fs::create_dir_all(&ssh_dir)?;
+    run_command("chmod", &["700", ssh_dir.to_str().unwrap()])?;
+
+    // Get email for key comment
+    let email = std::env::var("EMAIL")
+        .or_else(|_| {
+            run_command("git", &["config", "--global", "user.email"])
+                .map(|s| s.trim().to_string())
+        })
+        .unwrap_or_else(|_| "user@localhost".to_string());
+
+    // Generate ED25519 key (more secure than RSA)
+    run_command(
+        "ssh-keygen",
+        &[
+            "-t", "ed25519",
+            "-C", &email,
+            "-f", key_path.to_str().unwrap(),
+            "-N", "",  // Empty passphrase - user can add one later
+        ],
+    )?;
+
+    // Set proper permissions
+    run_command("chmod", &["600", key_path.to_str().unwrap()])?;
+    run_command("chmod", &["644", &format!("{}.pub", key_path.display())])?;
+
+    // Display the public key
+    println!("\nSSH public key generated. Add this to GitHub/GitLab:");
+    println!("----------------------------------------");
+    let pub_key = fs::read_to_string(format!("{}.pub", key_path.display()))?;
+    println!("{}", pub_key);
+    println!("----------------------------------------");
+
+    Ok(())
+}
+
+pub fn setup_gpg() -> Result<()> {
+    // Check if gpg is installed
+    if !which::which("gpg").is_ok() {
+        apt_install(&["gnupg"])?;
+    }
+
+    // Check if a GPG key already exists
+    let existing = run_command("gpg", &["--list-secret-keys", "--keyid-format=long"]);
+    if existing.is_ok() && !existing.unwrap().trim().is_empty() {
+        println!("GPG key already exists");
+        return Ok(());
+    }
+
+    // Get user info from git config
+    let name = run_command("git", &["config", "--global", "user.name"])
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|_| "User".to_string());
+
+    let email = run_command("git", &["config", "--global", "user.email"])
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|_| "user@localhost".to_string());
+
+    // Create batch file for unattended key generation
+    let batch_content = format!(
+        r#"Key-Type: eddsa
+Key-Curve: ed25519
+Key-Usage: sign
+Subkey-Type: ecdh
+Subkey-Curve: cv25519
+Subkey-Usage: encrypt
+Name-Real: {}
+Name-Email: {}
+Expire-Date: 2y
+%no-protection
+%commit
+"#,
+        name, email
+    );
+
+    let batch_path = "/tmp/gpg_batch";
+    fs::write(batch_path, batch_content)?;
+
+    // Generate key
+    run_command("gpg", &["--batch", "--generate-key", batch_path])?;
+
+    // Clean up
+    fs::remove_file(batch_path)?;
+
+    // Get the key ID
+    let keys_output = run_command("gpg", &["--list-secret-keys", "--keyid-format=long"])?;
+    println!("\nGPG key generated:");
+    println!("{}", keys_output);
+
+    // Configure git to use GPG
+    if let Some(key_id) = extract_gpg_key_id(&keys_output) {
+        let _ = run_command("git", &["config", "--global", "user.signingkey", &key_id]);
+        let _ = run_command("git", &["config", "--global", "commit.gpgsign", "true"]);
+        println!("\nGit configured to sign commits with key: {}", key_id);
+
+        // Export public key for GitHub
+        let public_key = run_command("gpg", &["--armor", "--export", &key_id])?;
+        println!("\nAdd this GPG public key to GitHub:");
+        println!("----------------------------------------");
+        println!("{}", public_key);
+        println!("----------------------------------------");
+    }
+
+    Ok(())
+}
+
+fn extract_gpg_key_id(output: &str) -> Option<String> {
+    // Parse output like: "sec   ed25519/ABC123DEF456 2024-01-01"
+    for line in output.lines() {
+        if line.starts_with("sec") {
+            if let Some(key_part) = line.split('/').nth(1) {
+                if let Some(key_id) = key_part.split_whitespace().next() {
+                    return Some(key_id.to_string());
+                }
+            }
+        }
+    }
+    None
 }
 
 // ============================================================================
