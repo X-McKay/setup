@@ -108,8 +108,8 @@ create_backup() {
             done
             ;;
         "data")
-            # Create full system backup using timeshift
-            sudo timeshift --create --comments "Manual backup $timestamp"
+            # Timeshift backups are now handled by Timeshift's built-in scheduler
+            # See /etc/timeshift/timeshift.json for retention settings
             ;;
     esac
 }
