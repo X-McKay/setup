@@ -501,18 +501,31 @@ pub fn install_lazygit() -> Result<()> {
         return Ok(());
     }
 
-    // Install via go or download binary
-    let arch = std::env::consts::ARCH;
-    let os = "Linux";
-
-    let url = format!(
-        "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_{}_{}_{}.tar.gz",
-        "0.44.1", os, arch
-    );
-
     let home = dirs::home_dir().expect("Could not find home directory");
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
+
+    // Get latest version from GitHub API
+    let version_cmd = run_command(
+        "sh",
+        &[
+            "-c",
+            "curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep -o '\"tag_name\": \"v[^\"]*\"' | sed 's/.*\"v\\([^\"]*\\)\"/\\1/'",
+        ],
+    )
+    .unwrap_or_else(|_| "0.44.1".to_string());
+    let version = version_cmd.trim();
+
+    let arch = match std::env::consts::ARCH {
+        "x86_64" => "x86_64",
+        "aarch64" => "arm64",
+        _ => return Err(anyhow::anyhow!("Unsupported architecture")),
+    };
+
+    let url = format!(
+        "https://github.com/jesseduffield/lazygit/releases/download/v{}/lazygit_{}_Linux_{}.tar.gz",
+        version, version, arch
+    );
 
     run_command(
         "sh",
@@ -557,7 +570,7 @@ pub fn install_glow() -> Result<()> {
         return Ok(());
     }
 
-    // Try apt first
+    // Try apt first (Ubuntu 24.04+)
     if run_sudo("apt", &["install", "-y", "glow"]).is_ok() {
         return Ok(());
     }
@@ -567,19 +580,35 @@ pub fn install_glow() -> Result<()> {
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
+    // Get latest version from GitHub API
+    let version_cmd = run_command(
+        "sh",
+        &[
+            "-c",
+            "curl -s https://api.github.com/repos/charmbracelet/glow/releases/latest | grep -o '\"tag_name\": \"v[^\"]*\"' | sed 's/.*\"v\\([^\"]*\\)\"/\\1/'",
+        ],
+    )
+    .unwrap_or_else(|_| "2.0.0".to_string());
+    let version = version_cmd.trim();
+
     let arch = match std::env::consts::ARCH {
         "x86_64" => "x86_64",
         "aarch64" => "arm64",
         _ => return Err(anyhow::anyhow!("Unsupported architecture")),
     };
 
+    let url = format!(
+        "https://github.com/charmbracelet/glow/releases/download/v{}/glow_{}_Linux_{}.tar.gz",
+        version, version, arch
+    );
+
     run_command(
         "sh",
         &[
             "-c",
             &format!(
-                "curl -Lo /tmp/glow.tar.gz 'https://github.com/charmbracelet/glow/releases/latest/download/glow_Linux_{}.tar.gz' && tar xf /tmp/glow.tar.gz -C /tmp && mv /tmp/glow {}",
-                arch,
+                "curl -Lo /tmp/glow.tar.gz '{}' && tar xf /tmp/glow.tar.gz -C /tmp && mv /tmp/glow_*/glow {}",
+                url,
                 bin_dir.display()
             ),
         ],
@@ -603,19 +632,35 @@ pub fn install_bottom() -> Result<()> {
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
+    // Get latest version from GitHub API
+    let version_cmd = run_command(
+        "sh",
+        &[
+            "-c",
+            "curl -s https://api.github.com/repos/ClementTsang/bottom/releases/latest | grep -o '\"tag_name\": \"[^\"]*\"' | sed 's/.*\"\\([^\"]*\\)\"/\\1/'",
+        ],
+    )
+    .unwrap_or_else(|_| "0.10.2".to_string());
+    let version = version_cmd.trim();
+
     let arch = match std::env::consts::ARCH {
         "x86_64" => "x86_64",
         "aarch64" => "aarch64",
         _ => return Err(anyhow::anyhow!("Unsupported architecture")),
     };
 
+    let url = format!(
+        "https://github.com/ClementTsang/bottom/releases/download/{}/bottom_{}-unknown-linux-gnu.tar.gz",
+        version, arch
+    );
+
     run_command(
         "sh",
         &[
             "-c",
             &format!(
-                "curl -Lo /tmp/bottom.tar.gz 'https://github.com/ClementTsang/bottom/releases/latest/download/bottom_{}-unknown-linux-gnu.tar.gz' && tar xf /tmp/bottom.tar.gz -C {} btm",
-                arch,
+                "curl -Lo /tmp/bottom.tar.gz '{}' && tar xf /tmp/bottom.tar.gz -C {} btm",
+                url,
                 bin_dir.display()
             ),
         ],
@@ -663,19 +708,35 @@ pub fn install_hyperfine() -> Result<()> {
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
+    // Get latest version from GitHub API
+    let version_cmd = run_command(
+        "sh",
+        &[
+            "-c",
+            "curl -s https://api.github.com/repos/sharkdp/hyperfine/releases/latest | grep -o '\"tag_name\": \"v[^\"]*\"' | sed 's/.*\"v\\([^\"]*\\)\"/\\1/'",
+        ],
+    )
+    .unwrap_or_else(|_| "1.18.0".to_string());
+    let version = version_cmd.trim();
+
     let arch = match std::env::consts::ARCH {
         "x86_64" => "x86_64",
         "aarch64" => "aarch64",
         _ => return Err(anyhow::anyhow!("Unsupported architecture")),
     };
 
+    let url = format!(
+        "https://github.com/sharkdp/hyperfine/releases/download/v{}/hyperfine-v{}-{}-unknown-linux-musl.tar.gz",
+        version, version, arch
+    );
+
     run_command(
         "sh",
         &[
             "-c",
             &format!(
-                "curl -Lo /tmp/hyperfine.tar.gz 'https://github.com/sharkdp/hyperfine/releases/latest/download/hyperfine-v1.18.0-{}-unknown-linux-musl.tar.gz' && tar xf /tmp/hyperfine.tar.gz -C /tmp && mv /tmp/hyperfine-*/hyperfine {}",
-                arch,
+                "curl -Lo /tmp/hyperfine.tar.gz '{}' && tar xf /tmp/hyperfine.tar.gz -C /tmp && mv /tmp/hyperfine-*/hyperfine {}",
+                url,
                 bin_dir.display()
             ),
         ],

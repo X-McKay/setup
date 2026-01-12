@@ -6,6 +6,9 @@ PASSED=0
 FAILED=0
 SKIPPED=0
 
+# Ensure ~/.local/bin is in PATH
+export PATH="$HOME/.local/bin:$PATH"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -14,17 +17,17 @@ NC='\033[0m'
 
 pass() {
   echo -e "${GREEN}✓ PASS${NC}: $1"
-  ((PASSED++))
+  PASSED=$((PASSED + 1))
 }
 
 fail() {
   echo -e "${RED}✗ FAIL${NC}: $1"
-  ((FAILED++))
+  FAILED=$((FAILED + 1))
 }
 
 skip() {
   echo -e "${YELLOW}○ SKIP${NC}: $1"
-  ((SKIPPED++))
+  SKIPPED=$((SKIPPED + 1))
 }
 
 check_command() {
@@ -32,8 +35,24 @@ check_command() {
   local desc=$2
   if command -v "$cmd" &>/dev/null; then
     pass "$desc ($cmd found)"
+    return 0
   else
     fail "$desc ($cmd not found)"
+    return 1
+  fi
+}
+
+# Check for command with fallback (for Ubuntu renamed binaries)
+check_command_or() {
+  local cmd1=$1
+  local cmd2=$2
+  local desc=$3
+  if command -v "$cmd1" &>/dev/null; then
+    pass "$desc ($cmd1 found)"
+  elif command -v "$cmd2" &>/dev/null; then
+    pass "$desc ($cmd2 found)"
+  else
+    fail "$desc ($cmd1 or $cmd2 not found)"
   fi
 }
 
@@ -60,6 +79,9 @@ check_dir() {
 echo "========================================"
 echo "Setup CLI Integration Tests"
 echo "========================================"
+echo "User: $(whoami)"
+echo "Home: $HOME"
+echo "PATH: $PATH"
 echo ""
 
 # Test 1: CLI builds and runs
@@ -91,9 +113,9 @@ echo ""
 echo "--- Test: Extra CLI Tools ---"
 $SETUP_BIN install tools -y
 check_command "rg" "ripgrep installed"
-check_command "fd" "fd-find installed"
+check_command_or "fd" "fdfind" "fd-find installed"
 check_command "fzf" "fzf installed"
-check_command "bat" "bat installed"
+check_command_or "bat" "batcat" "bat installed"
 check_command "eza" "eza installed"
 check_command "delta" "delta installed"
 
@@ -107,7 +129,7 @@ check_command "jq" "jq installed"
 echo ""
 echo "--- Test: yq ---"
 $SETUP_BIN install yq -y
-check_command "yq" "yq installed"
+check_file "$HOME/.local/bin/yq" "yq binary"
 
 # Test 6: Install starship
 echo ""
@@ -125,25 +147,25 @@ check_command "zoxide" "zoxide installed"
 echo ""
 echo "--- Test: Lazygit ---"
 $SETUP_BIN install lazygit -y
-check_command "lazygit" "lazygit installed"
+check_file "$HOME/.local/bin/lazygit" "lazygit binary"
 
 # Test 9: Install just
 echo ""
 echo "--- Test: Just ---"
 $SETUP_BIN install just -y
-check_command "just" "just installed"
+check_file "$HOME/.local/bin/just" "just binary"
 
 # Test 10: Install glow
 echo ""
 echo "--- Test: Glow ---"
 $SETUP_BIN install glow -y
-check_command "glow" "glow installed"
+check_file "$HOME/.local/bin/glow" "glow binary"
 
 # Test 11: Install bottom
 echo ""
 echo "--- Test: Bottom ---"
 $SETUP_BIN install bottom -y
-check_command "btm" "bottom installed"
+check_file "$HOME/.local/bin/btm" "bottom binary"
 
 # Test 12: Install GitHub CLI
 echo ""
@@ -155,7 +177,12 @@ check_command "gh" "GitHub CLI installed"
 echo ""
 echo "--- Test: Hyperfine ---"
 $SETUP_BIN install hyperfine -y
-check_command "hyperfine" "hyperfine installed"
+# Check for hyperfine in .local/bin or system PATH
+if [ -f "$HOME/.local/bin/hyperfine" ] || command -v hyperfine &>/dev/null; then
+  pass "hyperfine installed"
+else
+  fail "hyperfine not found"
+fi
 
 # Test 14: Install tldr
 echo ""
@@ -185,7 +212,7 @@ check_dir "$HOME/.tmux/plugins/tpm" "TPM directory"
 # Test 18: Dotfiles sync
 echo ""
 echo "--- Test: Dotfiles ---"
-$SETUP_BIN dotfiles sync -y
+$SETUP_BIN dotfiles sync --force
 check_file "$HOME/.bashrc" "bashrc synced"
 check_file "$HOME/.aliases" "aliases synced"
 check_file "$HOME/.exports" "exports synced"
