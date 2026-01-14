@@ -4,14 +4,18 @@
 # ----------------------------------------
 
 # Font -----------------------------------
+# Primary font (Nerd Font for icons/symbols)
+font-family = "Symbols Nerd Font Mono"
 font-family = "JetBrainsMono Nerd Font"
 font-size = 12
 font-thicken = true
 
-# Fallback fonts for symbols
 font-family-bold = "JetBrainsMono Nerd Font"
 font-family-italic = "JetBrainsMono Nerd Font"
 font-family-bold-italic = "JetBrainsMono Nerd Font"
+
+# Shell/Tmux -----------------------------
+command = tmux new-session -A -s main
 
 # Window ---------------------------------
 window-padding-x = 8

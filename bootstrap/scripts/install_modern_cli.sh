@@ -323,29 +323,43 @@ install_fzf() {
 # Nerd Fonts - Required for icons
 # ============================================================================
 install_nerd_font() {
-  info "Installing JetBrainsMono Nerd Font..."
+  info "Installing Nerd Fonts..."
 
   FONT_DIR="$HOME/.local/share/fonts"
   mkdir -p "$FONT_DIR"
 
+  # Install JetBrainsMono Nerd Font (complete font with icons)
   if ls "$FONT_DIR"/JetBrainsMono*.ttf &>/dev/null; then
     success "JetBrainsMono Nerd Font already installed"
-    return 0
+  else
+    info "  Downloading JetBrainsMono Nerd Font..."
+    curl -fLo "$FONT_DIR/JetBrainsMonoNerdFont-Regular.ttf" \
+      "https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/JetBrainsMono/Ligatures/Regular/JetBrainsMonoNerdFont-Regular.ttf"
+
+    curl -fLo "$FONT_DIR/JetBrainsMonoNerdFont-Bold.ttf" \
+      "https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/JetBrainsMono/Ligatures/Bold/JetBrainsMonoNerdFont-Bold.ttf"
+
+    curl -fLo "$FONT_DIR/JetBrainsMonoNerdFont-Italic.ttf" \
+      "https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/JetBrainsMono/Ligatures/Italic/JetBrainsMonoNerdFont-Italic.ttf"
+
+    success "JetBrainsMono Nerd Font installed"
   fi
 
-  curl -fLo "$FONT_DIR/JetBrainsMonoNerdFont-Regular.ttf" \
-    "https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/JetBrainsMono/Ligatures/Regular/JetBrainsMonoNerdFont-Regular.ttf"
+  # Install Symbols Nerd Font Mono (icons-only fallback font)
+  if ls "$FONT_DIR"/SymbolsNerdFont*.ttf &>/dev/null; then
+    success "Symbols Nerd Font Mono already installed"
+  else
+    info "  Downloading Symbols Nerd Font Mono..."
+    curl -fLo "$FONT_DIR/SymbolsNerdFontMono-Regular.ttf" \
+      "https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf"
 
-  curl -fLo "$FONT_DIR/JetBrainsMonoNerdFont-Bold.ttf" \
-    "https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/JetBrainsMono/Ligatures/Bold/JetBrainsMonoNerdFont-Bold.ttf"
-
-  curl -fLo "$FONT_DIR/JetBrainsMonoNerdFont-Italic.ttf" \
-    "https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/JetBrainsMono/Ligatures/Italic/JetBrainsMonoNerdFont-Italic.ttf"
+    success "Symbols Nerd Font Mono installed"
+  fi
 
   # Refresh font cache
   fc-cache -fv
 
-  success "JetBrainsMono Nerd Font installed"
+  success "All Nerd Fonts installed"
 }
 
 # ============================================================================
