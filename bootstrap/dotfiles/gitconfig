@@ -2,13 +2,33 @@
   branch = auto
   diff = auto
   status = auto
+
 [user]
   name = X-McKay
   email = aldmckay@gmail.com
+
 [github]
-	user = X-McKay
-  email = aldmckay@gmail.com
+  user = X-McKay
+
 [push]
-	default = matching
+  default = simple
+  autoSetupRemote = true
+
+[pull]
+  rebase = false
+
+[init]
+  defaultBranch = main
+
 [credential]
-	helper = cache --timeout=3600000
+  helper = cache --timeout=3600000
+
+[core]
+  editor = nvim
+  autocrlf = input
+
+[diff]
+  colorMoved = default
+
+[merge]
+  conflictstyle = diff3

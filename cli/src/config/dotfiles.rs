@@ -86,7 +86,7 @@ fn get_repo_dotfiles_dir() -> PathBuf {
     let candidates = [
         home.join("git").join("setup").join("bootstrap").join("dotfiles"),
         home.join(".setup").join("bootstrap").join("dotfiles"),
-        PathBuf::from("/home/al/git/setup/bootstrap/dotfiles"),
+        home.join("setup").join("bootstrap").join("dotfiles"),
     ];
 
     for candidate in &candidates {
@@ -95,7 +95,7 @@ fn get_repo_dotfiles_dir() -> PathBuf {
         }
     }
 
-    // Default to the expected location
+    // Default to ~/git/setup location (most common)
     home.join("git").join("setup").join("bootstrap").join("dotfiles")
 }
 

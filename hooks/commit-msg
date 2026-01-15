@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Conventional Commits validation hook
+# Install: cp hooks/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
+
+commit_msg_file=$1
+commit_msg=$(cat "$commit_msg_file")
+
+# Define conventional commit types
+types="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .+"
+
+# Check if the commit message matches the conventional commit format
+if ! [[ $commit_msg =~ $types ]]; then
+  echo "❌ Invalid commit message format."
+  echo "Please use conventional commit format:"
+  echo "  type(scope): description"
+  echo ""
+  echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+  echo "Example: feat(auth): add user authentication"
+  exit 1
+fi
+
+# Check if the subject line (first line) is too long
+subject_line=$(echo "$commit_msg" | head -n1)
+if [ ${#subject_line} -gt 100 ]; then
+  echo "❌ Commit subject line is too long (${#subject_line} chars)."
+  echo "Please keep it under 100 characters."
+  exit 1
+fi
+
+echo "✅ Commit message format is valid!"
+exit 0

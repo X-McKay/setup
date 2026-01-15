@@ -38,3 +38,13 @@ repos:
     rev: v8.18.1
     hooks:
       - id: gitleaks
+
+  # Local hook for commit message validation
+  - repo: local
+    hooks:
+      - id: commit-msg-check
+        name: Validate commit message format
+        entry: hooks/commit-msg
+        language: script
+        stages: [commit-msg]
+        always_run: true

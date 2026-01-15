@@ -2,6 +2,51 @@ use anyhow::{Context, Result};
 use std::fs;
 use std::process::Command;
 
+/// Default fallback versions when GitHub API is unavailable
+mod fallback_versions {
+    pub const LAZYGIT: &str = "0.44.1";
+    pub const GLOW: &str = "2.0.0";
+    pub const BOTTOM: &str = "0.10.2";
+    pub const HYPERFINE: &str = "1.18.0";
+}
+
+/// Fetch the latest version from GitHub releases API
+/// Returns the version string or a fallback with a warning
+fn fetch_github_version(repo: &str, fallback: &str) -> String {
+    let cmd = format!(
+        "curl -sf https://api.github.com/repos/{}/releases/latest | grep -o '\"tag_name\": \"v\\?[^\"]*\"' | sed 's/.*\"v\\?\\([^\"]*\\)\"/\\1/'",
+        repo
+    );
+
+    match run_command("sh", &["-c", &cmd]) {
+        Ok(version) => {
+            let v = version.trim();
+            if v.is_empty() {
+                eprintln!(
+                    "Warning: Could not fetch latest {} version, using fallback {}",
+                    repo, fallback
+                );
+                fallback.to_string()
+            } else {
+                v.to_string()
+            }
+        }
+        Err(_) => {
+            eprintln!(
+                "Warning: GitHub API unavailable for {}, using fallback version {}",
+                repo, fallback
+            );
+            fallback.to_string()
+        }
+    }
+}
+
+/// Convert a PathBuf to &str with proper error handling
+fn path_to_str(path: &std::path::Path) -> Result<&str> {
+    path.to_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid UTF-8 in path: {:?}", path))
+}
+
 /// Run a shell command and return its output
 fn run_command(cmd: &str, args: &[&str]) -> Result<String> {
     let output = Command::new(cmd)
@@ -134,14 +179,14 @@ pub fn install_mise() -> Result<()> {
 }
 
 fn run_mise_install() -> Result<()> {
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let tool_versions = home.join(".tool-versions");
 
     if tool_versions.exists() {
         // Try mise from ~/.local/bin first, then PATH
         let mise_path = home.join(".local").join("bin").join("mise");
         if mise_path.exists() {
-            let _ = run_command(mise_path.to_str().unwrap(), &["install"]);
+            let _ = run_command(path_to_str(&mise_path)?, &["install"]);
         } else if which::which("mise").is_ok() {
             let _ = run_command("mise", &["install"]);
         }
@@ -231,21 +276,30 @@ fn configure_fail2ban() -> Result<()> {
     let dest = "/etc/fail2ban/jail.local";
 
     if std::path::Path::new(source).exists() && !std::path::Path::new(dest).exists() {
-        let _ = run_sudo("cp", &[source, dest]);
+        run_sudo("cp", &[source, dest])?;
     }
-    let _ = run_sudo("systemctl", &["enable", "fail2ban"]);
-    let _ = run_sudo("systemctl", &["start", "fail2ban"]);
+
+    if let Err(e) = run_sudo("systemctl", &["enable", "fail2ban"]) {
+        eprintln!("Warning: Could not enable fail2ban service: {}", e);
+    }
+    if let Err(e) = run_sudo("systemctl", &["start", "fail2ban"]) {
+        eprintln!("Warning: Could not start fail2ban service: {}", e);
+    }
     Ok(())
 }
 
 fn configure_netdata() -> Result<()> {
-    let _ = run_sudo("systemctl", &["enable", "netdata"]);
-    let _ = run_sudo("systemctl", &["start", "netdata"]);
+    if let Err(e) = run_sudo("systemctl", &["enable", "netdata"]) {
+        eprintln!("Warning: Could not enable netdata service: {}", e);
+    }
+    if let Err(e) = run_sudo("systemctl", &["start", "netdata"]) {
+        eprintln!("Warning: Could not start netdata service: {}", e);
+    }
     Ok(())
 }
 
 fn create_health_check_script() -> Result<()> {
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let monitoring_dir = home.join(".monitoring");
     fs::create_dir_all(&monitoring_dir)?;
 
@@ -309,7 +363,7 @@ pub fn install_backup() -> Result<()> {
 }
 
 fn create_backup_structure() -> Result<()> {
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let backup_root = home.join(".backup");
 
     fs::create_dir_all(backup_root.join("configs"))?;
@@ -320,7 +374,7 @@ fn create_backup_structure() -> Result<()> {
 }
 
 fn create_backup_config() -> Result<()> {
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let config_path = home.join(".backup").join("configs").join("backup_config.sh");
 
     let config = r#"#!/bin/bash
@@ -388,12 +442,12 @@ restore_backup() {
 "#;
 
     fs::write(&config_path, config)?;
-    run_command("chmod", &["+x", config_path.to_str().unwrap()])?;
+    run_command("chmod", &["+x", path_to_str(&config_path)?])?;
     Ok(())
 }
 
 fn create_backup_script() -> Result<()> {
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let script_path = home.join(".backup").join("backup.sh");
 
     let script = r#"#!/bin/bash
@@ -415,12 +469,12 @@ echo "Backup completed at $(date)" >> "$BACKUP_ROOT/backup.log"
 "#;
 
     fs::write(&script_path, script)?;
-    run_command("chmod", &["+x", script_path.to_str().unwrap()])?;
+    run_command("chmod", &["+x", path_to_str(&script_path)?])?;
     Ok(())
 }
 
 fn create_restore_script() -> Result<()> {
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let script_path = home.join(".backup").join("restore.sh");
 
     let script = r#"#!/bin/bash
@@ -453,12 +507,12 @@ echo "Restore completed at $(date)" >> "$BACKUP_ROOT/restore.log"
 "#;
 
     fs::write(&script_path, script)?;
-    run_command("chmod", &["+x", script_path.to_str().unwrap()])?;
+    run_command("chmod", &["+x", path_to_str(&script_path)?])?;
     Ok(())
 }
 
 fn add_backup_cron() -> Result<()> {
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let backup_script = home.join(".backup").join("backup.sh");
 
     // Add cron job for daily backup at 2 AM, removing any existing backup.sh entry first
@@ -501,20 +555,12 @@ pub fn install_lazygit() -> Result<()> {
         return Ok(());
     }
 
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
     // Get latest version from GitHub API
-    let version_cmd = run_command(
-        "sh",
-        &[
-            "-c",
-            "curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep -o '\"tag_name\": \"v[^\"]*\"' | sed 's/.*\"v\\([^\"]*\\)\"/\\1/'",
-        ],
-    )
-    .unwrap_or_else(|_| "0.44.1".to_string());
-    let version = version_cmd.trim();
+    let version = fetch_github_version("jesseduffield/lazygit", fallback_versions::LAZYGIT);
 
     let arch = match std::env::consts::ARCH {
         "x86_64" => "x86_64",
@@ -547,7 +593,7 @@ pub fn install_just() -> Result<()> {
         return Ok(());
     }
 
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
@@ -576,20 +622,12 @@ pub fn install_glow() -> Result<()> {
     }
 
     // Fall back to binary download
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
     // Get latest version from GitHub API
-    let version_cmd = run_command(
-        "sh",
-        &[
-            "-c",
-            "curl -s https://api.github.com/repos/charmbracelet/glow/releases/latest | grep -o '\"tag_name\": \"v[^\"]*\"' | sed 's/.*\"v\\([^\"]*\\)\"/\\1/'",
-        ],
-    )
-    .unwrap_or_else(|_| "2.0.0".to_string());
-    let version = version_cmd.trim();
+    let version = fetch_github_version("charmbracelet/glow", fallback_versions::GLOW);
 
     let arch = match std::env::consts::ARCH {
         "x86_64" => "x86_64",
@@ -628,20 +666,12 @@ pub fn install_bottom() -> Result<()> {
     }
 
     // Fall back to binary download
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
     // Get latest version from GitHub API
-    let version_cmd = run_command(
-        "sh",
-        &[
-            "-c",
-            "curl -s https://api.github.com/repos/ClementTsang/bottom/releases/latest | grep -o '\"tag_name\": \"[^\"]*\"' | sed 's/.*\"\\([^\"]*\\)\"/\\1/'",
-        ],
-    )
-    .unwrap_or_else(|_| "0.10.2".to_string());
-    let version = version_cmd.trim();
+    let version = fetch_github_version("ClementTsang/bottom", fallback_versions::BOTTOM);
 
     let arch = match std::env::consts::ARCH {
         "x86_64" => "x86_64",
@@ -704,20 +734,12 @@ pub fn install_hyperfine() -> Result<()> {
     }
 
     // Fall back to binary download
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
     // Get latest version from GitHub API
-    let version_cmd = run_command(
-        "sh",
-        &[
-            "-c",
-            "curl -s https://api.github.com/repos/sharkdp/hyperfine/releases/latest | grep -o '\"tag_name\": \"v[^\"]*\"' | sed 's/.*\"v\\([^\"]*\\)\"/\\1/'",
-        ],
-    )
-    .unwrap_or_else(|_| "1.18.0".to_string());
-    let version = version_cmd.trim();
+    let version = fetch_github_version("sharkdp/hyperfine", fallback_versions::HYPERFINE);
 
     let arch = match std::env::consts::ARCH {
         "x86_64" => "x86_64",
@@ -756,7 +778,7 @@ pub fn install_jq() -> Result<()> {
     }
 
     // Fall back to binary download
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
@@ -787,7 +809,7 @@ pub fn install_yq() -> Result<()> {
         return Ok(());
     }
 
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
@@ -825,7 +847,7 @@ pub fn install_tldr() -> Result<()> {
     }
 
     // Fall back to tealdeer (Rust implementation)
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let bin_dir = home.join(".local").join("bin");
     std::fs::create_dir_all(&bin_dir)?;
 
@@ -858,7 +880,7 @@ pub fn install_neovim() -> Result<()> {
         // Try apt first for stable version
         if run_sudo("apt", &["install", "-y", "neovim"]).is_err() {
             // Fall back to AppImage for latest
-            let home = dirs::home_dir().expect("Could not find home directory");
+            let home = dirs::home_dir().context("Could not find home directory")?;
             let bin_dir = home.join(".local").join("bin");
             fs::create_dir_all(&bin_dir)?;
 
@@ -877,7 +899,7 @@ pub fn install_neovim() -> Result<()> {
     }
 
     // Create neovim config directory
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let nvim_config = home.join(".config").join("nvim");
     fs::create_dir_all(&nvim_config)?;
 
@@ -930,7 +952,7 @@ vim.keymap.set('n', '<C-l>', '<C-w>l')
 }
 
 pub fn install_tpm() -> Result<()> {
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let tpm_dir = home.join(".tmux").join("plugins").join("tpm");
 
     if tpm_dir.exists() {
@@ -943,7 +965,7 @@ pub fn install_tpm() -> Result<()> {
         &[
             "clone",
             "https://github.com/tmux-plugins/tpm",
-            tpm_dir.to_str().unwrap(),
+            path_to_str(&tpm_dir)?,
         ],
     )?;
 
@@ -973,7 +995,7 @@ run '~/.tmux/plugins/tpm/tpm'
 }
 
 pub fn setup_ssh_keys() -> Result<()> {
-    let home = dirs::home_dir().expect("Could not find home directory");
+    let home = dirs::home_dir().context("Could not find home directory")?;
     let ssh_dir = home.join(".ssh");
     let key_path = ssh_dir.join("id_ed25519");
 
@@ -985,7 +1007,7 @@ pub fn setup_ssh_keys() -> Result<()> {
 
     // Create .ssh directory with proper permissions
     fs::create_dir_all(&ssh_dir)?;
-    run_command("chmod", &["700", ssh_dir.to_str().unwrap()])?;
+    run_command("chmod", &["700", path_to_str(&ssh_dir)?])?;
 
     // Get email for key comment
     let email = std::env::var("EMAIL")
@@ -996,18 +1018,20 @@ pub fn setup_ssh_keys() -> Result<()> {
         .unwrap_or_else(|_| "user@localhost".to_string());
 
     // Generate ED25519 key (more secure than RSA)
+    // Note: Empty passphrase for automation - user should add passphrase with: ssh-keygen -p -f ~/.ssh/id_ed25519
+    eprintln!("Note: SSH key generated without passphrase. Add one with: ssh-keygen -p -f ~/.ssh/id_ed25519");
     run_command(
         "ssh-keygen",
         &[
             "-t", "ed25519",
             "-C", &email,
-            "-f", key_path.to_str().unwrap(),
-            "-N", "",  // Empty passphrase - user can add one later
+            "-f", path_to_str(&key_path)?,
+            "-N", "",
         ],
     )?;
 
     // Set proper permissions
-    run_command("chmod", &["600", key_path.to_str().unwrap()])?;
+    run_command("chmod", &["600", path_to_str(&key_path)?])?;
     run_command("chmod", &["644", &format!("{}.pub", key_path.display())])?;
 
     // Display the public key
@@ -1028,9 +1052,11 @@ pub fn setup_gpg() -> Result<()> {
 
     // Check if a GPG key already exists
     let existing = run_command("gpg", &["--list-secret-keys", "--keyid-format=long"]);
-    if existing.is_ok() && !existing.unwrap().trim().is_empty() {
-        println!("GPG key already exists");
-        return Ok(());
+    if let Ok(ref output) = existing {
+        if !output.trim().is_empty() {
+            println!("GPG key already exists");
+            return Ok(());
+        }
     }
 
     // Get user info from git config
@@ -1075,8 +1101,15 @@ Expire-Date: 2y
 
     // Configure git to use GPG
     if let Some(key_id) = extract_gpg_key_id(&keys_output) {
-        let _ = run_command("git", &["config", "--global", "user.signingkey", &key_id]);
-        let _ = run_command("git", &["config", "--global", "commit.gpgsign", "true"]);
+        eprintln!("\nNote: Configuring git to sign commits with GPG key: {}", key_id);
+        eprintln!("This will set git config: user.signingkey and commit.gpgsign=true");
+
+        if let Err(e) = run_command("git", &["config", "--global", "user.signingkey", &key_id]) {
+            eprintln!("Warning: Could not set git signing key: {}", e);
+        }
+        if let Err(e) = run_command("git", &["config", "--global", "commit.gpgsign", "true"]) {
+            eprintln!("Warning: Could not enable git commit signing: {}", e);
+        }
         println!("\nGit configured to sign commits with key: {}", key_id);
 
         // Export public key for GitHub

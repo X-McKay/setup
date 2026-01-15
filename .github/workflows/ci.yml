@@ -11,6 +11,23 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit checks
+        run: pre-commit run --all-files
+
   build:
     runs-on: ubuntu-latest
 
@@ -48,18 +65,6 @@ jobs:
       - name: Run tests
         working-directory: cli
         run: cargo test
-
-  shellcheck:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: '.'
-          severity: warning
 
   integration-test:
     runs-on: ubuntu-latest
