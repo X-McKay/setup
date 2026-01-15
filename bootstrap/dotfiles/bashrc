@@ -46,16 +46,6 @@ if command -v mise &>/dev/null; then
   eval "$(mise activate bash)"
 fi
 
-# Starship prompt
-if command -v starship &>/dev/null; then
-  eval "$(starship init bash)"
-fi
-
-# Zoxide (smarter cd)
-if command -v zoxide &>/dev/null; then
-  eval "$(zoxide init bash)"
-fi
-
 # fzf keybindings and completion
 if [ -f ~/.fzf.bash ]; then
   source ~/.fzf.bash
@@ -71,9 +61,8 @@ elif [ -f /usr/share/bash-completion/bash_completion ]; then
 fi
 
 # ----------------------------------------
-# Fallback Prompt (if starship not installed)
+# Prompt (GitHub Dark High Contrast colors)
 # ----------------------------------------
 
-if ! command -v starship &>/dev/null; then
-  PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\[\033[1;31m\]\$\[\033[0m\] '
-fi
+# Colors: cyan user, red @, green host, magenta path, red $
+PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\[\033[1;31m\]\$\[\033[0m\] '

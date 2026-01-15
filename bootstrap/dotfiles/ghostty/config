@@ -14,9 +14,6 @@ font-family-bold = "JetBrainsMono Nerd Font"
 font-family-italic = "JetBrainsMono Nerd Font"
 font-family-bold-italic = "JetBrainsMono Nerd Font"
 
-# Shell/Tmux -----------------------------
-command = tmux new-session -A -s main
-
 # Window ---------------------------------
 window-padding-x = 8
 window-padding-y = 8
@@ -99,3 +96,7 @@ keybind = super+shift+enter=toggle_fullscreen
 
 # Quick reload config
 keybind = super+shift+comma=reload_config
+
+# Split panes (+ vertical, - horizontal)
+keybind = ctrl+shift+equal=new_split:right
+keybind = ctrl+shift+minus=new_split:down

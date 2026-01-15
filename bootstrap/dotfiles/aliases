@@ -20,17 +20,17 @@ alias .....="cd ../../../.."
 
 # Directory listing with eza (modern ls)
 if command -v eza &>/dev/null; then
-  alias ls="eza --icons"
-  alias ll="eza -la --icons --git"
-  alias la="eza -a --icons"
-  alias lt="eza -T --icons --level=2"
-  alias ldir="eza -D --icons"
+  alias ls="eza"
+  alias ll="eza -la --git"
+  alias la="eza -a"
+  alias lt="eza -T --level=2"
+  alias ldir="eza -D"
 elif command -v exa &>/dev/null; then
   # Fallback to exa if still installed
-  alias ls="exa --icons"
-  alias ll="exa -la --icons --git"
-  alias la="exa -a --icons"
-  alias lt="exa -T --icons --level=2"
+  alias ls="exa"
+  alias ll="exa -la --git"
+  alias la="exa -a"
+  alias lt="exa -T --level=2"
 else
   alias ll="ls -la"
   alias la="ls -a"
@@ -88,12 +88,6 @@ if command -v lazygit &>/dev/null; then
   alias lg="lazygit"
 fi
 
-# Zoxide shortcuts
-if command -v zoxide &>/dev/null; then
-  alias cd="z"
-  alias cdi="zi"
-fi
-
 # Tmux
 alias ta="tmux attach -t"
 alias tl="tmux list-sessions"
@@ -124,7 +118,6 @@ alias vbash='${EDITOR:-vim} ~/.bashrc'
 alias valias='${EDITOR:-vim} ~/.aliases'
 alias vtmux='${EDITOR:-vim} ~/.tmux.conf'
 alias vgit='${EDITOR:-vim} ~/.gitconfig'
-alias vstar='${EDITOR:-vim} ~/.config/starship.toml'
 
 # Just task runner
 if command -v just &>/dev/null; then

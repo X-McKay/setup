@@ -31,7 +31,6 @@ HOME_DOTFILES=(
 
 # Files to copy to ~/.config/
 CONFIG_FILES=(
-  "starship.toml:starship.toml"
   "ghostty:ghostty"
   "lazygit:lazygit"
 )
@@ -61,7 +60,8 @@ copy_item() {
   mkdir -p "$(dirname "$dest")"
 
   if [ -d "$src" ]; then
-    # It's a directory, copy recursively
+    # It's a directory - remove existing and copy fresh to avoid nesting
+    rm -rf "$dest"
     cp -r "$src" "$dest"
   else
     # It's a file
