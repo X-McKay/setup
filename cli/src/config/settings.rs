@@ -20,8 +20,6 @@ pub struct InstalledComponents {
     pub docker: bool,
     pub monitoring: bool,
     pub backup: bool,
-    pub starship: bool,
-    pub zoxide: bool,
     pub lazygit: bool,
 }
 

@@ -135,6 +135,13 @@ Our configuration uses `Super` (Cmd on Mac, Win key on Linux) for Ghostty action
 | `Super+1-5` | Switch to tab 1-5 |
 | `Super+Shift+Enter` | Toggle fullscreen |
 
+### Split Panes
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+d` | Split pane right (vertical divider) |
+| `Ctrl+Shift+d` | Split pane down (horizontal divider) |
+
 ### Clipboard
 
 | Shortcut | Action |
@@ -228,8 +235,7 @@ fc-cache -fv
 Nerd Fonts include:
 - Programming ligatures (-> becomes →)
 - Powerline symbols for status lines
-- File type icons for eza, lazygit, etc.
-- Unicode symbols for starship prompt
+- File type icons for lazygit, etc.
 
 ### Verifying Font Installation
 
@@ -376,6 +382,8 @@ set -sa terminal-features ',xterm-256color:RGB'
 | `Super+t` | New tab |
 | `Super+w` | Close tab |
 | `Super+1-5` | Switch tabs |
+| `Ctrl+d` | Split right |
+| `Ctrl+Shift+d` | Split down |
 | `Super+c/v` | Copy/Paste |
 | `Super+=/-` | Font size |
 | `Super+Shift+Enter` | Fullscreen |

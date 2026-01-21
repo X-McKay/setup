@@ -37,8 +37,6 @@ services:
         ./install_modern_cli.sh &&
         echo '' &&
         echo '=== Verifying installations ===' &&
-        which starship && starship --version &&
-        which zoxide && zoxide --version &&
         which lazygit && lazygit --version | head -1 &&
         which just && just --version &&
         which glow && glow --version &&
@@ -71,7 +69,7 @@ services:
         echo '' &&
         echo '=== Verifying dotfiles ===' &&
         ls -la ~/.bashrc ~/.tmux.conf ~/.aliases ~/.exports &&
-        ls -la ~/.config/starship.toml ~/.config/ghostty/ ~/.config/lazygit/ &&
+        ls -la ~/.config/ghostty/ ~/.config/lazygit/ &&
         echo '' &&
         echo '=== Dotfiles copied successfully! ==='
       "

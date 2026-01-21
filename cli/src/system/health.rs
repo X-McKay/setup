@@ -24,8 +24,6 @@ fn get_version(cmd: &str) -> Option<String> {
         "git" => &["--version"],
         "docker" => &["--version"],
         "mise" => &["--version"],
-        "starship" => &["--version"],
-        "zoxide" => &["--version"],
         "lazygit" => &["--version"],
         "rg" => &["--version"],
         "bat" | "batcat" => &["--version"],

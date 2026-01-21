@@ -149,3 +149,48 @@ detect_platform() {
 
 # Run platform detection
 detect_platform
+
+# ----------------------------------------
+# System Info Command
+# ----------------------------------------
+sysi() {
+  echo ""
+  echo "SYSTEM"
+  echo "  Host:      $(hostname) ($(whoami))"
+  echo "  OS:        $(grep "^PRETTY_NAME" /etc/os-release 2>/dev/null | cut -d'"' -f2)"
+  echo "  Kernel:    $(uname -r)"
+  echo "  Uptime:    $(uptime -p 2>/dev/null | sed 's/up //')"
+  echo "  Shell:     ${SHELL##*/}"
+  echo "  Terminal:  ${TERM}"
+
+  echo ""
+  echo "HARDWARE"
+  echo "  CPU:       $(grep "model name" /proc/cpuinfo 2>/dev/null | head -1 | cut -d':' -f2 | sed 's/^ //') ($(nproc) cores)"
+  echo "  Load:      $(cat /proc/loadavg 2>/dev/null | awk '{print $1, $2, $3}') (1m 5m 15m)"
+  echo "  Memory:    $(free -h 2>/dev/null | awk '/^Mem:/{print $3 " / " $2}')"
+  if command -v nvidia-smi &>/dev/null; then
+    echo "  GPU:       $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)"
+    echo "  VRAM:      $(nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader 2>/dev/null | head -1 | sed 's/, / \/ /')"
+  fi
+
+  echo ""
+  echo "STORAGE"
+  echo "  Root (/):  $(df -h / 2>/dev/null | awk 'NR==2{print $3 " / " $2 " (" $5 " used)"}')"
+
+  echo ""
+  echo "NETWORK"
+  echo "  Local IP:  $(hostname -I 2>/dev/null | awk '{print $1}')"
+  echo "  Interface: $(ip route get 1 2>/dev/null | awk '{print $5; exit}')"
+  local public_ip=$(timeout 1 curl -s icanhazip.com 2>/dev/null)
+  [ -n "$public_ip" ] && echo "  Public IP: $public_ip"
+  echo "  DNS:       $(grep "^nameserver" /etc/resolv.conf 2>/dev/null | head -1 | awk '{print $2}')"
+
+  echo ""
+  echo "PROCESSES"
+  echo "  Total:     $(ps aux 2>/dev/null | wc -l) processes"
+  echo "  Running:   $(ps aux 2>/dev/null | awk '$8~/R/{c++}END{print c+0}')"
+  echo "  Users:     $(who 2>/dev/null | wc -l) logged in"
+  echo "  Top Mem:   $(ps aux --sort=-%mem 2>/dev/null | awk 'NR==2{n=$11; gsub(/.*\//,"",n); printf "%s (%.1f%%)", n, $4}')"
+  echo "  Top CPU:   $(ps aux --sort=-%cpu 2>/dev/null | awk 'NR==2{n=$11; gsub(/.*\//,"",n); printf "%s (%.1f%%)", n, $3}')"
+  echo ""
+}

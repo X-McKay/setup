@@ -41,7 +41,23 @@ fi
 if command -v bat &>/dev/null; then
   alias cat="bat --paging=never"
 elif command -v batcat &>/dev/null; then
+  alias bat="batcat"
   alias cat="batcat --paging=never"
+fi
+
+# Better find with fd
+if command -v fd &>/dev/null; then
+  alias find="fd"
+elif command -v fdfind &>/dev/null; then
+  alias fd="fdfind"
+  alias find="fdfind"
+fi
+
+# Ripgrep shortcuts (don't replace grep - different syntax)
+if command -v rg &>/dev/null; then
+  alias search="rg"
+  alias rgi="rg -i"  # Case insensitive
+  alias rgl="rg -l"  # Files only
 fi
 
 # Better top with htop or btop
@@ -164,4 +180,22 @@ fi
 # tldr - simplified man pages
 if command -v tldr &>/dev/null; then
   alias help="tldr" # Quick help
+fi
+
+# Mise version manager
+if command -v mise &>/dev/null; then
+  alias mi="mise install"
+  alias mu="mise use"
+  alias ml="mise list"
+  alias mls="mise ls-remote"
+fi
+
+# fzf fuzzy finder integrations
+if command -v fzf &>/dev/null; then
+  # Fuzzy cd into directory
+  alias fcd='cd "$(find . -type d | fzf)"'
+  # Fuzzy open file in editor
+  alias fe='${EDITOR:-vim} "$(fzf)"'
+  # Fuzzy kill process
+  alias fkill='kill -9 $(ps aux | fzf | awk "{print \$2}")'
 fi

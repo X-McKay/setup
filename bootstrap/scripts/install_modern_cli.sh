@@ -18,48 +18,6 @@ mkdir -p ~/.local/bin
 export PATH="$HOME/.local/bin:$PATH"
 
 # ============================================================================
-# Starship - Cross-shell prompt
-# ============================================================================
-install_starship() {
-  info "Installing Starship..."
-
-  if command -v starship &>/dev/null; then
-    success "Starship already installed: $(starship --version)"
-    return 0
-  fi
-
-  curl -sS https://starship.rs/install.sh | sh -s -- -y -b ~/.local/bin
-
-  if command -v starship &>/dev/null; then
-    success "Starship installed: $(starship --version)"
-  else
-    error "Starship installation failed"
-    return 1
-  fi
-}
-
-# ============================================================================
-# Zoxide - Smarter cd command
-# ============================================================================
-install_zoxide() {
-  info "Installing Zoxide..."
-
-  if command -v zoxide &>/dev/null; then
-    success "Zoxide already installed: $(zoxide --version)"
-    return 0
-  fi
-
-  curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
-
-  if command -v zoxide &>/dev/null; then
-    success "Zoxide installed: $(zoxide --version)"
-  else
-    error "Zoxide installation failed"
-    return 1
-  fi
-}
-
-# ============================================================================
 # Lazygit - Terminal UI for git
 # ============================================================================
 install_lazygit() {
@@ -702,8 +660,6 @@ main() {
   echo "========================================"
   echo ""
 
-  install_starship
-  install_zoxide
   install_lazygit
   install_eza
   install_fd
@@ -725,17 +681,8 @@ main() {
   success "All tools installed!"
   echo "========================================"
   echo ""
-  info "Add these to your .bashrc to enable:"
+  info "Add this to your .bashrc to enable fzf keybindings:"
   echo ""
-  echo '  # Starship prompt'
-  # shellcheck disable=SC2016
-  echo '  eval "$(starship init bash)"'
-  echo ""
-  echo '  # Zoxide (smarter cd)'
-  # shellcheck disable=SC2016
-  echo '  eval "$(zoxide init bash)"'
-  echo ""
-  echo '  # fzf keybindings'
   echo '  [ -f ~/.fzf.bash ] && source ~/.fzf.bash'
   echo ""
   info "Other tools ready to use:"

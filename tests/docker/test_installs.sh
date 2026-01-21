@@ -131,49 +131,37 @@ echo "--- Test: yq ---"
 $SETUP_BIN install yq -y
 check_file "$HOME/.local/bin/yq" "yq binary"
 
-# Test 6: Install starship
-echo ""
-echo "--- Test: Starship ---"
-$SETUP_BIN install starship -y
-check_command "starship" "starship installed"
-
-# Test 7: Install zoxide
-echo ""
-echo "--- Test: Zoxide ---"
-$SETUP_BIN install zoxide -y
-check_command "zoxide" "zoxide installed"
-
-# Test 8: Install lazygit
+# Test 6: Install lazygit
 echo ""
 echo "--- Test: Lazygit ---"
 $SETUP_BIN install lazygit -y
 check_file "$HOME/.local/bin/lazygit" "lazygit binary"
 
-# Test 9: Install just
+# Test 7: Install just
 echo ""
 echo "--- Test: Just ---"
 $SETUP_BIN install just -y
 check_file "$HOME/.local/bin/just" "just binary"
 
-# Test 10: Install glow
+# Test 8: Install glow
 echo ""
 echo "--- Test: Glow ---"
 $SETUP_BIN install glow -y
 check_file "$HOME/.local/bin/glow" "glow binary"
 
-# Test 11: Install bottom
+# Test 9: Install bottom
 echo ""
 echo "--- Test: Bottom ---"
 $SETUP_BIN install bottom -y
 check_file "$HOME/.local/bin/btm" "bottom binary"
 
-# Test 12: Install GitHub CLI
+# Test 10: Install GitHub CLI
 echo ""
 echo "--- Test: GitHub CLI ---"
 $SETUP_BIN install gh -y
 check_command "gh" "GitHub CLI installed"
 
-# Test 13: Install hyperfine
+# Test 11: Install hyperfine
 echo ""
 echo "--- Test: Hyperfine ---"
 $SETUP_BIN install hyperfine -y
@@ -184,39 +172,38 @@ else
   fail "hyperfine not found"
 fi
 
-# Test 14: Install tldr
+# Test 12: Install tldr
 echo ""
 echo "--- Test: tldr ---"
 $SETUP_BIN install tldr -y
 check_command "tldr" "tldr installed"
 
-# Test 15: Install mise
+# Test 13: Install mise
 echo ""
 echo "--- Test: Mise ---"
 $SETUP_BIN install mise -y
 check_file "$HOME/.local/bin/mise" "mise binary"
 
-# Test 16: Install Neovim
+# Test 14: Install Neovim
 echo ""
 echo "--- Test: Neovim ---"
 $SETUP_BIN install neovim -y
 check_command "nvim" "neovim installed"
 check_file "$HOME/.config/nvim/init.lua" "neovim config"
 
-# Test 17: Install TPM
+# Test 15: Install TPM
 echo ""
 echo "--- Test: TPM ---"
 $SETUP_BIN install tpm -y
 check_dir "$HOME/.tmux/plugins/tpm" "TPM directory"
 
-# Test 18: Dotfiles sync
+# Test 16: Dotfiles sync
 echo ""
 echo "--- Test: Dotfiles ---"
 $SETUP_BIN dotfiles sync --force
 check_file "$HOME/.bashrc" "bashrc synced"
 check_file "$HOME/.aliases" "aliases synced"
 check_file "$HOME/.exports" "exports synced"
-check_file "$HOME/.config/starship.toml" "starship config synced"
 
 # Skipped tests (require user input or special setup)
 echo ""

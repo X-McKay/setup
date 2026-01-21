@@ -54,24 +54,6 @@ pub fn install_docker() -> Result<()> {
     Ok(())
 }
 
-/// Install starship prompt.
-pub fn install_starship() -> Result<()> {
-    if which::which("starship").is_ok() {
-        return Ok(());
-    }
-    run_command("cargo", &["install", "starship", "--locked"])?;
-    Ok(())
-}
-
-/// Install zoxide directory jumper.
-pub fn install_zoxide() -> Result<()> {
-    if which::which("zoxide").is_ok() {
-        return Ok(());
-    }
-    run_command("cargo", &["install", "zoxide", "--locked"])?;
-    Ok(())
-}
-
 /// Install lazygit TUI.
 pub fn install_lazygit() -> Result<()> {
     if which::which("lazygit").is_ok() {

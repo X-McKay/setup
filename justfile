@@ -76,9 +76,9 @@ lint:
 # Installation (use with caution - affects local system)
 # ============================================================================
 
-# Install CLI to ~/.local/bin
-install-cli: build
-    cp cli/target/release/setup ~/.local/bin/
+# Install CLI to ~/.cargo/bin
+install-cli:
+    cargo install --path cli
 
 # Run the modern CLI tools installer
 install-tools:
@@ -99,8 +99,6 @@ install-all: install-tools install-dotfiles install-cli
 # Show what would be installed
 dry-run:
     @echo "Tools that would be installed:"
-    @echo "  - starship (prompt)"
-    @echo "  - zoxide (smarter cd)"
     @echo "  - lazygit (git TUI)"
     @echo "  - eza (better ls)"
     @echo "  - bat (better cat)"
@@ -119,7 +117,7 @@ dry-run:
     @echo "Dotfiles that would be copied:"
     @echo "  - bashrc, bash_profile, aliases, exports, util"
     @echo "  - tmux.conf, gitconfig, tool-versions"
-    @echo "  - starship.toml, ghostty/config, lazygit/config.yml"
+    @echo "  - ghostty/config, lazygit/config.yml"
 
 # Render README in terminal
 readme:

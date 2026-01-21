@@ -22,7 +22,7 @@ pub fn update_mise() -> Result<()> {
 pub fn update_rust_tools() -> Result<()> {
     run_command("rustup", &["update"])?;
 
-    let tools = ["starship", "zoxide", "eza", "git-delta", "bat"];
+    let tools = ["eza", "git-delta", "bat"];
     for tool in &tools {
         let _ = run_command("cargo", &["install", tool, "--locked"]);
     }

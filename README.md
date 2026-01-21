@@ -90,7 +90,7 @@ setup install docker
 setup install tools
 
 # Install multiple components
-setup install apt tools mise starship
+setup install apt tools mise lazygit
 ```
 
 ### Manage Dotfiles
@@ -131,8 +131,6 @@ setup update dotfiles    # Sync dotfiles from repo
 | `docker` | Docker and adds user to docker group |
 | `monitoring` | System monitoring (htop, netdata, fail2ban, logwatch) + health checks |
 | `backup` | Backup utilities (rsync, timeshift) + automated backup scripts |
-| `starship` | Starship cross-shell prompt |
-| `zoxide` | Smarter cd command that learns your habits |
 | `lazygit` | Terminal UI for git |
 | `just` | Modern task runner |
 | `glow` | Terminal markdown renderer |
@@ -155,13 +153,12 @@ The setup installs a curated set of modern CLI replacements:
 
 | Tool | Replaces | Description |
 |------|----------|-------------|
-| `eza` | `ls` | Modern ls with icons and git status |
+| `eza` | `ls` | Modern ls with git status |
 | `bat` | `cat` | Cat with syntax highlighting |
 | `fd` | `find` | Fast, user-friendly find |
 | `ripgrep` | `grep` | Fast recursive search |
 | `fzf` | - | Fuzzy finder for files, history, etc. |
 | `delta` | `diff` | Beautiful git diffs |
-| `zoxide` | `cd` | Smarter cd that learns your habits |
 | `bottom` | `top` | Beautiful system monitor |
 
 See [docs/TOOLS.md](docs/TOOLS.md) for detailed usage of each tool.
@@ -210,7 +207,6 @@ Managed dotfiles include:
 | `.tmux.conf` | Tmux configuration |
 | `.gitconfig` | Git configuration |
 | `.tool-versions` | Mise tool versions |
-| `.config/starship.toml` | Starship prompt config |
 | `.config/ghostty/config` | Ghostty terminal config |
 | `.config/lazygit/config.yml` | Lazygit config |
 | `.config/nvim/init.lua` | Neovim config (created by neovim component) |
@@ -243,7 +239,7 @@ The Docker tests:
 | CLI | Help, version commands |
 | APT | curl, git, wget, unzip |
 | Tools | ripgrep, fd, fzf, bat, eza, delta |
-| Utilities | jq, yq, starship, zoxide, lazygit, just |
+| Utilities | jq, yq, lazygit, just |
 | Apps | glow, bottom, gh, hyperfine, tldr |
 | Dev | mise, neovim, tpm |
 | Config | Dotfiles sync |
@@ -353,5 +349,4 @@ MIT
 
 - [pre-commit](https://pre-commit.com/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
-- [Starship](https://starship.rs/)
 - [Modern Unix](https://github.com/ibraheemdev/modern-unix)

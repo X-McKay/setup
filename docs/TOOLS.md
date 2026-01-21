@@ -18,42 +18,13 @@ A quick reference for all the tools included in this setup. These tools are desi
 
 ## Navigation & Files
 
-### Zoxide - Smarter Directory Navigation
-
-Zoxide learns your habits and lets you jump to directories with minimal typing.
-
-```bash
-# Jump to a directory (fuzzy matching)
-z projects          # Jumps to ~/projects or /var/projects, etc.
-z set               # Jumps to ~/git/setup (learns from frequency)
-
-# Interactive selection with fzf
-zi                  # Opens fuzzy finder for all known directories
-
-# Add a directory manually
-zoxide add /path/to/dir
-
-# Remove a directory
-zoxide remove /path/to/dir
-
-# List all known directories (ranked)
-zoxide query -l
-```
-
-**Tips:**
-- Just use `z` instead of `cd` - it works like `cd` but remembers where you go
-- The more you visit a directory, the higher it ranks
-- Use `zi` when you're not sure of the exact name
-
----
-
 ### Eza - Modern ls Replacement
 
-Better directory listings with colors, icons, and git integration.
+Better directory listings with colors and git integration.
 
 ```bash
 # Basic listing (aliased to ls)
-ls                  # List with icons
+ls                  # List files
 ll                  # Long format with git status
 la                  # Show hidden files
 lt                  # Tree view (2 levels deep)
@@ -64,7 +35,6 @@ eza -l --git        # Show git status for each file
 eza -T --level=3    # Tree view, 3 levels deep
 eza -l --sort=mod   # Sort by modification time
 eza -l --sort=size  # Sort by size
-eza --icons=always  # Always show icons
 ```
 
 ---
@@ -609,43 +579,12 @@ glow                    # Opens file browser
 
 ---
 
-### Starship - Shell Prompt
-
-Your prompt is already configured! Here's what the segments mean:
-
-```
-┌ username@hostname (only shown in SSH sessions)
-│  ┌ current directory (truncated, with git repo icon)
-│  │     ┌ git branch
-│  │     │        ┌ git status (modified, staged, etc.)
-│  │     │        │   ┌ language version (rust, python, node, etc.)
-│  │     │        │   │        ┌ command duration (if >2s)
-└──┴─────┴────────┴───┴────────┴─────────────────────────────────────
-  ~/git/setup  main !2 ?1  v1.75.0                        took 3s
-❯
-```
-
-**Git Status Symbols:**
-- `?` - Untracked files
-- `!` - Modified files
-- `+` - Staged files
-- `⇡` - Ahead of remote
-- `⇣` - Behind remote
-- `=` - Conflicts
-
-**Customization:**
-Edit `~/.config/starship.toml` to customize. Run `vstar` to edit.
-
----
-
 ## Quick Reference Card
 
 ### Essential Shortcuts
 
 | Shortcut | Tool | Action |
 |----------|------|--------|
-| `z <dir>` | zoxide | Jump to directory |
-| `zi` | zoxide | Interactive directory selection |
 | `lg` | lazygit | Open git TUI |
 | `j` / `jl` | just | Run task / list tasks |
 | `Ctrl+R` | fzf | Search command history |
@@ -693,22 +632,18 @@ Edit `~/.config/starship.toml` to customize. Run `vstar` to edit.
 
 ## Tips for Efficient Development
 
-1. **Use zoxide everywhere** - After a few days, `z` will know all your project directories
+1. **Master lazygit** - It makes git operations 10x faster. Press `?` to learn shortcuts
 
-2. **Master lazygit** - It makes git operations 10x faster. Press `?` to learn shortcuts
+2. **Create justfiles** - Every project should have common tasks documented in a justfile
 
-3. **Create justfiles** - Every project should have common tasks documented in a justfile
+3. **Use fzf integration** - `Ctrl+R` for history, `Ctrl+T` for files, `Alt+C` for directories
 
-4. **Use fzf integration** - `Ctrl+R` for history, `Ctrl+T` for files, `Alt+C` for directories
+4. **Let tools help you** - bat for viewing, fd for finding, rg for searching - they're all faster than the defaults
 
-5. **Let tools help you** - bat for viewing, fd for finding, rg for searching - they're all faster than the defaults
+5. **Use tldr before man** - `help tar` gives you practical examples instead of 50 pages of options
 
-6. **Customize your prompt** - Edit `~/.config/starship.toml` to show what matters to you
+6. **Benchmark before optimizing** - Use `hyperfine` to measure actual performance differences
 
-7. **Use tldr before man** - `help tar` gives you practical examples instead of 50 pages of options
+7. **Master jq/yq** - Essential for working with JSON/YAML APIs, configs, and Kubernetes
 
-8. **Benchmark before optimizing** - Use `hyperfine` to measure actual performance differences
-
-9. **Master jq/yq** - Essential for working with JSON/YAML APIs, configs, and Kubernetes
-
-10. **Learn one tool at a time** - Don't try to memorize everything at once
+8. **Learn one tool at a time** - Don't try to memorize everything at once

@@ -20,7 +20,7 @@ pub use apt::{install_apt_packages, install_extra_tools};
 pub use tools::{
     install_bottom, install_docker, install_gh, install_glow, install_hyperfine,
     install_jq, install_just, install_lazygit, install_mise, install_neovim,
-    install_starship, install_tldr, install_tpm, install_yq, install_zoxide,
+    install_tldr, install_tpm, install_yq,
 };
 
 // Services (monitoring, backup)

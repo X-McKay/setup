@@ -6,20 +6,39 @@ use crate::commands::install::Component;
 use crate::commands::update::UpdateComponent;
 
 pub fn select_components() -> Result<Vec<Component>> {
+    // First, ask if user wants to install all
+    let install_all = Select::new(
+        "How would you like to install?",
+        vec!["Install All (recommended)", "Select individual components"],
+    )
+    .with_help_message("Install All includes everything except SSH/GPG keys")
+    .prompt()?;
+
+    if install_all == "Install All (recommended)" {
+        return Ok(Component::all());
+    }
+
+    // Individual component selection
     let options = vec![
         ("Basic APT Packages", Component::Apt),
         ("Extra CLI Tools", Component::Tools),
         ("Mise Version Manager", Component::Mise),
         ("Docker", Component::Docker),
-        ("Starship Prompt", Component::Starship),
-        ("Zoxide", Component::Zoxide),
         ("Lazygit", Component::Lazygit),
         ("Just Task Runner", Component::Just),
         ("Glow Markdown Renderer", Component::Glow),
         ("Bottom System Monitor", Component::Bottom),
         ("GitHub CLI", Component::Gh),
+        ("Hyperfine Benchmarking", Component::Hyperfine),
+        ("jq JSON Processor", Component::Jq),
+        ("yq YAML Processor", Component::Yq),
+        ("tldr Man Pages", Component::Tldr),
+        ("Neovim Editor", Component::Neovim),
+        ("Tmux Plugin Manager", Component::Tpm),
         ("Monitoring Tools", Component::Monitoring),
         ("Backup Utilities", Component::Backup),
+        ("SSH Key Generation", Component::SshKeys),
+        ("GPG Key Setup", Component::Gpg),
     ];
 
     let labels: Vec<&str> = options.iter().map(|(l, _)| *l).collect();
@@ -80,7 +99,6 @@ pub fn select_dotfile_to_edit() -> Result<String> {
         "exports",
         "tmux.conf",
         "gitconfig",
-        "starship.toml",
         "ghostty/config",
     ];
 
@@ -90,6 +108,18 @@ pub fn select_dotfile_to_edit() -> Result<String> {
 }
 
 pub fn select_update_components() -> Result<Vec<UpdateComponent>> {
+    // First, ask if user wants to update all
+    let update_all = Select::new(
+        "How would you like to update?",
+        vec!["Update All (recommended)", "Select individual components"],
+    )
+    .with_help_message("Update All refreshes system packages, mise, rust tools, and dotfiles")
+    .prompt()?;
+
+    if update_all == "Update All (recommended)" {
+        return Ok(UpdateComponent::all());
+    }
+
     let options = vec![
         ("System Packages", UpdateComponent::System),
         ("Mise Runtimes", UpdateComponent::Mise),

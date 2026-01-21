@@ -49,11 +49,6 @@ pub fn get_managed_dotfiles() -> Vec<(String, PathBuf, PathBuf)> {
             home.join(".tool-versions"),
         ),
         (
-            "starship.toml".to_string(),
-            repo_dotfiles.join("starship.toml"),
-            home.join(".config").join("starship.toml"),
-        ),
-        (
             "ghostty/config".to_string(),
             repo_dotfiles.join("ghostty").join("config"),
             home.join(".config").join("ghostty").join("config"),
