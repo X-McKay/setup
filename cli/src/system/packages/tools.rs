@@ -321,6 +321,84 @@ vim.keymap.set('n', '<C-l>', '<C-w>l')
     Ok(())
 }
 
+/// Install Chromium browser.
+pub fn install_chromium() -> Result<()> {
+    if which::which("chromium-browser").is_ok() || which::which("chromium").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "chromium"])?;
+
+    Ok(())
+}
+
+/// Install Discord chat client.
+pub fn install_discord() -> Result<()> {
+    if which::which("discord").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "discord"])?;
+
+    Ok(())
+}
+
+/// Install Obsidian note-taking app.
+pub fn install_obsidian() -> Result<()> {
+    if which::which("obsidian").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "obsidian", "--classic"])?;
+
+    Ok(())
+}
+
+/// Install Spotify music player.
+pub fn install_spotify() -> Result<()> {
+    if which::which("spotify").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "spotify"])?;
+
+    Ok(())
+}
+
+/// Install VLC media player.
+pub fn install_vlc() -> Result<()> {
+    if which::which("vlc").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "vlc"])?;
+
+    Ok(())
+}
+
+/// Install Ghostty terminal emulator.
+pub fn install_ghostty() -> Result<()> {
+    if which::which("ghostty").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "ghostty", "--classic"])?;
+
+    Ok(())
+}
+
+/// Install Claude Code CLI.
+pub fn install_claude_code() -> Result<()> {
+    if which::which("claude").is_ok() {
+        return Ok(());
+    }
+
+    let script = run_command("curl", &["-fsSL", "https://claude.ai/install.sh"])?;
+    run_command("sh", &["-c", &script])?;
+
+    Ok(())
+}
+
 /// Install tmux plugin manager.
 pub fn install_tpm() -> Result<()> {
     let home = dirs::home_dir().context("Could not find home directory")?;

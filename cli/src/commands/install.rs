@@ -54,6 +54,20 @@ pub enum Component {
     Yq,
     /// tldr simplified man pages
     Tldr,
+    /// Chromium web browser
+    Chromium,
+    /// Discord chat client
+    Discord,
+    /// Obsidian note-taking app
+    Obsidian,
+    /// Spotify music player
+    Spotify,
+    /// VLC media player
+    Vlc,
+    /// Ghostty terminal emulator
+    Ghostty,
+    /// Claude Code AI coding assistant
+    ClaudeCode,
     /// Neovim editor with sensible defaults
     Neovim,
     /// Tmux plugin manager
@@ -80,6 +94,13 @@ impl Component {
             Component::Jq,
             Component::Yq,
             Component::Tldr,
+            Component::Chromium,
+            Component::Discord,
+            Component::Obsidian,
+            Component::Spotify,
+            Component::Vlc,
+            Component::Ghostty,
+            Component::ClaudeCode,
             Component::Neovim,
             Component::Tpm,
             Component::Monitoring,
@@ -105,6 +126,13 @@ impl Component {
             Component::Jq => "jq JSON Processor",
             Component::Yq => "yq YAML Processor",
             Component::Tldr => "tldr Man Pages",
+            Component::Chromium => "Chromium Browser",
+            Component::Discord => "Discord",
+            Component::Obsidian => "Obsidian",
+            Component::Spotify => "Spotify",
+            Component::Vlc => "VLC Media Player",
+            Component::Ghostty => "Ghostty Terminal",
+            Component::ClaudeCode => "Claude Code",
             Component::Neovim => "Neovim Editor",
             Component::Tpm => "Tmux Plugin Manager",
             Component::SshKeys => "SSH Key Generation",
@@ -257,6 +285,13 @@ fn install_component_with_progress(mp: &MultiProgress, component: &Component) ->
         Component::Jq => packages::install_jq(),
         Component::Yq => packages::install_yq(),
         Component::Tldr => packages::install_tldr(),
+        Component::Chromium => packages::install_chromium(),
+        Component::Discord => packages::install_discord(),
+        Component::Obsidian => packages::install_obsidian(),
+        Component::Spotify => packages::install_spotify(),
+        Component::Vlc => packages::install_vlc(),
+        Component::Ghostty => packages::install_ghostty(),
+        Component::ClaudeCode => packages::install_claude_code(),
         Component::Neovim => packages::install_neovim(),
         Component::Tpm => packages::install_tpm(),
         Component::SshKeys => packages::setup_ssh_keys(),

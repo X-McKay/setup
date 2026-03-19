@@ -18,9 +18,10 @@ pub use apt::{install_apt_packages, install_extra_tools};
 
 // Individual tools
 pub use tools::{
-    install_bottom, install_docker, install_gh, install_glow, install_hyperfine,
-    install_jq, install_just, install_lazygit, install_mise, install_neovim,
-    install_tldr, install_tpm, install_yq,
+    install_bottom, install_chromium, install_claude_code, install_discord, install_docker,
+    install_gh, install_ghostty, install_glow, install_hyperfine, install_jq, install_just,
+    install_lazygit, install_mise, install_neovim, install_obsidian, install_spotify,
+    install_tldr, install_tpm, install_vlc, install_yq,
 };
 
 // Services (monitoring, backup)
