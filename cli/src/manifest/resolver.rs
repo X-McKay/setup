@@ -77,6 +77,61 @@ pub fn pull_in_dependencies(
     Ok(out)
 }
 
+/// Topologically sort the given component ids using their `depends_on` edges.
+/// Uses Kahn's algorithm. Order is deterministic: ties broken alphabetically.
+pub fn topo_sort(manifest: &Manifest, ids: &BTreeSet<String>) -> Result<Vec<String>> {
+    use std::collections::{BTreeMap, VecDeque};
+
+    let in_set = |id: &str| ids.contains(id);
+
+    let mut in_degree: BTreeMap<String, usize> = ids.iter().map(|id| (id.clone(), 0)).collect();
+    let mut adj: BTreeMap<String, Vec<String>> =
+        ids.iter().map(|id| (id.clone(), Vec::new())).collect();
+
+    for id in ids {
+        let spec = manifest
+            .components
+            .iter()
+            .find(|c| c.id == *id)
+            .ok_or_else(|| anyhow::anyhow!("component {:?} not in manifest", id))?;
+        for dep in &spec.depends_on {
+            if in_set(dep) {
+                adj.get_mut(dep).unwrap().push(id.clone());
+                *in_degree.get_mut(id).unwrap() += 1;
+            }
+        }
+    }
+
+    let mut ready: VecDeque<String> = in_degree
+        .iter()
+        .filter(|(_, &d)| d == 0)
+        .map(|(k, _)| k.clone())
+        .collect();
+
+    let mut ordered: Vec<String> = Vec::with_capacity(ids.len());
+    while let Some(node) = ready.pop_front() {
+        ordered.push(node.clone());
+        for next in &adj[&node] {
+            let d = in_degree.get_mut(next).unwrap();
+            *d -= 1;
+            if *d == 0 {
+                ready.push_back(next.clone());
+            }
+        }
+    }
+
+    if ordered.len() != ids.len() {
+        let remaining: Vec<String> = in_degree
+            .iter()
+            .filter(|(_, &d)| d > 0)
+            .map(|(k, _)| k.clone())
+            .collect();
+        anyhow::bail!("dep graph cycle detected among: {}", remaining.join(", "));
+    }
+
+    Ok(ordered)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -185,5 +240,30 @@ mod tests {
         let plan = pull_in_dependencies(&m, &ids).unwrap();
         assert!(plan.contains("apt"));
         assert!(plan.contains("docker"));
+    }
+
+    #[test]
+    fn topo_sort_respects_deps() {
+        let mut m = mk_manifest();
+        m.components.iter_mut().find(|c| c.id == "docker").unwrap().depends_on =
+            vec!["apt".into(), "mise".into()];
+        let seeds: BTreeSet<String> =
+            ["apt", "mise", "docker"].iter().map(|s| s.to_string()).collect();
+        let ordered = topo_sort(&m, &seeds).unwrap();
+        let pos = |id: &str| ordered.iter().position(|x| x == id).unwrap();
+        assert!(pos("apt") < pos("docker"));
+        assert!(pos("mise") < pos("docker"));
+    }
+
+    #[test]
+    fn topo_sort_detects_cycle() {
+        let mut m = mk_manifest();
+        m.components.iter_mut().find(|c| c.id == "apt").unwrap().depends_on =
+            vec!["mise".into()];
+        m.components.iter_mut().find(|c| c.id == "mise").unwrap().depends_on =
+            vec!["apt".into()];
+        let seeds: BTreeSet<String> = ["apt", "mise"].iter().map(|s| s.to_string()).collect();
+        let err = topo_sort(&m, &seeds).unwrap_err();
+        assert!(err.to_string().contains("cycle"));
     }
 }
