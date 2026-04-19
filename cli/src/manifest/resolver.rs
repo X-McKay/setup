@@ -54,6 +54,29 @@ fn expand_profile(
     Ok(())
 }
 
+/// Walk the dep graph from `seeds` and return a set including all transitive
+/// dependencies. `seeds` is typically the output of `expand_selection`.
+pub fn pull_in_dependencies(
+    manifest: &Manifest,
+    seeds: &BTreeSet<String>,
+) -> Result<BTreeSet<String>> {
+    let mut out = seeds.clone();
+    let mut frontier: Vec<String> = seeds.iter().cloned().collect();
+    while let Some(id) = frontier.pop() {
+        let spec = manifest
+            .components
+            .iter()
+            .find(|c| c.id == id)
+            .ok_or_else(|| anyhow::anyhow!("unknown component: {}", id))?;
+        for dep in &spec.depends_on {
+            if out.insert(dep.clone()) {
+                frontier.push(dep.clone());
+            }
+        }
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -149,5 +172,18 @@ mod tests {
         let m = mk_manifest();
         let err = expand_selection(&m, &[], &["bogus".into()]).unwrap_err();
         assert!(err.to_string().contains("unknown component"));
+    }
+
+    #[test]
+    fn selection_auto_pulls_transitive_deps() {
+        let mut m = mk_manifest();
+        // docker depends on apt
+        m.components.iter_mut().find(|c| c.id == "docker").unwrap().depends_on =
+            vec!["apt".into()];
+        // Select docker alone — apt must be auto-pulled.
+        let ids = expand_selection(&m, &[], &["docker".into()]).unwrap();
+        let plan = pull_in_dependencies(&m, &ids).unwrap();
+        assert!(plan.contains("apt"));
+        assert!(plan.contains("docker"));
     }
 }
