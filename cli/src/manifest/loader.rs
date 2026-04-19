@@ -9,24 +9,41 @@ use super::schema::Manifest;
 /// Production callers pass an explicit path via `load_from`.
 const REPO_MANIFEST_RELATIVE: &str = "bootstrap/manifest.toml";
 
+fn find_repo_manifest_from(start: &Path) -> Option<PathBuf> {
+    for ancestor in start.ancestors() {
+        let candidate = ancestor.join(REPO_MANIFEST_RELATIVE);
+        if candidate.exists() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
 /// Locate the repo-shipped manifest. Tries, in order:
 /// 1. `$SETUP_MANIFEST` environment override (used by tests).
-/// 2. `./bootstrap/manifest.toml` relative to current working directory
-///    (source-tree layout).
+/// 2. Search current-working-directory ancestors for `bootstrap/manifest.toml`
+///    (source-tree layouts like repo root or `cli/`).
 /// 3. `<exe_dir>/../share/setup/manifest.toml` (installed layout).
+/// 4. Search current-exe ancestors for `bootstrap/manifest.toml` (cargo layouts).
 pub fn repo_manifest_path() -> Result<PathBuf> {
     if let Ok(env_path) = std::env::var("SETUP_MANIFEST") {
         return Ok(PathBuf::from(env_path));
     }
-    let cwd_rel = PathBuf::from(REPO_MANIFEST_RELATIVE);
-    if cwd_rel.exists() {
-        return Ok(cwd_rel);
+
+    if let Ok(cwd) = std::env::current_dir() {
+        if let Some(found) = find_repo_manifest_from(&cwd) {
+            return Ok(found);
+        }
     }
+
     if let Ok(exe) = std::env::current_exe() {
         if let Some(parent) = exe.parent() {
             let share = parent.join("..").join("share").join("setup").join("manifest.toml");
             if share.exists() {
                 return Ok(share);
+            }
+            if let Some(found) = find_repo_manifest_from(parent) {
+                return Ok(found);
             }
         }
     }
@@ -225,5 +242,26 @@ display_name = "APT"
         assert!(m.profiles.contains_key("server"));
         assert!(m.profiles.contains_key("workstation"));
         assert!(m.profiles.contains_key("ai-heavy"));
+    }
+
+    #[test]
+    fn finds_repo_manifest_from_ancestor_directory() {
+        let dir = std::env::temp_dir().join(format!("setup-manifest-find-{}", std::process::id()));
+        let nested = dir.join("cli").join("src");
+        std::fs::create_dir_all(dir.join("bootstrap")).unwrap();
+        std::fs::create_dir_all(&nested).unwrap();
+        let manifest = dir.join("bootstrap").join("manifest.toml");
+        std::fs::write(
+            &manifest,
+            r#"
+[[components]]
+id = "apt"
+display_name = "APT"
+"#,
+        )
+        .unwrap();
+
+        let found = find_repo_manifest_from(&nested).unwrap();
+        assert_eq!(found, manifest);
     }
 }
