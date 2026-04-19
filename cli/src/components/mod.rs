@@ -20,6 +20,7 @@ pub mod jq;
 pub mod just;
 pub mod lazygit;
 pub mod mise;
+pub mod monitoring;
 pub mod neovim;
 pub mod obsidian;
 pub mod registry;

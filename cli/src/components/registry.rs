@@ -31,6 +31,7 @@ impl Registry {
         r.register(Arc::new(super::just::Just));
         r.register(Arc::new(super::lazygit::Lazygit));
         r.register(Arc::new(super::mise::Mise));
+        r.register(Arc::new(super::monitoring::Monitoring));
         r.register(Arc::new(super::neovim::Neovim));
         r.register(Arc::new(super::obsidian::Obsidian));
         r.register(Arc::new(super::spotify::Spotify));
@@ -243,6 +244,11 @@ mod tests {
     #[test]
     fn tpm_is_registered() {
         assert_registered("tpm");
+    }
+
+    #[test]
+    fn monitoring_is_registered() {
+        assert_registered("monitoring");
     }
 
     #[test]
