@@ -207,4 +207,23 @@ display_name = "APT"
         let m = load_from(&repo, Some(&nonexistent)).unwrap();
         assert_eq!(m.components.len(), 1);
     }
+
+    #[test]
+    fn real_repo_manifest_parses_and_validates() {
+        // This test assumes cargo test runs with CWD at the crate root (cli/)
+        // or the workspace root. Try both.
+        let candidates = [
+            PathBuf::from("../bootstrap/manifest.toml"),
+            PathBuf::from("bootstrap/manifest.toml"),
+        ];
+        let found = candidates.iter().find(|p| p.exists()).expect(
+            "bootstrap/manifest.toml not found; run from repo root or cli/",
+        );
+        let m = load_from(found, None).expect("repo manifest should load");
+        assert!(!m.components.is_empty());
+        assert!(m.profiles.contains_key("base"));
+        assert!(m.profiles.contains_key("server"));
+        assert!(m.profiles.contains_key("workstation"));
+        assert!(m.profiles.contains_key("ai-heavy"));
+    }
 }

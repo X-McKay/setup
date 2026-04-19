@@ -88,46 +88,56 @@ impl Manifest {
             }
         }
 
-        // Extends cycle detection via DFS.
+        // Extends cycle detection via recursive DFS (three-color marking).
+        #[derive(Clone, Copy, PartialEq)]
+        enum Mark {
+            Unvisited,
+            OnStack,
+            Done,
+        }
+        let mut marks: std::collections::HashMap<&str, Mark> =
+            self.profiles.keys().map(|k| (k.as_str(), Mark::Unvisited)).collect();
+
+        fn dfs<'a>(
+            node: &'a str,
+            profiles: &'a BTreeMap<String, ProfileSpec>,
+            marks: &mut std::collections::HashMap<&'a str, Mark>,
+            path: &mut Vec<&'a str>,
+        ) -> anyhow::Result<()> {
+            marks.insert(node, Mark::OnStack);
+            path.push(node);
+            let p = &profiles[node];
+            for ext in &p.extends {
+                let ext_str = ext.as_str();
+                // Resolve &str keyed into the map by looking up the profile key.
+                let ext_key = profiles
+                    .keys()
+                    .find(|k| k.as_str() == ext_str)
+                    .map(|k| k.as_str())
+                    .unwrap_or(ext_str);
+                match marks.get(ext_key).copied().unwrap_or(Mark::Unvisited) {
+                    Mark::OnStack => {
+                        anyhow::bail!(
+                            "profile extends cycle detected: {} -> {}",
+                            path.join(" -> "),
+                            ext_key
+                        );
+                    }
+                    Mark::Done => continue,
+                    Mark::Unvisited => {
+                        dfs(ext_key, profiles, marks, path)?;
+                    }
+                }
+            }
+            path.pop();
+            marks.insert(node, Mark::Done);
+            Ok(())
+        }
+
         for start in self.profiles.keys() {
-            let mut stack: Vec<&str> = vec![start.as_str()];
-            let mut path: Vec<&str> = Vec::new();
-            let mut visited: std::collections::HashSet<&str> = std::collections::HashSet::new();
-            while let Some(node) = stack.last().copied() {
-                if !visited.insert(node) {
-                    if path.contains(&node) {
-                        anyhow::bail!(
-                            "profile extends cycle detected: {} -> {}",
-                            path.join(" -> "),
-                            node
-                        );
-                    }
-                    stack.pop();
-                    path.pop();
-                    continue;
-                }
-                path.push(node);
-                let p = &self.profiles[node];
-                let mut pushed = false;
-                for ext in &p.extends {
-                    if !visited.contains(ext.as_str()) {
-                        stack.push(ext.as_str());
-                        pushed = true;
-                        break;
-                    }
-                    // If we've already seen it AND it's on the current path, cycle.
-                    if path.contains(&ext.as_str()) {
-                        anyhow::bail!(
-                            "profile extends cycle detected: {} -> {}",
-                            path.join(" -> "),
-                            ext
-                        );
-                    }
-                }
-                if !pushed {
-                    stack.pop();
-                    path.pop();
-                }
+            if marks.get(start.as_str()).copied().unwrap_or(Mark::Unvisited) == Mark::Unvisited {
+                let mut path: Vec<&str> = Vec::new();
+                dfs(start.as_str(), &self.profiles, &mut marks, &mut path)?;
             }
         }
 

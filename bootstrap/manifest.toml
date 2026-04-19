@@ -1,0 +1,224 @@
+# Repo-default component catalog + profiles.
+# Users may override entries by creating ~/.config/setup/manifest.toml
+# (see docs — override/reshape only, cannot introduce new component ids).
+
+# ---------- components ----------
+
+[[components]]
+id = "apt"
+display_name = "Basic APT Packages"
+description = "Core system packages (curl, git, build-essential, etc.)"
+tags = ["core"]
+requires_sudo = true
+
+[[components]]
+id = "tools"
+display_name = "Extra CLI Tools"
+description = "ripgrep, fd, fzf, bat, eza, delta"
+depends_on = ["apt"]
+tags = ["core", "cli"]
+requires_sudo = true
+
+[[components]]
+id = "mise"
+display_name = "Mise Version Manager"
+description = "Polyglot version manager (reads ~/.tool-versions)"
+depends_on = ["apt"]
+tags = ["core", "dev"]
+
+[[components]]
+id = "docker"
+display_name = "Docker"
+description = "Container runtime"
+depends_on = ["apt"]
+tags = ["container", "dev"]
+requires_sudo = true
+requires_systemd = true
+requires_privileged = true
+
+[[components]]
+id = "lazygit"
+display_name = "Lazygit"
+description = "Terminal UI for git"
+tags = ["dev"]
+
+[[components]]
+id = "just"
+display_name = "Just"
+description = "Command runner"
+tags = ["dev"]
+
+[[components]]
+id = "glow"
+display_name = "Glow"
+description = "Markdown renderer for terminal"
+tags = ["cli"]
+
+[[components]]
+id = "bottom"
+display_name = "Bottom"
+description = "System monitor (btm)"
+tags = ["cli"]
+
+[[components]]
+id = "gh"
+display_name = "GitHub CLI"
+description = "GitHub from the terminal"
+depends_on = ["apt"]
+tags = ["dev"]
+requires_sudo = true
+
+[[components]]
+id = "hyperfine"
+display_name = "Hyperfine"
+description = "Command-line benchmarking"
+tags = ["cli"]
+
+[[components]]
+id = "jq"
+display_name = "jq"
+description = "JSON processor"
+tags = ["cli"]
+
+[[components]]
+id = "yq"
+display_name = "yq"
+description = "YAML processor"
+tags = ["cli"]
+
+[[components]]
+id = "tldr"
+display_name = "tldr"
+description = "Simplified man pages"
+tags = ["cli"]
+
+[[components]]
+id = "chromium"
+display_name = "Chromium"
+description = "Web browser (snap)"
+tags = ["gui"]
+requires_sudo = true
+
+[[components]]
+id = "discord"
+display_name = "Discord"
+description = "Chat client (snap)"
+tags = ["gui"]
+requires_sudo = true
+
+[[components]]
+id = "obsidian"
+display_name = "Obsidian"
+description = "Note-taking app (snap)"
+tags = ["gui"]
+requires_sudo = true
+
+[[components]]
+id = "spotify"
+display_name = "Spotify"
+description = "Music streaming (snap)"
+tags = ["gui"]
+requires_sudo = true
+
+[[components]]
+id = "vlc"
+display_name = "VLC"
+description = "Media player (snap)"
+tags = ["gui"]
+requires_sudo = true
+
+[[components]]
+id = "ghostty"
+display_name = "Ghostty Terminal"
+description = "GPU-accelerated terminal emulator"
+tags = ["gui", "dev"]
+requires_sudo = true
+
+[[components]]
+id = "claude-code"
+display_name = "Claude Code"
+description = "Anthropic's official CLI for Claude"
+depends_on = ["mise"]
+tags = ["ai", "dev"]
+
+[[components]]
+id = "neovim"
+display_name = "Neovim"
+description = "Modal editor"
+depends_on = ["apt"]
+tags = ["dev"]
+requires_sudo = true
+
+[[components]]
+id = "tpm"
+display_name = "Tmux Plugin Manager"
+description = "Plugin manager for tmux"
+tags = ["dev"]
+
+[[components]]
+id = "monitoring"
+display_name = "System Monitoring"
+description = "htop, netdata, fail2ban, logwatch + daily health cron"
+depends_on = ["apt"]
+tags = ["ops"]
+requires_sudo = true
+requires_systemd = true
+
+[[components]]
+id = "backup"
+display_name = "Backup Utilities"
+description = "rsync, timeshift, duplicity + backup cron"
+depends_on = ["apt"]
+tags = ["ops"]
+requires_sudo = true
+requires_systemd = true
+
+[[components]]
+id = "ssh-keys"
+display_name = "SSH Key Generation"
+description = "Generate ED25519 SSH keys (interactive)"
+tags = ["security"]
+interactive = true
+
+[[components]]
+id = "gpg"
+display_name = "GPG Setup"
+description = "Generate GPG keys for commit signing (interactive)"
+tags = ["security"]
+interactive = true
+
+# ---------- profiles ----------
+
+[profiles.base]
+description = "Always present; other profiles extend this"
+components = ["apt", "tools", "mise"]
+
+[profiles.server]
+description = "Headless server: core + container + ops + dev basics"
+extends = ["base"]
+components = ["docker", "gh", "neovim", "lazygit", "just", "jq", "yq", "monitoring", "backup"]
+
+[profiles.workstation]
+description = "Desktop/laptop development box"
+extends = ["base"]
+components = [
+    "ghostty",
+    "docker",
+    "lazygit",
+    "just",
+    "glow",
+    "bottom",
+    "gh",
+    "hyperfine",
+    "jq",
+    "yq",
+    "tldr",
+    "neovim",
+    "tpm",
+    "chromium",
+    "obsidian",
+]
+
+[profiles.ai-heavy]
+description = "AI tooling layer — compose with server or workstation"
+components = ["claude-code"]
