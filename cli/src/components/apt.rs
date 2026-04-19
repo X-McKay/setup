@@ -20,8 +20,26 @@ impl Component for Apt {
     }
 
     fn is_installed(&self) -> Result<bool> {
-        // Probe a representative subset from the package bundle.
-        Ok(which::which("curl").is_ok() && which::which("git").is_ok())
+        // Probe the command-bearing packages so preinstalled build deps do not
+        // cause us to skip the rest of the base bundle.
+        let required_commands = [
+            "curl",
+            "wget",
+            "git",
+            "gcc",
+            "make",
+            "cmake",
+            "pkg-config",
+            "python3",
+            "pip3",
+            "unzip",
+            "zip",
+            "jq",
+        ];
+
+        Ok(required_commands
+            .iter()
+            .all(|command| which::which(command).is_ok()))
     }
 
     fn install(&self) -> Result<()> {

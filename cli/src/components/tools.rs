@@ -8,7 +8,7 @@
 
 use anyhow::Result;
 
-use super::util::{apt_install, run_command, run_sudo};
+use super::util::{apt_install, ensure_bin_dir, path_to_str, run_command, run_sudo};
 use super::Component;
 
 pub struct Tools;
@@ -19,7 +19,12 @@ impl Component for Tools {
     }
 
     fn is_installed(&self) -> Result<bool> {
-        Ok(which::which("rg").is_ok() && which::which("fd").is_ok() && which::which("bat").is_ok())
+        Ok(which::which("rg").is_ok()
+            && (which::which("fd").is_ok() || which::which("fdfind").is_ok())
+            && which::which("fzf").is_ok()
+            && (which::which("bat").is_ok() || which::which("batcat").is_ok())
+            && which::which("eza").is_ok()
+            && which::which("delta").is_ok())
     }
 
     fn install(&self) -> Result<()> {
@@ -49,7 +54,7 @@ fn install_eza() -> Result<()> {
         return Ok(());
     }
 
-    run_command("cargo", &["install", "eza"])?;
+    cargo_install_local("eza")?;
     Ok(())
 }
 
@@ -67,6 +72,19 @@ fn install_delta() -> Result<()> {
         return Ok(());
     }
 
-    run_command("cargo", &["install", "git-delta"])?;
+    cargo_install_local("git-delta")?;
+    Ok(())
+}
+
+fn cargo_install_local(crate_name: &str) -> Result<()> {
+    let bin_dir = ensure_bin_dir()?;
+    let root = bin_dir
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("Could not determine ~/.local from {:?}", bin_dir))?;
+
+    run_command(
+        "cargo",
+        &["install", "--root", path_to_str(root)?, crate_name],
+    )?;
     Ok(())
 }

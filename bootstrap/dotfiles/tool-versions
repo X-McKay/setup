@@ -1,5 +1,5 @@
 rust latest
-python 3.12.4
+python 3.12.13
 pre-commit 3.7.1
 cmake 3.29.6
 shellcheck 0.7.0

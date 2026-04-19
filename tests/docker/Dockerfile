@@ -27,7 +27,9 @@ ENV HOME=/home/testuser
 ENV PATH="/home/testuser/.local/bin:${PATH}"
 
 RUN curl -fsSL https://mise.run | sh
-RUN mise install --yes
+# python-build-standalone still omits attestations for the install-only
+# archives that mise uses here, so disable that verification in Docker e2e.
+RUN MISE_PYTHON_GITHUB_ATTESTATIONS=false mise install --yes
 ENV PATH="/home/testuser/.local/share/mise/shims:${PATH}"
 
 # Copy the project (as root, then fix permissions)
@@ -38,7 +40,9 @@ RUN chown -R testuser:testuser /setup
 
 # Build the CLI as testuser
 USER testuser
-RUN cargo build --release --manifest-path cli/Cargo.toml
+WORKDIR /home/testuser
+# Build from $HOME so the home-level .tool-versions file applies to mise shims.
+RUN cargo build --release --manifest-path /setup/cli/Cargo.toml
 
 # Copy test script and set permissions
 USER root
