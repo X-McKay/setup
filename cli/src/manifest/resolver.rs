@@ -104,7 +104,7 @@ pub fn topo_sort(manifest: &Manifest, ids: &BTreeSet<String>) -> Result<Vec<Stri
 
     let mut ready: VecDeque<String> = in_degree
         .iter()
-        .filter(|(_, &d)| d == 0)
+        .filter(|&(_, &d)| d == 0)
         .map(|(k, _)| k.clone())
         .collect();
 
@@ -123,7 +123,7 @@ pub fn topo_sort(manifest: &Manifest, ids: &BTreeSet<String>) -> Result<Vec<Stri
     if ordered.len() != ids.len() {
         let remaining: Vec<String> = in_degree
             .iter()
-            .filter(|(_, &d)| d > 0)
+            .filter(|&(_, &d)| d > 0)
             .map(|(k, _)| k.clone())
             .collect();
         anyhow::bail!("dep graph cycle detected among: {}", remaining.join(", "));

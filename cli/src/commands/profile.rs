@@ -91,7 +91,10 @@ mod tests {
         if p.exists() {
             std::fs::remove_file(&p).unwrap();
         }
-        std::env::set_var("SETUP_INTENT", &p);
+        // Test-only process-local env override used before any worker threads exist.
+        unsafe {
+            std::env::set_var("SETUP_INTENT", &p);
+        }
         p
     }
 
