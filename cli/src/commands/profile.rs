@@ -79,3 +79,42 @@ pub fn run(args: ProfileArgs) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn tmp_intent() -> PathBuf {
+        let p =
+            std::env::temp_dir().join(format!("setup-profile-test-{}.toml", std::process::id()));
+        if p.exists() {
+            std::fs::remove_file(&p).unwrap();
+        }
+        std::env::set_var("SETUP_INTENT", &p);
+        p
+    }
+
+    #[test]
+    fn activate_then_deactivate_roundtrip() {
+        let p = tmp_intent();
+
+        run(ProfileArgs {
+            command: ProfileCmd::Activate {
+                name: "server".into(),
+            },
+        })
+        .unwrap();
+        let i = intent::read(&p).unwrap();
+        assert!(i.active_profiles.contains(&"server".to_string()));
+
+        run(ProfileArgs {
+            command: ProfileCmd::Deactivate {
+                name: "server".into(),
+            },
+        })
+        .unwrap();
+        let i = intent::read(&p).unwrap();
+        assert!(!i.active_profiles.contains(&"server".to_string()));
+    }
+}
