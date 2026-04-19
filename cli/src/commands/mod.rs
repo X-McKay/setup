@@ -4,6 +4,7 @@ pub mod check;
 pub mod dotfiles;
 pub mod install;
 pub mod interactive;
+pub mod uninstall;
 pub mod update;
 
 #[derive(Parser)]
@@ -27,6 +28,9 @@ pub enum Commands {
 
     /// Manage dotfiles (sync, diff, edit)
     Dotfiles(dotfiles::DotfilesArgs),
+
+    /// Remove components
+    Uninstall(uninstall::UninstallArgs),
 
     /// Check system health and installed tools
     Check(check::CheckArgs),
