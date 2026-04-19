@@ -19,6 +19,7 @@ impl Registry {
         };
         r.register(Arc::new(super::apt::Apt));
         r.register(Arc::new(super::bottom::Bottom));
+        r.register(Arc::new(super::chromium::Chromium));
         r.register(Arc::new(super::docker::Docker));
         r.register(Arc::new(super::gh::Gh));
         r.register(Arc::new(super::glow::Glow));
@@ -189,6 +190,11 @@ mod tests {
     #[test]
     fn tldr_is_registered() {
         assert_registered("tldr");
+    }
+
+    #[test]
+    fn chromium_is_registered() {
+        assert_registered("chromium");
     }
 
     #[test]
