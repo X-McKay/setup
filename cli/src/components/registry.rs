@@ -20,6 +20,7 @@ impl Registry {
         r.register(Arc::new(super::apt::Apt));
         r.register(Arc::new(super::bottom::Bottom));
         r.register(Arc::new(super::docker::Docker));
+        r.register(Arc::new(super::gh::Gh));
         r.register(Arc::new(super::glow::Glow));
         r.register(Arc::new(super::just::Just));
         r.register(Arc::new(super::lazygit::Lazygit));
@@ -159,6 +160,11 @@ mod tests {
     #[test]
     fn bottom_is_registered() {
         assert_registered("bottom");
+    }
+
+    #[test]
+    fn gh_is_registered() {
+        assert_registered("gh");
     }
 
     #[test]

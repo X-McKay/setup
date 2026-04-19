@@ -9,6 +9,7 @@ use anyhow::Result;
 pub mod apt;
 pub mod bottom;
 pub mod docker;
+pub mod gh;
 pub mod glow;
 pub mod just;
 pub mod lazygit;
