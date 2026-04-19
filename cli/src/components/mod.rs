@@ -18,6 +18,7 @@ pub mod lazygit;
 pub mod mise;
 pub mod registry;
 pub mod tools;
+pub mod yq;
 
 pub trait Component: Send + Sync {
     /// Matches the manifest `id`.

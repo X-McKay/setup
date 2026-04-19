@@ -28,6 +28,7 @@ impl Registry {
         r.register(Arc::new(super::lazygit::Lazygit));
         r.register(Arc::new(super::mise::Mise));
         r.register(Arc::new(super::tools::Tools));
+        r.register(Arc::new(super::yq::Yq));
         r
     }
 
@@ -177,6 +178,11 @@ mod tests {
     #[test]
     fn jq_is_registered() {
         assert_registered("jq");
+    }
+
+    #[test]
+    fn yq_is_registered() {
+        assert_registered("yq");
     }
 
     #[test]
