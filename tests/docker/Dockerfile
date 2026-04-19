@@ -17,8 +17,9 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m -s /bin/bash testuser && \
     echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Copy .tool-versions for mise (needs to be owned by testuser)
+# Copy shared mise inputs (need to be owned by testuser)
 COPY --chown=testuser:testuser bootstrap/dotfiles/tool-versions /home/testuser/.tool-versions
+COPY --chown=testuser:testuser bootstrap/dotfiles/mise/config.toml /home/testuser/.config/mise/config.toml
 
 # Install mise and Rust as testuser (mirrors bootstrap.sh flow)
 USER testuser
@@ -27,9 +28,7 @@ ENV HOME=/home/testuser
 ENV PATH="/home/testuser/.local/bin:${PATH}"
 
 RUN curl -fsSL https://mise.run | sh
-# python-build-standalone still omits attestations for the install-only
-# archives that mise uses here, so disable that verification in Docker e2e.
-RUN MISE_PYTHON_GITHUB_ATTESTATIONS=false mise install --yes
+RUN mise install --yes
 ENV PATH="/home/testuser/.local/share/mise/shims:${PATH}"
 
 # Copy the project (as root, then fix permissions)

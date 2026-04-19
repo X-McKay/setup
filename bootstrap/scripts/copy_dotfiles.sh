@@ -33,6 +33,7 @@ HOME_DOTFILES=(
 CONFIG_FILES=(
   "ghostty:ghostty"
   "lazygit:lazygit"
+  "mise:mise"
 )
 
 # Backup directory

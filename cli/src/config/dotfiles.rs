@@ -58,6 +58,11 @@ pub fn get_managed_dotfiles() -> Vec<(String, PathBuf, PathBuf)> {
             repo_dotfiles.join("lazygit").join("config.yml"),
             home.join(".config").join("lazygit").join("config.yml"),
         ),
+        (
+            "mise/config.toml".to_string(),
+            repo_dotfiles.join("mise").join("config.toml"),
+            home.join(".config").join("mise").join("config.toml"),
+        ),
     ]
 }
 

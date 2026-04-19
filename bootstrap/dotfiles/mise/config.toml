@@ -1,0 +1,4 @@
+[settings.python]
+# python-build-standalone does not currently publish attestations for the
+# install_only* archive flavors that mise uses for Python precompiled binaries.
+github_attestations = false
