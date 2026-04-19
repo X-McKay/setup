@@ -19,6 +19,7 @@ impl Registry {
         };
         r.register(Arc::new(super::apt::Apt));
         r.register(Arc::new(super::bottom::Bottom));
+        r.register(Arc::new(super::claude_code::ClaudeCode));
         r.register(Arc::new(super::chromium::Chromium));
         r.register(Arc::new(super::discord::Discord));
         r.register(Arc::new(super::docker::Docker));
@@ -225,6 +226,11 @@ mod tests {
     #[test]
     fn ghostty_is_registered() {
         assert_registered("ghostty");
+    }
+
+    #[test]
+    fn claude_code_is_registered() {
+        assert_registered("claude-code");
     }
 
     #[test]
