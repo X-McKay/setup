@@ -35,6 +35,7 @@ impl Registry {
         r.register(Arc::new(super::monitoring::Monitoring));
         r.register(Arc::new(super::neovim::Neovim));
         r.register(Arc::new(super::obsidian::Obsidian));
+        r.register(Arc::new(super::ssh_keys::SshKeys));
         r.register(Arc::new(super::spotify::Spotify));
         r.register(Arc::new(super::tldr::Tldr));
         r.register(Arc::new(super::tpm::Tpm));
@@ -255,6 +256,11 @@ mod tests {
     #[test]
     fn backup_is_registered() {
         assert_registered("backup");
+    }
+
+    #[test]
+    fn ssh_keys_is_registered() {
+        assert_registered("ssh-keys");
     }
 
     #[test]

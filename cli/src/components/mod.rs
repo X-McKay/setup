@@ -25,6 +25,7 @@ pub mod monitoring;
 pub mod neovim;
 pub mod obsidian;
 pub mod registry;
+pub mod ssh_keys;
 pub mod spotify;
 pub mod tldr;
 pub mod tpm;
