@@ -41,6 +41,7 @@ fn main() -> Result<()> {
 fn run_command(cmd: Commands) -> Result<()> {
     match cmd {
         Commands::Install(args) => commands::install::run(args),
+        Commands::List(args) => commands::list::run(args),
         Commands::Doctor(args) => commands::doctor::run(args),
         Commands::Uninstall(args) => commands::uninstall::run(args),
         Commands::Dotfiles(args) => commands::dotfiles::run(args),

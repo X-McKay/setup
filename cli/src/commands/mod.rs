@@ -5,6 +5,7 @@ pub mod doctor;
 pub mod dotfiles;
 pub mod install;
 pub mod interactive;
+pub mod list;
 pub mod uninstall;
 pub mod update;
 
@@ -29,6 +30,9 @@ pub enum Commands {
 
     /// Manage dotfiles (sync, diff, edit)
     Dotfiles(dotfiles::DotfilesArgs),
+
+    /// Print the component catalog
+    List(list::ListArgs),
 
     /// System health + drift report
     Doctor(doctor::DoctorArgs),
