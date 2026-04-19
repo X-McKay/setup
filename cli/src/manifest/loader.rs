@@ -7,8 +7,40 @@ use super::schema::Manifest;
 
 /// Default path to the repo manifest, relative to the built binary's parent.
 /// Production callers pass an explicit path via `load_from`.
-#[allow(dead_code)]
 const REPO_MANIFEST_RELATIVE: &str = "bootstrap/manifest.toml";
+
+/// Locate the repo-shipped manifest. Tries, in order:
+/// 1. `$SETUP_MANIFEST` environment override (used by tests).
+/// 2. `./bootstrap/manifest.toml` relative to current working directory
+///    (source-tree layout).
+/// 3. `<exe_dir>/../share/setup/manifest.toml` (installed layout).
+pub fn repo_manifest_path() -> Result<PathBuf> {
+    if let Ok(env_path) = std::env::var("SETUP_MANIFEST") {
+        return Ok(PathBuf::from(env_path));
+    }
+    let cwd_rel = PathBuf::from(REPO_MANIFEST_RELATIVE);
+    if cwd_rel.exists() {
+        return Ok(cwd_rel);
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            let share = parent.join("..").join("share").join("setup").join("manifest.toml");
+            if share.exists() {
+                return Ok(share);
+            }
+        }
+    }
+    anyhow::bail!(
+        "could not locate bootstrap/manifest.toml. Set SETUP_MANIFEST to override."
+    )
+}
+
+/// Convenience: locate both paths and load.
+pub fn load() -> Result<Manifest> {
+    let repo = repo_manifest_path()?;
+    let user = user_manifest_path();
+    load_from(&repo, user.as_deref())
+}
 
 /// Where the user override lives.
 pub fn user_manifest_path() -> Option<PathBuf> {
