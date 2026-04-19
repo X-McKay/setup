@@ -20,6 +20,7 @@ pub mod lazygit;
 pub mod mise;
 pub mod obsidian;
 pub mod registry;
+pub mod spotify;
 pub mod tldr;
 pub mod tools;
 pub mod yq;
