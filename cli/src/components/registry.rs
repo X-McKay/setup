@@ -19,6 +19,7 @@ impl Registry {
         };
         r.register(Arc::new(super::apt::Apt));
         r.register(Arc::new(super::docker::Docker));
+        r.register(Arc::new(super::just::Just));
         r.register(Arc::new(super::lazygit::Lazygit));
         r.register(Arc::new(super::mise::Mise));
         r.register(Arc::new(super::tools::Tools));
@@ -141,6 +142,11 @@ mod tests {
     #[test]
     fn lazygit_is_registered() {
         assert_registered("lazygit");
+    }
+
+    #[test]
+    fn just_is_registered() {
+        assert_registered("just");
     }
 
     #[test]
