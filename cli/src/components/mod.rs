@@ -8,6 +8,7 @@ use anyhow::Result;
 
 pub mod apt;
 pub mod registry;
+pub mod tools;
 
 pub trait Component: Send + Sync {
     /// Matches the manifest `id`.
