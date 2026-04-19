@@ -6,6 +6,14 @@ authors = ["Al McKay <aldmckay@gmail.com>"]
 description = "Personal development environment setup CLI"
 license = "MIT"
 
+[lib]
+name = "setup"
+path = "src/lib.rs"
+
+[[bin]]
+name = "setup"
+path = "src/main.rs"
+
 [dependencies]
 # CLI framework
 clap = { version = "4", features = ["derive", "env"] }
