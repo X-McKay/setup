@@ -31,6 +31,7 @@ impl Registry {
         r.register(Arc::new(super::just::Just));
         r.register(Arc::new(super::lazygit::Lazygit));
         r.register(Arc::new(super::mise::Mise));
+        r.register(Arc::new(super::neovim::Neovim));
         r.register(Arc::new(super::obsidian::Obsidian));
         r.register(Arc::new(super::spotify::Spotify));
         r.register(Arc::new(super::tldr::Tldr));
@@ -231,6 +232,11 @@ mod tests {
     #[test]
     fn claude_code_is_registered() {
         assert_registered("claude-code");
+    }
+
+    #[test]
+    fn neovim_is_registered() {
+        assert_registered("neovim");
     }
 
     #[test]

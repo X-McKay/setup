@@ -20,6 +20,7 @@ pub mod jq;
 pub mod just;
 pub mod lazygit;
 pub mod mise;
+pub mod neovim;
 pub mod obsidian;
 pub mod registry;
 pub mod spotify;
