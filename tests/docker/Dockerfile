@@ -17,12 +17,18 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m -s /bin/bash testuser && \
     echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Install Rust as testuser
+# Copy .tool-versions for mise (needs to be owned by testuser)
+COPY --chown=testuser:testuser bootstrap/dotfiles/tool-versions /home/testuser/.tool-versions
+
+# Install mise and Rust as testuser (mirrors bootstrap.sh flow)
 USER testuser
 WORKDIR /home/testuser
 ENV HOME=/home/testuser
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/home/testuser/.cargo/bin:${PATH}"
+ENV PATH="/home/testuser/.local/bin:${PATH}"
+
+RUN curl -fsSL https://mise.run | sh
+RUN mise install --yes
+ENV PATH="/home/testuser/.local/share/mise/shims:${PATH}"
 
 # Copy the project (as root, then fix permissions)
 USER root
@@ -32,7 +38,7 @@ RUN chown -R testuser:testuser /setup
 
 # Build the CLI as testuser
 USER testuser
-RUN cd cli && cargo build --release
+RUN cargo build --release --manifest-path cli/Cargo.toml
 
 # Copy test script and set permissions
 USER root
