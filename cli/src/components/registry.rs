@@ -24,6 +24,7 @@ impl Registry {
         r.register(Arc::new(super::chromium::Chromium));
         r.register(Arc::new(super::discord::Discord));
         r.register(Arc::new(super::docker::Docker));
+        r.register(Arc::new(super::gpg::Gpg));
         r.register(Arc::new(super::ghostty::Ghostty));
         r.register(Arc::new(super::gh::Gh));
         r.register(Arc::new(super::glow::Glow));
@@ -261,6 +262,11 @@ mod tests {
     #[test]
     fn ssh_keys_is_registered() {
         assert_registered("ssh-keys");
+    }
+
+    #[test]
+    fn gpg_is_registered() {
+        assert_registered("gpg");
     }
 
     #[test]

@@ -13,6 +13,7 @@ pub mod claude_code;
 pub mod chromium;
 pub mod discord;
 pub mod docker;
+pub mod gpg;
 pub mod ghostty;
 pub mod gh;
 pub mod glow;
