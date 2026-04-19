@@ -37,7 +37,7 @@
 | Execution model | Sequential, topologically ordered. |
 | Install-state tracking | None. `is_installed()` probes reality each time. |
 | Intent tracking | Persisted in `~/.config/setup/active.toml` (written by `setup install --profile`, read by `doctor` and `uninstall`). |
-| Component reversibility | Per-component `is_reversible()`. Default true. Components that generate user material (SSH keys, GPG) return false and are skipped by `--rollback-on-failure`. |
+| Component reversibility | Two orthogonal axes: `uninstall()` (whether removal is *possible*) and `is_reversible()` (whether removal is *safe to automate*). SSH/GPG components typically implement `uninstall()` AND return `is_reversible() = false`: `setup uninstall ssh-keys --force` works; `--rollback-on-failure` skips them. See §4.4. |
 | User manifest scope | Override/reshape only. Cannot introduce new component IDs without a Rust implementation. |
 
 ## 4. Data model
@@ -144,20 +144,39 @@ pub trait Component: Send + Sync {
     /// Install the component. MUST be idempotent — safe to re-run.
     fn install(&self) -> anyhow::Result<()>;
 
-    /// Whether this component can be safely uninstalled automatically.
-    /// Returns false for components that generate user material (SSH keys, GPG keys) —
-    /// `--rollback-on-failure` skips these, and `setup uninstall <id>` refuses without --force.
-    /// Default: true.
+    /// Whether this component is safe for AUTOMATIC uninstall (i.e., by
+    /// `--rollback-on-failure`). Orthogonal to whether `uninstall()` is implemented.
+    ///
+    /// - true (default): `--rollback-on-failure` may call `uninstall()` without extra confirmation.
+    /// - false: `--rollback-on-failure` SKIPS this component with a printed notice.
+    ///   The component may still implement `uninstall()` — it just won't be called automatically.
+    ///   Override to false for components that manage user material (SSH keys, GPG keys, etc.)
+    ///   where destruction on rollback would be a footgun.
     fn is_reversible(&self) -> bool { true }
 
     /// Remove the component. Best-effort; documented scope limits per component.
-    /// Default implementation refuses — components that want to be uninstallable must override.
-    /// Called by `setup uninstall` and (for reversible components) by `--rollback-on-failure`.
+    ///
+    /// Default implementation refuses — this is the safe default for components that
+    /// truly cannot be cleanly uninstalled. Components that want `setup uninstall <id>`
+    /// to work must override this.
+    ///
+    /// Called by:
+    /// - `setup uninstall <id>` — always calls `uninstall()` if implemented (subject to
+    ///   the `--force` check for non-reversible components below).
+    /// - `--rollback-on-failure` — calls `uninstall()` only when `is_reversible()` is true.
+    ///
+    /// Components are expected to implement `uninstall()` whenever removal is *possible*,
+    /// regardless of `is_reversible()`. The two axes are independent:
+    ///
+    /// | is_reversible | uninstall() overridden | `setup uninstall <id>`      | --rollback-on-failure |
+    /// |---------------|------------------------|------------------------------|------------------------|
+    /// | true          | yes                    | works                        | called                 |
+    /// | false         | yes                    | requires --force             | skipped (with notice)  |
+    /// | either        | no (default refuses)   | fails with "not removable"   | skipped (with notice)  |
     fn uninstall(&self) -> anyhow::Result<()> {
         anyhow::bail!(
-            "{} does not support uninstall (is_reversible = {})",
-            self.id(),
-            self.is_reversible()
+            "{} does not implement uninstall — it cannot be removed by this tool",
+            self.id()
         )
     }
 
@@ -182,7 +201,11 @@ Each component lives at `cli/src/components/<id>.rs` as a unit struct implementi
 
 Adding a new component:
 1. Add one `[[components]]` entry to `bootstrap/manifest.toml`.
-2. Create `cli/src/components/<id>.rs` with a struct implementing `Component`. Override `uninstall()` if the component is reversible (most are). Override `is_reversible()` to `false` for components that generate user material.
+2. Create `cli/src/components/<id>.rs` with a struct implementing `Component`.
+   - Implement `id`, `is_installed`, `install`.
+   - **Override `uninstall()`** if removal is technically possible. Skip only if the component genuinely cannot be uninstalled.
+   - **Override `is_reversible()` to `false`** if automatic rollback would destroy user material (SSH keys, GPG keys, generated secrets). This is independent of whether `uninstall()` is implemented — ssh-keys will typically have both `uninstall()` implemented *and* `is_reversible() = false`, so `setup uninstall ssh-keys --force` works but `--rollback-on-failure` skips it.
+   - Override `verify()` and `dry_run()` where meaningful.
 3. Add one `registry.register(Arc::new(...))` line to `registry.rs`.
 
 ### 4.5 Intent persistence (`active.toml`)
@@ -196,18 +219,27 @@ File: `~/.config/setup/active.toml`
 active_profiles = ["server", "ai-heavy"]
 ```
 
-Who writes it:
-- `setup install --profile X [--profile Y]` writes the union of passed profiles after a successful run.
-- `setup profile activate <name>` / `setup profile deactivate <name>` maintain it without installing.
-- Users may edit it directly.
+**Write semantics.** `active.toml` is updated by these paths with precise rules:
+
+| Trigger | Behavior |
+|---|---|
+| `setup install --profile X [--profile Y]` completes **without error** (all selected components installed or already present) | **Union-add** X, Y to existing `active_profiles`. Existing entries preserved. |
+| `setup install --profile X` completes **with `--keep-going`**, some components failed | **Union-add** X. Intent was declared by the user; doctor surfaces the still-missing components. Partial install ≠ invalid intent. |
+| `setup install --profile X` **stops on failure** (no `--keep-going`) | **No change** to `active.toml`. Intent wasn't realized; user should fix and re-run. |
+| `setup install --profile X --rollback-on-failure` triggers rollback | **No change** to `active.toml`. |
+| `setup install <components>` (no `--profile`) | **No change** to `active.toml`. Ad-hoc installs don't alter declared intent. |
+| `setup install --all` | **No change** to `active.toml`. `--all` is an override, not a declaration of long-term intent. |
+| `setup profile activate <name>` | Add `<name>` to `active_profiles` (no install). |
+| `setup profile deactivate <name>` | Remove `<name>` from `active_profiles` (no uninstall). |
+| User edits the file directly | Honored as-is on next read. Invalid profile names produce a warning but don't fail the run (see §11). |
 
 Who reads it:
-- `setup doctor` with no `--profile` flag uses `active_profiles` as the "active set." If the file doesn't exist or is empty, doctor switches to **informational-only mode** (everything reported with `~`/`?`, exit code 0). This avoids false failures on machines where the user never declared intent.
+- `setup doctor` with no `--profile` flag uses `active_profiles` as the active set for the profile-dependent checks (declared-but-missing, installed-but-not-declared). See §6 for precise fallback behavior — critically, profile-independent checks (PATH, dotfile drift, broken symlinks) are **not** affected by the absence of intent.
 - `setup uninstall <id>` checks `active_profiles` to refine the "other components depend on this" warning.
 
 If `--profile` is passed explicitly to `doctor`, the intent file is ignored for that run.
 
-Rationale: the reviewer of an earlier draft of this spec flagged that `doctor` without persistent intent either produces false failures (if it assumes the union of all profiles) or useless noise (if it accepts anything). Distinguishing user-declared *intent* (persisted) from system *state* (probed) resolves this cleanly without reintroducing the "state file lies" problem.
+Rationale: Distinguishing user-declared *intent* (persisted) from system *state* (probed) lets doctor produce meaningful results on both declared-intent machines (server, workstation, etc.) and ad-hoc machines (no profile declared) without reintroducing the "state file lies" problem.
 
 ## 5. Runtime behavior
 
@@ -240,30 +272,66 @@ Flags:
 
 ### 5.3 `setup uninstall`
 
-- `setup uninstall <id>` — calls `uninstall()` on the target. Behavior:
-  - If `is_reversible()` returns false (e.g. ssh-keys, gpg — components that manage user material), refuse unless `--force` is passed. The force flag acknowledges the destructive intent explicitly.
-  - If other installed components declare `depends_on = [<id>]`, refuse unless `--force` (ignore dependents) or `--cascade` (also uninstall dependents in reverse topo order).
-  - Each component's `uninstall()` docs its own scope limits (e.g. apt transitive deps stay; `gh auth` state stays).
-- **No `setup uninstall --profile` in v1.** With composable profiles and shared base dependencies, safe set-difference uninstall requires design work that's out of scope for this round (see §12). Uninstall one component at a time, or remove components explicitly.
+`setup uninstall <id>` calls the component's `uninstall()` method. Control flow:
+
+1. **Does the component implement `uninstall()`?** (i.e., override the trait default.) If not, fail with `"<id>: not removable by this tool"` — no flag can force it, because there is no implementation to call. This is the case for components that truly can't be cleanly removed.
+2. **Is `is_reversible()` false?** (ssh-keys, gpg, etc.) If yes, refuse unless `--force` is passed. The force flag acknowledges destruction of user material explicitly.
+3. **Do other installed components declare `depends_on = [<id>]`?** If yes, refuse unless `--force` (ignore dependents) or `--cascade` (uninstall dependents first, reverse topo order).
+4. Call `uninstall()`. Component's `uninstall()` docstring documents its own scope limits (apt transitive deps stay; `gh auth` state stays; etc.).
+
+Matrix (summarizes the trait docs in §4.4):
+
+| component shape | `setup uninstall <id>` | `setup uninstall <id> --force` | `--rollback-on-failure` |
+|---|---|---|---|
+| reversible, `uninstall()` implemented | works | works | called |
+| non-reversible, `uninstall()` implemented (ssh-keys, gpg) | refuses | works | skipped (notice) |
+| `uninstall()` not implemented | fails with "not removable" | fails with "not removable" | skipped (notice) |
+
+**No `setup uninstall --profile` in v1.** With composable profiles and shared base dependencies, safe set-difference uninstall requires design work that's out of scope for this round (see §12). Uninstall one component at a time, or remove components explicitly.
 
 ## 6. Doctor
 
 `setup doctor [--profile P]... [--verify] [--warn-only]`
 
-**Active set resolution:**
+### Check categories
+
+Doctor's checks fall into two categories that are treated independently:
+
+- **Machine-health checks** — profile-independent. Run always at full severity regardless of whether intent is declared.
+- **Profile-drift checks** — profile-dependent. Require an active set to be meaningful; downgraded or skipped when no intent is declared.
+
+| # | Check | Category |
+|---|---|---|
+| 1 | PATH sanity — is `~/.local/bin` on `$PATH`? Flag duplicates or shadowing. | Machine-health |
+| 2 | Declared-but-missing — for each component in active set, `is_installed()` must be true. | Profile-drift |
+| 3 | Installed-but-not-declared — for each component in the registry not in active set, if `is_installed()` is true, note informationally. | Profile-drift |
+| 4 | Dotfile drift — diff repo version vs installed. | Machine-health |
+| 5 | Broken symlinks — scan `~/.local/bin` for dangling links. | Machine-health |
+| 6 | Optional `verify()` — run each installed component's `verify()` when `--verify` is passed. | Machine-health |
+
+### Active-set resolution for profile-drift checks
+
 1. If `--profile` is passed (one or more times), use the union of those profiles. Ignore the intent file.
 2. Else, if `~/.config/setup/active.toml` exists and has non-empty `active_profiles`, use that.
-3. Else, enter **informational-only mode**: report all findings with `~` / `?` severity, always exit `0`. In this mode doctor does not fail on "declared-but-missing" because no intent has been declared. Output includes a one-line hint: `hint: no active profiles — run 'setup install --profile <name>' or 'setup profile activate <name>'`.
+3. Else, **skip profile-drift checks** (do not run checks 2 and 3 at all). Output a one-line note: `info: no active profiles — skipping profile-drift checks. Run 'setup install --profile <name>' or 'setup profile activate <name>' to declare intent.`
 
-Checks (in order):
-1. **PATH sanity** — is `~/.local/bin` on `$PATH`? Flag duplicates or shadowing.
-2. **Declared-but-missing** — for each component in the active profile(s), `is_installed()` must be true. If false, flag with a fix command.
-3. **Installed-but-not-declared** — for each component in the registry not in the active profile(s), if `is_installed()` is true, flag informationally.
-4. **Dotfile drift** — diff repo version vs installed. Reuses existing `dotfiles diff` logic.
-5. **Broken symlinks** — scan `~/.local/bin` for dangling links.
-6. **Optional `verify()`** — run each installed component's `verify()` when `--verify` is passed.
+Machine-health checks **always run** regardless of intent declaration. A broken `PATH` or a dangling symlink is a real problem whether or not the user has declared a profile. Their individual severity mapping (below) is independent of intent.
 
-Output example:
+### Severity mapping and exit codes
+
+Each finding is tagged with a severity symbol:
+
+| Symbol | Meaning | Contributes to exit 1? |
+|---|---|---|
+| `✓` | OK | no |
+| `✗` | declared but missing | **yes** (profile-drift only) |
+| `!` | broken / structural problem (PATH not set, dangling symlinks, `verify()` failed) | **yes** |
+| `~` | drift that might be intentional (dotfile edited locally) | no |
+| `?` | informational (installed but not in active profile) | no |
+
+`--warn-only` forces exit `0` regardless.
+
+### Output example (intent declared)
 
 ```
 setup doctor --profile workstation
@@ -278,11 +346,20 @@ setup doctor --profile workstation
 Issues: 1 missing, 1 dotfile drift, 1 PATH warning
 ```
 
-Exit codes:
-- `0` — no `✗` or `!` findings.
-- `1` — any `✗` (missing) or `!` (broken).
-- `~` and `?` are informational, do not fail.
-- `--warn-only` forces `0`.
+### Output example (no intent declared)
+
+```
+setup doctor
+
+info: no active profiles — skipping profile-drift checks. Run 'setup install --profile <name>' or 'setup profile activate <name>' to declare intent.
+
+! ~/.local/bin  not in PATH                   → add to .bashrc manually
+~ .bashrc       differs from repo             → setup dotfiles sync
+
+Issues: 1 PATH warning, 1 dotfile drift  (profile-drift checks skipped)
+```
+
+Note the second example still exits `1` because of the `!` PATH warning — machine health is evaluated independently of intent.
 
 Doctor never modifies state. A future `doctor --fix` mode is an additive, separate design.
 
@@ -379,7 +456,8 @@ The existing test container runs without systemd or privileged mode. Components 
 Tests:
 - `setup install --dry-run --profile server` — exits 0, no filesystem changes (Docker runs the dry-run on the full profile; dry-run is safe because it performs no install steps).
 - `setup install --profile server` inside fresh container — installs only the `docker-testable` subset; each installed component's `is_installed()` returns true afterward. Skipped components are reported by name in test output.
-- `setup doctor` with no intent file → informational-only mode, exit 0, hint message present.
+- `setup doctor` with no intent file and a healthy system → exits 0; profile-drift checks skipped with hint; machine-health checks run clean.
+- `setup doctor` with no intent file and a broken PATH → exits 1 (PATH is machine-health, runs regardless of intent).
 - `setup doctor --profile server` on fresh container → reports all declared-missing, exits 1.
 - `setup doctor --profile server` after install → reports the docker-skipped components as `✗` (they were declared, not installed). Test asserts the expected-skipped set matches.
 - `setup install --profile server` then `setup profile activate server` writes `~/.config/setup/active.toml`; subsequent `setup doctor` (no args) uses it.
