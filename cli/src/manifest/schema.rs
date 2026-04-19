@@ -44,6 +44,61 @@ impl ComponentSpec {
     }
 }
 
+impl Manifest {
+    /// Validate structural invariants: non-empty kebab-case ids, unique ids,
+    /// every depends_on / profile component reference resolves inside this manifest.
+    /// Called after merging repo + user manifests.
+    pub fn validate(&self) -> anyhow::Result<()> {
+        use std::collections::HashSet;
+
+        let mut seen = HashSet::new();
+        for c in &self.components {
+            if c.id.is_empty() {
+                anyhow::bail!("component has empty id");
+            }
+            if !is_kebab_case(&c.id) {
+                anyhow::bail!("component has invalid id: {:?} (must be lowercase kebab-case)", c.id);
+            }
+            if !seen.insert(c.id.clone()) {
+                anyhow::bail!("duplicate component id: {:?}", c.id);
+            }
+        }
+
+        // Reference integrity — every depends_on id must exist in the manifest.
+        let ids: HashSet<&str> = self.components.iter().map(|c| c.id.as_str()).collect();
+        for c in &self.components {
+            for d in &c.depends_on {
+                if !ids.contains(d.as_str()) {
+                    anyhow::bail!("component {:?} depends on unknown component {:?}", c.id, d);
+                }
+            }
+        }
+
+        // Profile component references must also resolve.
+        for (name, p) in &self.profiles {
+            for cid in &p.components {
+                if !ids.contains(cid.as_str()) {
+                    anyhow::bail!("profile {:?} references unknown component {:?}", name, cid);
+                }
+            }
+            for ext in &p.extends {
+                if !self.profiles.contains_key(ext) {
+                    anyhow::bail!("profile {:?} extends unknown profile {:?}", name, ext);
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+fn is_kebab_case(s: &str) -> bool {
+    !s.is_empty()
+        && s.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        && !s.starts_with('-')
+        && !s.ends_with('-')
+}
+
 /// A named, composable machine shape. Extends transitively pulls another
 /// profile's components.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -144,5 +199,44 @@ components = []
             "expected unknown-field error, got: {}",
             err
         );
+    }
+
+    #[test]
+    fn rejects_empty_id() {
+        let input = r#"
+[[components]]
+id = ""
+display_name = "X"
+"#;
+        let m: Manifest = toml::from_str(input).unwrap();
+        let err = m.validate().unwrap_err();
+        assert!(err.to_string().contains("empty id"));
+    }
+
+    #[test]
+    fn rejects_invalid_id_chars() {
+        let input = r#"
+[[components]]
+id = "Apt_Packages"
+display_name = "X"
+"#;
+        let m: Manifest = toml::from_str(input).unwrap();
+        let err = m.validate().unwrap_err();
+        assert!(err.to_string().contains("invalid id"));
+    }
+
+    #[test]
+    fn rejects_duplicate_ids() {
+        let input = r#"
+[[components]]
+id = "apt"
+display_name = "X"
+[[components]]
+id = "apt"
+display_name = "Y"
+"#;
+        let m: Manifest = toml::from_str(input).unwrap();
+        let err = m.validate().unwrap_err();
+        assert!(err.to_string().contains("duplicate"));
     }
 }
