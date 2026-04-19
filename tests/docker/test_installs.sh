@@ -30,6 +30,16 @@ skip() {
   SKIPPED=$((SKIPPED + 1))
 }
 
+check_exit() {
+  if [ "$1" -eq 0 ]; then
+    echo -e "${GREEN}[PASS]${NC} $2"
+    PASSED=$((PASSED + 1))
+  else
+    echo -e "${RED}[FAIL]${NC} $2 (exit $1)"
+    FAILED=$((FAILED + 1))
+  fi
+}
+
 check_command() {
   local cmd=$1
   local desc=$2
@@ -204,6 +214,31 @@ $SETUP_BIN dotfiles sync --force
 check_file "$HOME/.bashrc" "bashrc synced"
 check_file "$HOME/.aliases" "aliases synced"
 check_file "$HOME/.exports" "exports synced"
+
+# Test 17: profile-based install and doctor/profile flows
+echo ""
+echo "--- Test: install --profile server --dry-run ---"
+$SETUP_BIN install --profile server --dry-run
+check_exit $? "install --profile server --dry-run exits 0"
+
+echo ""
+echo "--- Test: doctor --warn-only (no intent) ---"
+$SETUP_BIN doctor --warn-only
+check_exit $? "doctor --warn-only exits 0"
+
+echo ""
+echo "--- Test: profile activate / deactivate ---"
+export SETUP_INTENT="$HOME/.config/setup/active.toml"
+rm -f "$SETUP_INTENT"
+$SETUP_BIN profile activate server
+grep -q 'server' "$SETUP_INTENT" && echo -e "${GREEN}[PASS]${NC} activate wrote server" || { echo -e "${RED}[FAIL]${NC} activate did not write server"; FAILED=$((FAILED+1)); }
+$SETUP_BIN profile deactivate server
+! grep -q 'server' "$SETUP_INTENT" && echo -e "${GREEN}[PASS]${NC} deactivate removed server" || { echo -e "${RED}[FAIL]${NC} deactivate did not remove"; FAILED=$((FAILED+1)); }
+unset SETUP_INTENT
+
+echo ""
+echo "--- Test: doctor --profile server (fresh, expect failures for docker/monitoring/backup) ---"
+$SETUP_BIN doctor --profile server || true
 
 # Skipped tests (require user input or special setup)
 echo ""
