@@ -3,7 +3,7 @@
 # Usage: ./setup.sh [options]
 #
 # This script builds and runs the Rust CLI for system setup.
-# If Rust is not installed, it falls back to bash scripts.
+# If Rust is not installed, it suggests running bootstrap.sh first.
 
 set -e
 
@@ -19,8 +19,22 @@ info() { echo -e "${GREEN}==>${NC} $1"; }
 warn() { echo -e "${YELLOW}==>${NC} $1"; }
 error() { echo -e "${RED}==>${NC} $1"; }
 
-# Check if Rust/cargo is available
-if ! command -v cargo &>/dev/null; then
+# Find cargo: check PATH first, then try mise
+CARGO_CMD=""
+
+if command -v cargo &>/dev/null; then
+  CARGO_CMD="cargo"
+elif command -v mise &>/dev/null; then
+  if mise which cargo &>/dev/null 2>&1; then
+    CARGO_CMD="mise exec -- cargo"
+  fi
+elif [[ -x "$HOME/.local/bin/mise" ]]; then
+  if "$HOME/.local/bin/mise" which cargo &>/dev/null 2>&1; then
+    CARGO_CMD="$HOME/.local/bin/mise exec -- cargo"
+  fi
+fi
+
+if [[ -z "$CARGO_CMD" ]]; then
   warn "Rust not found. Using bash fallback..."
   echo ""
 
@@ -35,14 +49,15 @@ if ! command -v cargo &>/dev/null; then
   fi
 
   info "Basic setup complete!"
-  echo "To use the full CLI, install Rust first: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  echo ""
+  echo "To use the full CLI, run ./bootstrap.sh first to install mise and Rust."
   exit 0
 fi
 
 # Build CLI if needed
 if [[ ! -f cli/target/release/setup ]] || [[ cli/src -nt cli/target/release/setup ]]; then
   info "Building setup CLI..."
-  (cd cli && cargo build --release --quiet)
+  $CARGO_CMD build --release --quiet --manifest-path cli/Cargo.toml
 fi
 
 # Run the CLI, passing through all arguments
