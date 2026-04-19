@@ -8,6 +8,7 @@ use anyhow::Result;
 
 pub mod apt;
 pub mod docker;
+pub mod lazygit;
 pub mod mise;
 pub mod registry;
 pub mod tools;
