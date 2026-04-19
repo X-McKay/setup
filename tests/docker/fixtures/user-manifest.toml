@@ -1,0 +1,9 @@
+# Test fixture: redefines workstation to exclude `gh`, adds a new profile.
+
+[profiles.workstation]
+description = "Workstation (test-override)"
+extends = ["base"]
+components = ["lazygit", "just", "jq"]
+
+[profiles.minimal]
+components = ["apt"]

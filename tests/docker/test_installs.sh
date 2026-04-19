@@ -240,6 +240,15 @@ echo ""
 echo "--- Test: doctor --profile server (fresh, expect failures for docker/monitoring/backup) ---"
 $SETUP_BIN doctor --profile server || true
 
+echo ""
+echo "--- Test: user-manifest override ---"
+mkdir -p "$HOME/.config/setup"
+cp /setup/tests/docker/fixtures/user-manifest.toml "$HOME/.config/setup/manifest.toml"
+$SETUP_BIN profile show workstation | grep -q 'lazygit' && echo -e "${GREEN}[PASS]${NC} override workstation has lazygit" || { echo -e "${RED}[FAIL]${NC} override workstation missing lazygit"; FAILED=$((FAILED+1)); }
+$SETUP_BIN profile show workstation | grep -q 'gh' && { echo -e "${RED}[FAIL]${NC} override workstation still has gh"; FAILED=$((FAILED+1)); } || echo -e "${GREEN}[PASS]${NC} override workstation excludes gh"
+$SETUP_BIN profile show minimal | grep -q 'apt' && echo -e "${GREEN}[PASS]${NC} new minimal profile works" || { echo -e "${RED}[FAIL]${NC} new minimal profile missing"; FAILED=$((FAILED+1)); }
+rm -f "$HOME/.config/setup/manifest.toml"
+
 # Skipped tests (require user input or special setup)
 echo ""
 echo "--- Skipped Tests ---"
