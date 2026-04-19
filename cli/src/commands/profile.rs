@@ -117,4 +117,16 @@ mod tests {
         let i = intent::read(&p).unwrap();
         assert!(!i.active_profiles.contains(&"server".to_string()));
     }
+
+    #[test]
+    fn activate_unknown_profile_errors() {
+        tmp_intent();
+        let err = run(ProfileArgs {
+            command: ProfileCmd::Activate {
+                name: "ghost".into(),
+            },
+        })
+        .unwrap_err();
+        assert!(err.to_string().contains("unknown profile"));
+    }
 }
