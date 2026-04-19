@@ -22,6 +22,7 @@ impl Registry {
         r.register(Arc::new(super::chromium::Chromium));
         r.register(Arc::new(super::discord::Discord));
         r.register(Arc::new(super::docker::Docker));
+        r.register(Arc::new(super::ghostty::Ghostty));
         r.register(Arc::new(super::gh::Gh));
         r.register(Arc::new(super::glow::Glow));
         r.register(Arc::new(super::hyperfine::Hyperfine));
@@ -219,6 +220,11 @@ mod tests {
     #[test]
     fn vlc_is_registered() {
         assert_registered("vlc");
+    }
+
+    #[test]
+    fn ghostty_is_registered() {
+        assert_registered("ghostty");
     }
 
     #[test]

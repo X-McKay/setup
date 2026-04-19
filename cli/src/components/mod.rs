@@ -11,6 +11,7 @@ pub mod bottom;
 pub mod chromium;
 pub mod discord;
 pub mod docker;
+pub mod ghostty;
 pub mod gh;
 pub mod glow;
 pub mod hyperfine;
