@@ -18,6 +18,7 @@ impl Registry {
             components: HashMap::new(),
         };
         r.register(Arc::new(super::apt::Apt));
+        r.register(Arc::new(super::backup::Backup));
         r.register(Arc::new(super::bottom::Bottom));
         r.register(Arc::new(super::claude_code::ClaudeCode));
         r.register(Arc::new(super::chromium::Chromium));
@@ -249,6 +250,11 @@ mod tests {
     #[test]
     fn monitoring_is_registered() {
         assert_registered("monitoring");
+    }
+
+    #[test]
+    fn backup_is_registered() {
+        assert_registered("backup");
     }
 
     #[test]

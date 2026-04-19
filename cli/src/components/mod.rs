@@ -8,6 +8,7 @@ use anyhow::Result;
 
 pub mod apt;
 pub mod bottom;
+pub mod backup;
 pub mod claude_code;
 pub mod chromium;
 pub mod discord;
