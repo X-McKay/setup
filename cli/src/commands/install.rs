@@ -301,3 +301,24 @@ fn install_component_with_progress(mp: &MultiProgress, component: &Component) ->
     pb.finish_and_clear();
     result
 }
+
+fn install_via_registry(mp: &MultiProgress, id: &str) -> Result<()> {
+    use crate::components::registry::Registry;
+
+    let spinner_style = ProgressStyle::default_spinner()
+        .template("{spinner:.cyan} {msg}")
+        .unwrap()
+        .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏");
+
+    let pb = mp.add(ProgressBar::new_spinner());
+    pb.set_style(spinner_style);
+    pb.set_message(format!("{}...", style(id).cyan()));
+    pb.enable_steady_tick(Duration::from_millis(80));
+
+    let registry = Registry::build();
+    let component = registry.get(id)?;
+    let result = component.install();
+
+    pb.finish_and_clear();
+    result
+}
