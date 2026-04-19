@@ -20,6 +20,7 @@ impl Registry {
         r.register(Arc::new(super::apt::Apt));
         r.register(Arc::new(super::bottom::Bottom));
         r.register(Arc::new(super::chromium::Chromium));
+        r.register(Arc::new(super::discord::Discord));
         r.register(Arc::new(super::docker::Docker));
         r.register(Arc::new(super::gh::Gh));
         r.register(Arc::new(super::glow::Glow));
@@ -195,6 +196,11 @@ mod tests {
     #[test]
     fn chromium_is_registered() {
         assert_registered("chromium");
+    }
+
+    #[test]
+    fn discord_is_registered() {
+        assert_registered("discord");
     }
 
     #[test]
