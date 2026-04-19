@@ -320,3 +320,51 @@ fn compute_exit(r: &Report, warn_only: bool) -> i32 {
         0
     }
 }
+
+#[cfg(test)]
+mod exit_tests {
+    use super::*;
+
+    #[test]
+    fn ok_report_exits_zero() {
+        let r = Report::default();
+        assert_eq!(compute_exit(&r, false), 0);
+    }
+
+    #[test]
+    fn missing_fails_exit() {
+        let r = Report {
+            drift_findings: vec![Finding {
+                severity: Severity::Missing,
+                subject: "x".into(),
+                message: "m".into(),
+                fix_hint: None,
+            }],
+            ..Default::default()
+        };
+        assert_eq!(compute_exit(&r, false), 1);
+    }
+
+    #[test]
+    fn warn_only_forces_zero() {
+        let r = Report {
+            machine_findings: vec![Finding {
+                severity: Severity::Broken,
+                subject: "x".into(),
+                message: "m".into(),
+                fix_hint: None,
+            }],
+            ..Default::default()
+        };
+        assert_eq!(compute_exit(&r, true), 0);
+    }
+
+    #[test]
+    fn drift_skipped_does_not_fail_on_its_own() {
+        let r = Report {
+            drift_skipped: true,
+            ..Default::default()
+        };
+        assert_eq!(compute_exit(&r, false), 0);
+    }
+}
