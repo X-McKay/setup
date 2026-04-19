@@ -1,7 +1,9 @@
 # ----------------------------------------
 # Al's Ghostty Configuration
-# GitHub Dark High Contrast Theme
 # ----------------------------------------
+
+# Theme ----------------------------------
+theme = GitHub Dark High Contrast
 
 # Font -----------------------------------
 # Primary font (Nerd Font for icons/symbols)
@@ -34,37 +36,6 @@ copy-on-select = clipboard
 
 # Shell integration ----------------------
 shell-integration = bash
-
-# ----------------------------------------
-# GitHub Dark High Contrast Colors
-# ----------------------------------------
-
-background = 0a0c10
-foreground = f0f3f6
-cursor-color = 71b7ff
-cursor-text = 0a0c10
-selection-background = f0f3f6
-selection-foreground = 0a0c10
-
-# Normal colors (0-7)
-palette = 0=#7a828e
-palette = 1=#ff9492
-palette = 2=#26cd4d
-palette = 3=#f0b72f
-palette = 4=#71b7ff
-palette = 5=#cb9eff
-palette = 6=#39c5cf
-palette = 7=#d9dee3
-
-# Bright colors (8-15)
-palette = 8=#9ea7b3
-palette = 9=#ffb1af
-palette = 10=#4ae168
-palette = 11=#f7c843
-palette = 12=#91cbff
-palette = 13=#dbb7ff
-palette = 14=#56d4dd
-palette = 15=#ffffff
 
 # ----------------------------------------
 # Keybindings
