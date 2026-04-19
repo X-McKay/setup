@@ -18,6 +18,7 @@ impl Registry {
             components: HashMap::new(),
         };
         r.register(Arc::new(super::apt::Apt));
+        r.register(Arc::new(super::bottom::Bottom));
         r.register(Arc::new(super::docker::Docker));
         r.register(Arc::new(super::glow::Glow));
         r.register(Arc::new(super::just::Just));
@@ -153,6 +154,11 @@ mod tests {
     #[test]
     fn glow_is_registered() {
         assert_registered("glow");
+    }
+
+    #[test]
+    fn bottom_is_registered() {
+        assert_registered("bottom");
     }
 
     #[test]
