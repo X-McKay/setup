@@ -19,6 +19,7 @@ impl Registry {
         };
         r.register(Arc::new(super::apt::Apt));
         r.register(Arc::new(super::docker::Docker));
+        r.register(Arc::new(super::glow::Glow));
         r.register(Arc::new(super::just::Just));
         r.register(Arc::new(super::lazygit::Lazygit));
         r.register(Arc::new(super::mise::Mise));
@@ -147,6 +148,11 @@ mod tests {
     #[test]
     fn just_is_registered() {
         assert_registered("just");
+    }
+
+    #[test]
+    fn glow_is_registered() {
+        assert_registered("glow");
     }
 
     #[test]
