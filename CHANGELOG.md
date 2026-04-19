@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Declarative component manifest (`bootstrap/manifest.toml`) as the source of truth for components and profiles
+- Composable machine-shape profiles: `base`, `server`, `workstation`, `ai-heavy`
+- Persistent intent file at `~/.config/setup/active.toml`
+- Component dependency graph with topological install order and transitive auto-pull
+- `setup install --dry-run`
+- `setup install --rollback-on-failure`
+- `setup install --keep-going`
+- `setup install --verify`
+- `setup uninstall` with `--force` and `--cascade`
+- `setup doctor` for health and drift reporting
+- `setup list [--profile X] [--tag T]`
+- `setup profile list / show / activate / deactivate`
+- Optional `~/.config/setup/manifest.toml` user override
 - Neovim installation with sensible default configuration
 - Tmux Plugin Manager (tpm) installation
 - SSH key generation helper (ED25519)
@@ -17,8 +30,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation workflow for tagged releases
 
 ### Changed
+- Components are now Rust structs implementing a `Component` trait, dispatched by id via `Registry::build()`
+- `setup check` is deprecated and now forwards to `setup doctor`
 - Enhanced mise installation to run `mise install` from .tool-versions
 - Improved apt package installation argument handling
+
+### Removed
+- `cli/src/system/packages/` module (install logic moved to `cli/src/components/<id>.rs`)
+- Hardcoded `Component` enum in `cli/src/commands/install.rs`
+
+### Migration Notes
+- Existing `setup install <component>` invocations still work
+- Consider `setup profile activate workstation` or `setup profile activate server` so `setup doctor` has intent to compare against
+- Run `setup doctor` after upgrading to see drift
 
 ## [0.2.0] - 2026-01-11
 
