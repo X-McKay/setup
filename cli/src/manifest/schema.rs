@@ -88,6 +88,49 @@ impl Manifest {
             }
         }
 
+        // Extends cycle detection via DFS.
+        for start in self.profiles.keys() {
+            let mut stack: Vec<&str> = vec![start.as_str()];
+            let mut path: Vec<&str> = Vec::new();
+            let mut visited: std::collections::HashSet<&str> = std::collections::HashSet::new();
+            while let Some(node) = stack.last().copied() {
+                if !visited.insert(node) {
+                    if path.contains(&node) {
+                        anyhow::bail!(
+                            "profile extends cycle detected: {} -> {}",
+                            path.join(" -> "),
+                            node
+                        );
+                    }
+                    stack.pop();
+                    path.pop();
+                    continue;
+                }
+                path.push(node);
+                let p = &self.profiles[node];
+                let mut pushed = false;
+                for ext in &p.extends {
+                    if !visited.contains(ext.as_str()) {
+                        stack.push(ext.as_str());
+                        pushed = true;
+                        break;
+                    }
+                    // If we've already seen it AND it's on the current path, cycle.
+                    if path.contains(&ext.as_str()) {
+                        anyhow::bail!(
+                            "profile extends cycle detected: {} -> {}",
+                            path.join(" -> "),
+                            ext
+                        );
+                    }
+                }
+                if !pushed {
+                    stack.pop();
+                    path.pop();
+                }
+            }
+        }
+
         Ok(())
     }
 }
@@ -238,5 +281,20 @@ display_name = "Y"
         let m: Manifest = toml::from_str(input).unwrap();
         let err = m.validate().unwrap_err();
         assert!(err.to_string().contains("duplicate"));
+    }
+
+    #[test]
+    fn rejects_extends_cycle() {
+        let input = r#"
+[profiles.a]
+extends = ["b"]
+components = []
+[profiles.b]
+extends = ["a"]
+components = []
+"#;
+        let m: Manifest = toml::from_str(input).unwrap();
+        let err = m.validate().unwrap_err();
+        assert!(err.to_string().contains("cycle"));
     }
 }
