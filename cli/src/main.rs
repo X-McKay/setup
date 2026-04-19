@@ -18,6 +18,18 @@ fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    // Validate manifest <-> registry consistency on every run.
+    // Keep this as a warning during migration so unrelated flows continue
+    // to work even if a future port introduces drift.
+    if let (Ok(manifest), registry) = (
+        manifest::loader::load(),
+        components::registry::Registry::build(),
+    ) {
+        if let Err(e) = registry.validate_against(&manifest) {
+            eprintln!("warning: manifest/registry drift:\n{}\n", e);
+        }
+    }
+
     let cli = Cli::parse();
 
     match cli.command {
