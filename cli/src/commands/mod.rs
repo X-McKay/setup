@@ -6,6 +6,7 @@ pub mod dotfiles;
 pub mod install;
 pub mod interactive;
 pub mod list;
+pub mod profile;
 pub mod uninstall;
 pub mod update;
 
@@ -33,6 +34,9 @@ pub enum Commands {
 
     /// Print the component catalog
     List(list::ListArgs),
+
+    /// Inspect and manage manifest profiles
+    Profile(profile::ProfileArgs),
 
     /// System health + drift report
     Doctor(doctor::DoctorArgs),
