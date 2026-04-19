@@ -6,11 +6,11 @@
 //! Uninstall removes the setup-managed `~/.local/bin/mise` binary. It does
 //! not remove installed runtimes, caches, or config that mise may manage.
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use std::fs;
 
+use super::util::{path_to_str, run_command};
 use super::Component;
-use crate::system::packages;
 
 pub struct Mise;
 
@@ -24,7 +24,7 @@ impl Component for Mise {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_mise()
+        install_mise()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -36,4 +36,32 @@ impl Component for Mise {
         }
         Ok(())
     }
+}
+
+fn install_mise() -> Result<()> {
+    if which::which("mise").is_ok() {
+        run_mise_install()?;
+        return Ok(());
+    }
+
+    let script = run_command("curl", &["-fsSL", "https://mise.run"])?;
+    run_command("sh", &["-c", &script])?;
+    run_mise_install()?;
+
+    Ok(())
+}
+
+fn run_mise_install() -> Result<()> {
+    let home = dirs::home_dir().context("Could not find home directory")?;
+    let tool_versions = home.join(".tool-versions");
+
+    if tool_versions.exists() {
+        let mise_path = home.join(".local").join("bin").join("mise");
+        if mise_path.exists() {
+            let _ = run_command(path_to_str(&mise_path)?, &["install"]);
+        } else if which::which("mise").is_ok() {
+            let _ = run_command("mise", &["install"]);
+        }
+    }
+    Ok(())
 }

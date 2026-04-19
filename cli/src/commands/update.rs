@@ -4,7 +4,7 @@ use console::style;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::Duration;
 
-use crate::system::packages;
+use crate::components::util::{run_command, run_sudo};
 use crate::ui::prompts;
 
 #[derive(Args)]
@@ -156,10 +156,7 @@ pub fn run(args: UpdateArgs) -> Result<()> {
             style("All components updated successfully!").green().bold()
         );
     } else {
-        println!(
-            "\n{}",
-            style("Some components failed to update.").yellow()
-        );
+        println!("\n{}", style("Some components failed to update.").yellow());
     }
 
     Ok(())
@@ -173,19 +170,53 @@ fn update_component_with_progress(mp: &MultiProgress, component: &UpdateComponen
 
     let pb = mp.add(ProgressBar::new_spinner());
     pb.set_style(spinner_style);
-    pb.set_message(format!(
-        "{}...",
-        style(component.display_name()).cyan()
-    ));
+    pb.set_message(format!("{}...", style(component.display_name()).cyan()));
     pb.enable_steady_tick(Duration::from_millis(80));
 
     let result = match component {
-        UpdateComponent::System => packages::update_system(),
-        UpdateComponent::Mise => packages::update_mise(),
-        UpdateComponent::Rust => packages::update_rust_tools(),
-        UpdateComponent::Dotfiles => packages::sync_dotfiles(),
+        UpdateComponent::System => update_system(),
+        UpdateComponent::Mise => update_mise(),
+        UpdateComponent::Rust => update_rust_tools(),
+        UpdateComponent::Dotfiles => sync_dotfiles(),
     };
 
     pb.finish_and_clear();
     result
+}
+
+fn update_system() -> Result<()> {
+    run_sudo("apt", &["update"])?;
+    run_sudo("apt", &["upgrade", "-y"])?;
+    run_sudo("apt", &["autoremove", "-y"])?;
+    Ok(())
+}
+
+fn update_mise() -> Result<()> {
+    run_command("mise", &["self-update"])?;
+    run_command("mise", &["upgrade"])?;
+    Ok(())
+}
+
+fn update_rust_tools() -> Result<()> {
+    run_command("rustup", &["update"])?;
+
+    let tools = ["eza", "git-delta", "bat"];
+    for tool in &tools {
+        let _ = run_command("cargo", &["install", tool, "--locked"]);
+    }
+
+    Ok(())
+}
+
+fn sync_dotfiles() -> Result<()> {
+    use crate::config::dotfiles;
+
+    let managed = dotfiles::get_managed_dotfiles();
+    for (_, source, target) in managed {
+        if source.exists() {
+            dotfiles::copy_dotfile(&source, &target)?;
+        }
+    }
+
+    Ok(())
 }

@@ -8,8 +8,8 @@ use anyhow::{bail, Context, Result};
 use std::path::Path;
 use std::process::Command;
 
+use super::util::run_sudo;
 use super::Component;
-use crate::system::packages;
 
 pub struct Obsidian;
 
@@ -23,7 +23,7 @@ impl Component for Obsidian {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_obsidian()
+        install_obsidian()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -38,4 +38,13 @@ impl Component for Obsidian {
         }
         Ok(())
     }
+}
+
+fn install_obsidian() -> Result<()> {
+    if which::which("obsidian").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "obsidian", "--classic"])?;
+    Ok(())
 }

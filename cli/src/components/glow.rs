@@ -10,8 +10,8 @@ use anyhow::{anyhow, bail, Context, Result};
 use std::fs;
 use std::process::Command;
 
+use super::util::{ensure_bin_dir, fallback_versions, fetch_github_version, run_command, run_sudo};
 use super::Component;
-use crate::system::packages;
 
 pub struct Glow;
 
@@ -25,7 +25,7 @@ impl Component for Glow {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_glow()
+        install_glow()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -47,4 +47,42 @@ impl Component for Glow {
         }
         Ok(())
     }
+}
+
+fn install_glow() -> Result<()> {
+    if which::which("glow").is_ok() {
+        return Ok(());
+    }
+
+    if run_sudo("apt", &["install", "-y", "glow"]).is_ok() {
+        return Ok(());
+    }
+
+    let bin_dir = ensure_bin_dir()?;
+    let version = fetch_github_version("charmbracelet/glow", fallback_versions::GLOW);
+
+    let arch = match std::env::consts::ARCH {
+        "x86_64" => "x86_64",
+        "aarch64" => "arm64",
+        _ => return Err(anyhow!("Unsupported architecture")),
+    };
+
+    let url = format!(
+        "https://github.com/charmbracelet/glow/releases/download/v{}/glow_{}_Linux_{}.tar.gz",
+        version, version, arch
+    );
+
+    run_command(
+        "sh",
+        &[
+            "-c",
+            &format!(
+                "curl -Lo /tmp/glow.tar.gz '{}' && tar xf /tmp/glow.tar.gz -C /tmp && mv /tmp/glow_*/glow {}",
+                url,
+                bin_dir.display()
+            ),
+        ],
+    )?;
+
+    Ok(())
 }

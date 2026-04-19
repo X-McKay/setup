@@ -8,8 +8,8 @@ use anyhow::{bail, Context, Result};
 use std::path::Path;
 use std::process::Command;
 
+use super::util::run_sudo;
 use super::Component;
-use crate::system::packages;
 
 pub struct Discord;
 
@@ -23,7 +23,7 @@ impl Component for Discord {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_discord()
+        install_discord()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -38,4 +38,13 @@ impl Component for Discord {
         }
         Ok(())
     }
+}
+
+fn install_discord() -> Result<()> {
+    if which::which("discord").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "discord"])?;
+    Ok(())
 }

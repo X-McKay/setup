@@ -6,11 +6,11 @@
 //! Uninstall deletes the generated keypair. This is destructive user
 //! material, so the component is not automatically reversible.
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use std::fs;
 
+use super::util::{path_to_str, run_command};
 use super::Component;
-use crate::system::packages;
 
 pub struct SshKeys;
 
@@ -27,7 +27,7 @@ impl Component for SshKeys {
     }
 
     fn install(&self) -> Result<()> {
-        packages::setup_ssh_keys()
+        setup_ssh_keys()
     }
 
     fn is_reversible(&self) -> bool {
@@ -44,4 +44,53 @@ impl Component for SshKeys {
         }
         Ok(())
     }
+}
+
+fn setup_ssh_keys() -> Result<()> {
+    let home = dirs::home_dir().context("Could not find home directory")?;
+    let ssh_dir = home.join(".ssh");
+    let key_path = ssh_dir.join("id_ed25519");
+
+    if key_path.exists() {
+        println!("SSH key already exists at {}", key_path.display());
+        return Ok(());
+    }
+
+    fs::create_dir_all(&ssh_dir)?;
+    run_command("chmod", &["700", path_to_str(&ssh_dir)?])?;
+
+    let email = std::env::var("EMAIL")
+        .or_else(|_| {
+            run_command("git", &["config", "--global", "user.email"]).map(|s| s.trim().to_string())
+        })
+        .unwrap_or_else(|_| "user@localhost".to_string());
+
+    eprintln!(
+        "Note: SSH key generated without passphrase. Add one with: ssh-keygen -p -f ~/.ssh/id_ed25519"
+    );
+
+    run_command(
+        "ssh-keygen",
+        &[
+            "-t",
+            "ed25519",
+            "-C",
+            &email,
+            "-f",
+            path_to_str(&key_path)?,
+            "-N",
+            "",
+        ],
+    )?;
+
+    run_command("chmod", &["600", path_to_str(&key_path)?])?;
+    run_command("chmod", &["644", &format!("{}.pub", key_path.display())])?;
+
+    println!("\nSSH public key generated. Add this to GitHub/GitLab:");
+    println!("----------------------------------------");
+    let pub_key = fs::read_to_string(format!("{}.pub", key_path.display()))?;
+    println!("{}", pub_key);
+    println!("----------------------------------------");
+
+    Ok(())
 }

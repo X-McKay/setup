@@ -7,16 +7,16 @@
 use anyhow::Result;
 
 pub mod apt;
-pub mod bottom;
 pub mod backup;
-pub mod claude_code;
+pub mod bottom;
 pub mod chromium;
+pub mod claude_code;
 pub mod discord;
 pub mod docker;
-pub mod gpg;
-pub mod ghostty;
 pub mod gh;
+pub mod ghostty;
 pub mod glow;
+pub mod gpg;
 pub mod hyperfine;
 pub mod jq;
 pub mod just;
@@ -26,11 +26,12 @@ pub mod monitoring;
 pub mod neovim;
 pub mod obsidian;
 pub mod registry;
-pub mod ssh_keys;
 pub mod spotify;
+pub mod ssh_keys;
 pub mod tldr;
-pub mod tpm;
 pub mod tools;
+pub mod tpm;
+pub mod util;
 pub mod vlc;
 pub mod yq;
 

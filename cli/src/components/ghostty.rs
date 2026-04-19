@@ -7,8 +7,8 @@
 
 use anyhow::Result;
 
+use super::util::run_sudo;
 use super::Component;
-use crate::system::packages;
 
 pub struct Ghostty;
 
@@ -22,6 +22,15 @@ impl Component for Ghostty {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_ghostty()
+        install_ghostty()
     }
+}
+
+fn install_ghostty() -> Result<()> {
+    if which::which("ghostty").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "ghostty", "--classic"])?;
+    Ok(())
 }

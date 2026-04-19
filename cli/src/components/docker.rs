@@ -8,8 +8,8 @@
 
 use anyhow::Result;
 
+use super::util::{run_command, run_sudo};
 use super::Component;
-use crate::system::packages;
 
 pub struct Docker;
 
@@ -23,6 +23,33 @@ impl Component for Docker {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_docker()
+        install_docker()
     }
+}
+
+fn install_docker() -> Result<()> {
+    if which::which("docker").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("apt", &["update"])?;
+    run_sudo(
+        "apt",
+        &[
+            "install",
+            "-y",
+            "ca-certificates",
+            "curl",
+            "gnupg",
+            "lsb-release",
+        ],
+    )?;
+
+    let script = run_command("curl", &["-fsSL", "https://get.docker.com"])?;
+    run_sudo("sh", &["-c", &script])?;
+
+    let user = std::env::var("USER").unwrap_or_else(|_| "al".to_string());
+    run_sudo("usermod", &["-aG", "docker", &user])?;
+
+    Ok(())
 }

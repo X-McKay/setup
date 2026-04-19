@@ -8,8 +8,8 @@
 use anyhow::{anyhow, Result};
 use std::fs;
 
+use super::util::{ensure_bin_dir, get_arch_alt, run_command};
 use super::Component;
-use crate::system::packages;
 
 pub struct Yq;
 
@@ -23,7 +23,7 @@ impl Component for Yq {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_yq()
+        install_yq()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -35,4 +35,28 @@ impl Component for Yq {
         }
         Ok(())
     }
+}
+
+fn install_yq() -> Result<()> {
+    if which::which("yq").is_ok() {
+        return Ok(());
+    }
+
+    let bin_dir = ensure_bin_dir()?;
+    let arch = get_arch_alt()?;
+
+    run_command(
+        "sh",
+        &[
+            "-c",
+            &format!(
+                "curl -Lo {}/yq 'https://github.com/mikefarah/yq/releases/latest/download/yq_linux_{}' && chmod +x {}/yq",
+                bin_dir.display(),
+                arch,
+                bin_dir.display()
+            ),
+        ],
+    )?;
+
+    Ok(())
 }

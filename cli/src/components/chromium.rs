@@ -8,8 +8,8 @@ use anyhow::{bail, Context, Result};
 use std::path::Path;
 use std::process::Command;
 
+use super::util::run_sudo;
 use super::Component;
-use crate::system::packages;
 
 pub struct Chromium;
 
@@ -23,7 +23,7 @@ impl Component for Chromium {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_chromium()
+        install_chromium()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -38,4 +38,13 @@ impl Component for Chromium {
         }
         Ok(())
     }
+}
+
+fn install_chromium() -> Result<()> {
+    if which::which("chromium-browser").is_ok() || which::which("chromium").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "chromium"])?;
+    Ok(())
 }

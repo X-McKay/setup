@@ -8,8 +8,8 @@
 use anyhow::{anyhow, Result};
 use std::fs;
 
+use super::util::{ensure_bin_dir, run_command};
 use super::Component;
-use crate::system::packages;
 
 pub struct Just;
 
@@ -23,7 +23,7 @@ impl Component for Just {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_just()
+        install_just()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -35,4 +35,24 @@ impl Component for Just {
         }
         Ok(())
     }
+}
+
+fn install_just() -> Result<()> {
+    if which::which("just").is_ok() {
+        return Ok(());
+    }
+
+    let bin_dir = ensure_bin_dir()?;
+    run_command(
+        "sh",
+        &[
+            "-c",
+            &format!(
+                "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to {}",
+                bin_dir.display()
+            ),
+        ],
+    )?;
+
+    Ok(())
 }

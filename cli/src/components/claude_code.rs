@@ -7,8 +7,8 @@
 use anyhow::{bail, Context, Result};
 use std::process::Command;
 
+use super::util::run_command;
 use super::Component;
-use crate::system::packages;
 
 pub struct ClaudeCode;
 
@@ -22,7 +22,7 @@ impl Component for ClaudeCode {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_claude_code()
+        install_claude_code()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -31,8 +31,22 @@ impl Component for ClaudeCode {
             .status()
             .context("running npm uninstall -g @anthropic-ai/claude-code")?;
         if !status.success() {
-            bail!("npm uninstall -g @anthropic-ai/claude-code failed: {}", status);
+            bail!(
+                "npm uninstall -g @anthropic-ai/claude-code failed: {}",
+                status
+            );
         }
         Ok(())
     }
+}
+
+fn install_claude_code() -> Result<()> {
+    if which::which("claude").is_ok() {
+        return Ok(());
+    }
+
+    let script = run_command("curl", &["-fsSL", "https://claude.ai/install.sh"])?;
+    run_command("sh", &["-c", &script])?;
+
+    Ok(())
 }

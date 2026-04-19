@@ -9,8 +9,8 @@
 
 use anyhow::Result;
 
+use super::util::{apt_install, run_sudo};
 use super::Component;
-use crate::system::packages;
 
 pub struct Apt;
 
@@ -25,6 +25,31 @@ impl Component for Apt {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_apt_packages()
+        install_apt_packages()
     }
+}
+
+fn install_apt_packages() -> Result<()> {
+    run_sudo("apt", &["update"])?;
+
+    let packages = [
+        "curl",
+        "wget",
+        "git",
+        "build-essential",
+        "gcc",
+        "make",
+        "cmake",
+        "pkg-config",
+        "libssl-dev",
+        "libffi-dev",
+        "python3-dev",
+        "python3-pip",
+        "unzip",
+        "zip",
+        "jq",
+    ];
+
+    apt_install(&packages)?;
+    Ok(())
 }

@@ -10,8 +10,10 @@ use anyhow::{anyhow, bail, Context, Result};
 use std::fs;
 use std::process::Command;
 
+use super::util::{
+    ensure_bin_dir, fallback_versions, fetch_github_version, get_arch, run_command, run_sudo,
+};
 use super::Component;
-use crate::system::packages;
 
 pub struct Bottom;
 
@@ -25,7 +27,7 @@ impl Component for Bottom {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_bottom()
+        install_bottom()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -47,4 +49,37 @@ impl Component for Bottom {
         }
         Ok(())
     }
+}
+
+fn install_bottom() -> Result<()> {
+    if which::which("btm").is_ok() {
+        return Ok(());
+    }
+
+    if run_sudo("apt", &["install", "-y", "bottom"]).is_ok() {
+        return Ok(());
+    }
+
+    let bin_dir = ensure_bin_dir()?;
+    let version = fetch_github_version("ClementTsang/bottom", fallback_versions::BOTTOM);
+    let arch = get_arch()?;
+
+    let url = format!(
+        "https://github.com/ClementTsang/bottom/releases/download/{}/bottom_{}-unknown-linux-gnu.tar.gz",
+        version, arch
+    );
+
+    run_command(
+        "sh",
+        &[
+            "-c",
+            &format!(
+                "curl -Lo /tmp/bottom.tar.gz '{}' && tar xf /tmp/bottom.tar.gz -C {} btm",
+                url,
+                bin_dir.display()
+            ),
+        ],
+    )?;
+
+    Ok(())
 }

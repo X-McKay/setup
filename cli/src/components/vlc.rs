@@ -7,8 +7,8 @@
 use anyhow::{bail, Context, Result};
 use std::process::Command;
 
+use super::util::run_sudo;
 use super::Component;
-use crate::system::packages;
 
 pub struct Vlc;
 
@@ -22,7 +22,7 @@ impl Component for Vlc {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_vlc()
+        install_vlc()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -37,4 +37,13 @@ impl Component for Vlc {
         }
         Ok(())
     }
+}
+
+fn install_vlc() -> Result<()> {
+    if which::which("vlc").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "vlc"])?;
+    Ok(())
 }

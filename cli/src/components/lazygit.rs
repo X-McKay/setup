@@ -8,8 +8,8 @@
 use anyhow::{anyhow, Result};
 use std::fs;
 
+use super::util::{ensure_bin_dir, fallback_versions, fetch_github_version, run_command};
 use super::Component;
-use crate::system::packages;
 
 pub struct Lazygit;
 
@@ -23,7 +23,7 @@ impl Component for Lazygit {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_lazygit()
+        install_lazygit()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -35,4 +35,38 @@ impl Component for Lazygit {
         }
         Ok(())
     }
+}
+
+fn install_lazygit() -> Result<()> {
+    if which::which("lazygit").is_ok() {
+        return Ok(());
+    }
+
+    let bin_dir = ensure_bin_dir()?;
+    let version = fetch_github_version("jesseduffield/lazygit", fallback_versions::LAZYGIT);
+
+    let arch = match std::env::consts::ARCH {
+        "x86_64" => "x86_64",
+        "aarch64" => "arm64",
+        _ => return Err(anyhow!("Unsupported architecture")),
+    };
+
+    let url = format!(
+        "https://github.com/jesseduffield/lazygit/releases/download/v{}/lazygit_{}_Linux_{}.tar.gz",
+        version, version, arch
+    );
+
+    run_command(
+        "sh",
+        &[
+            "-c",
+            &format!(
+                "curl -Lo /tmp/lazygit.tar.gz '{}' && tar xf /tmp/lazygit.tar.gz -C {} lazygit",
+                url,
+                bin_dir.display()
+            ),
+        ],
+    )?;
+
+    Ok(())
 }

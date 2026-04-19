@@ -8,8 +8,8 @@ use anyhow::{bail, Context, Result};
 use std::path::Path;
 use std::process::Command;
 
+use super::util::run_sudo;
 use super::Component;
-use crate::system::packages;
 
 pub struct Spotify;
 
@@ -23,7 +23,7 @@ impl Component for Spotify {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_spotify()
+        install_spotify()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -38,4 +38,13 @@ impl Component for Spotify {
         }
         Ok(())
     }
+}
+
+fn install_spotify() -> Result<()> {
+    if which::which("spotify").is_ok() {
+        return Ok(());
+    }
+
+    run_sudo("snap", &["install", "spotify"])?;
+    Ok(())
 }

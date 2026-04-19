@@ -8,8 +8,8 @@
 
 use anyhow::Result;
 
+use super::util::{ensure_bin_dir, get_arch_alt, run_command, run_sudo};
 use super::Component;
-use crate::system::packages;
 
 pub struct Jq;
 
@@ -23,6 +23,34 @@ impl Component for Jq {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_jq()
+        install_jq()
     }
+}
+
+fn install_jq() -> Result<()> {
+    if which::which("jq").is_ok() {
+        return Ok(());
+    }
+
+    if run_sudo("apt", &["install", "-y", "jq"]).is_ok() {
+        return Ok(());
+    }
+
+    let bin_dir = ensure_bin_dir()?;
+    let arch = get_arch_alt()?;
+
+    run_command(
+        "sh",
+        &[
+            "-c",
+            &format!(
+                "curl -Lo {}/jq 'https://github.com/jqlang/jq/releases/latest/download/jq-linux-{}' && chmod +x {}/jq",
+                bin_dir.display(),
+                arch,
+                bin_dir.display()
+            ),
+        ],
+    )?;
+
+    Ok(())
 }

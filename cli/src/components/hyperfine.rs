@@ -10,8 +10,10 @@ use anyhow::{anyhow, bail, Context, Result};
 use std::fs;
 use std::process::Command;
 
+use super::util::{
+    ensure_bin_dir, fallback_versions, fetch_github_version, get_arch, run_command, run_sudo,
+};
 use super::Component;
-use crate::system::packages;
 
 pub struct Hyperfine;
 
@@ -25,7 +27,7 @@ impl Component for Hyperfine {
     }
 
     fn install(&self) -> Result<()> {
-        packages::install_hyperfine()
+        install_hyperfine()
     }
 
     fn uninstall(&self) -> Result<()> {
@@ -47,4 +49,37 @@ impl Component for Hyperfine {
         }
         Ok(())
     }
+}
+
+fn install_hyperfine() -> Result<()> {
+    if which::which("hyperfine").is_ok() {
+        return Ok(());
+    }
+
+    if run_sudo("apt", &["install", "-y", "hyperfine"]).is_ok() {
+        return Ok(());
+    }
+
+    let bin_dir = ensure_bin_dir()?;
+    let version = fetch_github_version("sharkdp/hyperfine", fallback_versions::HYPERFINE);
+    let arch = get_arch()?;
+
+    let url = format!(
+        "https://github.com/sharkdp/hyperfine/releases/download/v{}/hyperfine-v{}-{}-unknown-linux-musl.tar.gz",
+        version, version, arch
+    );
+
+    run_command(
+        "sh",
+        &[
+            "-c",
+            &format!(
+                "curl -Lo /tmp/hyperfine.tar.gz '{}' && tar xf /tmp/hyperfine.tar.gz -C /tmp && mv /tmp/hyperfine-*/hyperfine {}",
+                url,
+                bin_dir.display()
+            ),
+        ],
+    )?;
+
+    Ok(())
 }
