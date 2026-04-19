@@ -132,6 +132,26 @@ pub fn topo_sort(manifest: &Manifest, ids: &BTreeSet<String>) -> Result<Vec<Stri
     Ok(ordered)
 }
 
+/// End-to-end: given a user selection, produce the ordered install plan.
+/// Returns the ordered list of component ids, and the set that was
+/// auto-pulled as transitive deps (for reporting).
+pub struct Plan {
+    pub ordered: Vec<String>,
+    pub auto_pulled: BTreeSet<String>,
+}
+
+pub fn resolve(
+    manifest: &Manifest,
+    profiles: &[String],
+    explicit: &[String],
+) -> Result<Plan> {
+    let seeds = expand_selection(manifest, profiles, explicit)?;
+    let full = pull_in_dependencies(manifest, &seeds)?;
+    let auto_pulled: BTreeSet<String> = full.difference(&seeds).cloned().collect();
+    let ordered = topo_sort(manifest, &full)?;
+    Ok(Plan { ordered, auto_pulled })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -265,5 +285,40 @@ mod tests {
         let seeds: BTreeSet<String> = ["apt", "mise"].iter().map(|s| s.to_string()).collect();
         let err = topo_sort(&m, &seeds).unwrap_err();
         assert!(err.to_string().contains("cycle"));
+    }
+}
+
+#[cfg(test)]
+mod resolve_tests {
+    use super::*;
+    use crate::manifest::schema::{ComponentSpec, ProfileSpec};
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn resolve_reports_auto_pulled() {
+        let mut profiles = BTreeMap::new();
+        profiles.insert(
+            "x".into(),
+            ProfileSpec {
+                description: String::new(),
+                extends: vec![],
+                components: vec!["docker".into()],
+            },
+        );
+        let m = Manifest {
+            components: vec![
+                ComponentSpec { id: "apt".into(), display_name: "APT".into(), ..Default::default() },
+                ComponentSpec {
+                    id: "docker".into(),
+                    display_name: "Docker".into(),
+                    depends_on: vec!["apt".into()],
+                    ..Default::default()
+                },
+            ],
+            profiles,
+        };
+        let plan = resolve(&m, &["x".into()], &[]).unwrap();
+        assert_eq!(plan.ordered, vec!["apt", "docker"]);
+        assert_eq!(plan.auto_pulled, ["apt".to_string()].into_iter().collect());
     }
 }
