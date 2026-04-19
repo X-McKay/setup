@@ -4,7 +4,6 @@ use console::style;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::Duration;
 
-use crate::system::packages;
 use crate::ui::prompts;
 
 #[derive(Args)]
@@ -256,50 +255,35 @@ pub fn run(args: InstallArgs) -> Result<()> {
 }
 
 fn install_component_with_progress(mp: &MultiProgress, component: &Component) -> Result<()> {
-    let spinner_style = ProgressStyle::default_spinner()
-        .template("{spinner:.cyan} {msg}")
-        .unwrap()
-        .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏");
-
-    let pb = mp.add(ProgressBar::new_spinner());
-    pb.set_style(spinner_style);
-    pb.set_message(format!(
-        "{}...",
-        style(component.display_name()).cyan()
-    ));
-    pb.enable_steady_tick(Duration::from_millis(80));
-
-    let result = match component {
-        Component::Apt => packages::install_apt_packages(),
-        Component::Tools => packages::install_extra_tools(),
-        Component::Mise => packages::install_mise(),
-        Component::Docker => packages::install_docker(),
-        Component::Monitoring => packages::install_monitoring(),
-        Component::Backup => packages::install_backup(),
-        Component::Lazygit => packages::install_lazygit(),
-        Component::Just => packages::install_just(),
-        Component::Glow => packages::install_glow(),
-        Component::Bottom => packages::install_bottom(),
-        Component::Gh => packages::install_gh(),
-        Component::Hyperfine => packages::install_hyperfine(),
-        Component::Jq => packages::install_jq(),
-        Component::Yq => packages::install_yq(),
-        Component::Tldr => packages::install_tldr(),
-        Component::Chromium => packages::install_chromium(),
-        Component::Discord => packages::install_discord(),
-        Component::Obsidian => packages::install_obsidian(),
-        Component::Spotify => packages::install_spotify(),
-        Component::Vlc => packages::install_vlc(),
-        Component::Ghostty => packages::install_ghostty(),
-        Component::ClaudeCode => packages::install_claude_code(),
-        Component::Neovim => packages::install_neovim(),
-        Component::Tpm => packages::install_tpm(),
-        Component::SshKeys => packages::setup_ssh_keys(),
-        Component::Gpg => packages::setup_gpg(),
+    let id = match component {
+        Component::Apt => "apt",
+        Component::Tools => "tools",
+        Component::Mise => "mise",
+        Component::Docker => "docker",
+        Component::Monitoring => "monitoring",
+        Component::Backup => "backup",
+        Component::Lazygit => "lazygit",
+        Component::Just => "just",
+        Component::Glow => "glow",
+        Component::Bottom => "bottom",
+        Component::Gh => "gh",
+        Component::Hyperfine => "hyperfine",
+        Component::Jq => "jq",
+        Component::Yq => "yq",
+        Component::Tldr => "tldr",
+        Component::Chromium => "chromium",
+        Component::Discord => "discord",
+        Component::Obsidian => "obsidian",
+        Component::Spotify => "spotify",
+        Component::Vlc => "vlc",
+        Component::Ghostty => "ghostty",
+        Component::ClaudeCode => "claude-code",
+        Component::Neovim => "neovim",
+        Component::Tpm => "tpm",
+        Component::SshKeys => "ssh-keys",
+        Component::Gpg => "gpg",
     };
-
-    pb.finish_and_clear();
-    result
+    install_via_registry(mp, id)
 }
 
 fn install_via_registry(mp: &MultiProgress, id: &str) -> Result<()> {
