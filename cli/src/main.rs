@@ -4,6 +4,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod commands;
 mod config;
+mod manifest;
 mod system;
 mod ui;
 
