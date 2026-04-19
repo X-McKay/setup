@@ -2,6 +2,10 @@
 //!
 //! This module provides functions to install development tools,
 //! configure services, and manage system updates.
+//!
+//! DEPRECATED: these functions are wrapped by trait impls in
+//! `cli/src/components/*.rs`. This module is deleted in Phase 10
+//! after `install.rs` is fully rewritten onto the manifest.
 
 mod apt;
 mod security;
