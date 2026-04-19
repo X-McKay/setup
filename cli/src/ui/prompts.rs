@@ -2,59 +2,7 @@ use anyhow::Result;
 use inquire::{Confirm, MultiSelect, Select};
 
 use crate::commands::dotfiles::DotfilesAction;
-use crate::commands::install::Component;
 use crate::commands::update::UpdateComponent;
-
-pub fn select_components() -> Result<Vec<Component>> {
-    // First, ask if user wants to install all
-    let install_all = Select::new(
-        "How would you like to install?",
-        vec!["Install All (recommended)", "Select individual components"],
-    )
-    .with_help_message("Install All includes everything except SSH/GPG keys")
-    .prompt()?;
-
-    if install_all == "Install All (recommended)" {
-        return Ok(Component::all());
-    }
-
-    // Individual component selection
-    let options = vec![
-        ("Basic APT Packages", Component::Apt),
-        ("Extra CLI Tools", Component::Tools),
-        ("Mise Version Manager", Component::Mise),
-        ("Docker", Component::Docker),
-        ("Lazygit", Component::Lazygit),
-        ("Just Task Runner", Component::Just),
-        ("Glow Markdown Renderer", Component::Glow),
-        ("Bottom System Monitor", Component::Bottom),
-        ("GitHub CLI", Component::Gh),
-        ("Hyperfine Benchmarking", Component::Hyperfine),
-        ("jq JSON Processor", Component::Jq),
-        ("yq YAML Processor", Component::Yq),
-        ("tldr Man Pages", Component::Tldr),
-        ("Neovim Editor", Component::Neovim),
-        ("Tmux Plugin Manager", Component::Tpm),
-        ("Monitoring Tools", Component::Monitoring),
-        ("Backup Utilities", Component::Backup),
-        ("SSH Key Generation", Component::SshKeys),
-        ("GPG Key Setup", Component::Gpg),
-    ];
-
-    let labels: Vec<&str> = options.iter().map(|(l, _)| *l).collect();
-
-    let selected = MultiSelect::new("Select components to install:", labels)
-        .with_help_message("Space to select, Enter to confirm")
-        .prompt()?;
-
-    let components = options
-        .into_iter()
-        .filter(|(l, _)| selected.contains(l))
-        .map(|(_, c)| c)
-        .collect();
-
-    Ok(components)
-}
 
 pub fn confirm_install(components: &[&str]) -> Result<bool> {
     let msg = format!("Install {} component(s)?", components.len());

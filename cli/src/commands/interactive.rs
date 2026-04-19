@@ -1,8 +1,10 @@
 use anyhow::Result;
 use console::style;
-use inquire::Select;
+use inquire::{MultiSelect, Select};
 
 use super::{check, dotfiles, install, update};
+use crate::components::registry::Registry;
+use crate::manifest::loader;
 
 pub fn run() -> Result<()> {
     println!();
@@ -35,11 +37,61 @@ pub fn run() -> Result<()> {
 
         match selection {
             "Install components" => {
-                install::run(install::InstallArgs {
-                    component: None,
-                    all: false,
-                    yes: false,
-                })?;
+                let install_mode = Select::new(
+                    "How would you like to install?",
+                    vec!["Install all", "Select components", "Install by profile"],
+                )
+                .with_help_message("Profiles and direct ids both resolve through the manifest")
+                .prompt()?;
+
+                match install_mode {
+                    "Install all" => {
+                        install::run(install::InstallArgs {
+                            components: vec![],
+                            profiles: vec![],
+                            all: true,
+                            dry_run: false,
+                            verify: false,
+                            keep_going: false,
+                            rollback_on_failure: false,
+                            yes: false,
+                        })?;
+                    }
+                    "Select components" => {
+                        let ids = Registry::build().ids();
+                        let picked = MultiSelect::new("Select components:", ids)
+                            .with_help_message("Space to select, Enter to confirm")
+                            .prompt()?;
+                        install::run(install::InstallArgs {
+                            components: picked,
+                            profiles: vec![],
+                            all: false,
+                            dry_run: false,
+                            verify: false,
+                            keep_going: false,
+                            rollback_on_failure: false,
+                            yes: false,
+                        })?;
+                    }
+                    "Install by profile" => {
+                        let manifest = loader::load()?;
+                        let names: Vec<String> = manifest.profiles.keys().cloned().collect();
+                        let picked = MultiSelect::new("Select profiles:", names)
+                            .with_help_message("Space to select, Enter to confirm")
+                            .prompt()?;
+                        install::run(install::InstallArgs {
+                            components: vec![],
+                            profiles: picked,
+                            all: false,
+                            dry_run: false,
+                            verify: false,
+                            keep_going: false,
+                            rollback_on_failure: false,
+                            yes: false,
+                        })?;
+                    }
+                    _ => unreachable!(),
+                }
             }
             "Manage dotfiles" => {
                 dotfiles::run(dotfiles::DotfilesArgs { action: None })?;
