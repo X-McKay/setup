@@ -6,6 +6,7 @@
 
 use anyhow::Result;
 
+pub mod apt;
 pub mod registry;
 
 pub trait Component: Send + Sync {

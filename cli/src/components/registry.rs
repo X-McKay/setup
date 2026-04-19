@@ -17,9 +17,7 @@ impl Registry {
         let mut r = Self {
             components: HashMap::new(),
         };
-        // Components are registered here in Phase 6. For now the registry
-        // is empty — this is the seam.
-        let _ = &mut r;
+        r.register(Arc::new(super::apt::Apt));
         r
     }
 
@@ -91,6 +89,12 @@ mod tests {
         }
     }
 
+    fn assert_registered(id: &str) {
+        let r = Registry::build();
+        let c = r.get(id).unwrap();
+        assert_eq!(c.id(), id);
+    }
+
     #[test]
     fn register_and_get() {
         let mut r = Registry {
@@ -108,6 +112,11 @@ mod tests {
         };
         r.register(Arc::new(FakeA));
         assert_eq!(r.ids(), vec!["a"]);
+    }
+
+    #[test]
+    fn apt_is_registered() {
+        assert_registered("apt");
     }
 
     #[test]
