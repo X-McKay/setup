@@ -1,9 +1,9 @@
 #!/bin/bash
-# Setup CLI - One command to set up a new development machine
+# Setup CLI - Build and run the Rust CLI wrapper
 # Usage: ./setup.sh [options]
 #
 # This script builds and runs the Rust CLI for system setup.
-# If Rust is not installed, it suggests running bootstrap.sh first.
+# On a fresh machine, run ./bootstrap.sh first.
 
 set -e
 
@@ -35,23 +35,10 @@ elif [[ -x "$HOME/.local/bin/mise" ]]; then
 fi
 
 if [[ -z "$CARGO_CMD" ]]; then
-  warn "Rust not found. Using bash fallback..."
+  error "Rust toolchain not found."
   echo ""
-
-  if [[ -f bootstrap/scripts/install_modern_cli.sh ]]; then
-    info "Installing modern CLI tools..."
-    ./bootstrap/scripts/install_modern_cli.sh
-  fi
-
-  if [[ -f bootstrap/scripts/copy_dotfiles.sh ]]; then
-    info "Installing dotfiles..."
-    ./bootstrap/scripts/copy_dotfiles.sh
-  fi
-
-  info "Basic setup complete!"
-  echo ""
-  echo "To use the full CLI, run ./bootstrap.sh first to install mise and Rust."
-  exit 0
+  echo "Run ./bootstrap.sh first to install mise, Rust, and build the setup CLI."
+  exit 1
 fi
 
 # Build CLI if needed
