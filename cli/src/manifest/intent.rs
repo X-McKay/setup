@@ -58,6 +58,26 @@ pub fn remove(intent: &mut Intent, name: &str) {
     intent.active_profiles.retain(|profile| profile != name);
 }
 
+/// Filter intent profiles to those still present in the manifest.
+/// Returns `(valid_profiles, unknown_profiles_for_warning)`.
+pub fn validated(
+    intent: &Intent,
+    manifest: &crate::manifest::schema::Manifest,
+) -> (Vec<String>, Vec<String>) {
+    let mut valid = Vec::new();
+    let mut unknown = Vec::new();
+
+    for profile in &intent.active_profiles {
+        if manifest.profiles.contains_key(profile) {
+            valid.push(profile.clone());
+        } else {
+            unknown.push(profile.clone());
+        }
+    }
+
+    (valid, unknown)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -116,5 +136,31 @@ mod tests {
         };
         remove(&mut intent, "b");
         assert_eq!(intent.active_profiles, vec!["a", "c"]);
+    }
+
+    #[test]
+    fn warn_drift_filters_unknown_profiles() {
+        use crate::manifest::schema::{Manifest, ProfileSpec};
+        use std::collections::BTreeMap;
+
+        let mut profiles = BTreeMap::new();
+        profiles.insert(
+            "server".into(),
+            ProfileSpec {
+                description: String::new(),
+                extends: vec![],
+                components: vec![],
+            },
+        );
+        let manifest = Manifest {
+            components: vec![],
+            profiles,
+        };
+        let intent = Intent {
+            active_profiles: vec!["server".into(), "ghost".into()],
+        };
+        let (valid, warnings) = validated(&intent, &manifest);
+        assert_eq!(valid, vec!["server"]);
+        assert_eq!(warnings, vec!["ghost"]);
     }
 }
