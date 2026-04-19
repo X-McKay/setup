@@ -17,6 +17,7 @@ pub mod just;
 pub mod lazygit;
 pub mod mise;
 pub mod registry;
+pub mod tldr;
 pub mod tools;
 pub mod yq;
 
