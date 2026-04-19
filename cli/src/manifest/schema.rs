@@ -294,6 +294,19 @@ display_name = "Y"
     }
 
     #[test]
+    fn accepts_acyclic_extends_chain() {
+        let input = r#"
+[profiles.base]
+components = []
+[profiles.server]
+extends = ["base"]
+components = []
+"#;
+        let m: Manifest = toml::from_str(input).unwrap();
+        m.validate().unwrap();
+    }
+
+    #[test]
     fn rejects_extends_cycle() {
         let input = r#"
 [profiles.a]
