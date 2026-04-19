@@ -56,7 +56,6 @@ description = "Core system packages (curl, git, build-essential)"
 depends_on = []
 tags = ["core"]
 requires_sudo = true
-skip_in_docker = false
 
 [[components]]
 id = "mise"
@@ -102,8 +101,16 @@ components = ["claude-code"]   # codex, gemini, aider, ollama added in Sub-proje
 | `requires_sudo` | bool | no, default false | Component needs root. |
 | `requires_systemd` | bool | no, default false | Component needs systemd (fails in Docker test harness). |
 | `requires_privileged` | bool | no, default false | Component needs privileged container or host access. |
-| `skip_in_docker` | bool | no, default false | Convenience flag — true iff any of the above "requires_" flags make Docker runs impossible. Computed-and-stored rather than derived, so the manifest is self-describing for filtering. |
-| `interactive` | bool | no, default false | Component prompts for user input. Suppressed from non-interactive `--all` unless explicitly named. |
+| `interactive` | bool | no, default false | Component prompts for user input. |
+
+**Derived predicate — `docker_testable`:** A component is considered docker-testable iff `!requires_systemd && !requires_privileged && !interactive`. This predicate is computed once at manifest load and used consistently by:
+- `--all` filtering under Docker (skips non-docker-testable components).
+- The Docker integration test harness (installs only the docker-testable subset).
+- The component contract test (runs only on components that are both docker-testable and reversible).
+
+Keeping `docker_testable` as a derivation of the capability flags — rather than a separately-stored field — eliminates the drift risk where a stored flag disagrees with the underlying capabilities.
+
+**Derived predicate — `non_interactive_installable`:** A component is installable in `--all --yes` runs iff `!interactive`. Interactive components must be named explicitly. (Kept separate from `docker_testable` because `interactive` is also a user-UX concern, not just a test-harness concern.)
 
 **`[profiles.<name>]` fields:**
 
@@ -448,25 +455,25 @@ Full migration in small, independently reviewable commits. Code compiles and tes
 
 ### Integration tests (Docker, existing test harness)
 
-The existing test container runs without systemd or privileged mode. Components with `requires_systemd = true`, `requires_privileged = true`, or `interactive = true` cannot be tested there. To handle this cleanly:
-
-- A `docker-testable` capability filter is defined as: all three `requires_*` flags and `interactive` are false.
-- The test harness filters profiles down to the `docker-testable` subset before running install.
+The existing test container runs without systemd or privileged mode, so the test harness operates on the `docker_testable` subset defined in §4.1. Profiles are filtered to that subset before installation; skipped components are reported by name in test output.
 
 Tests:
-- `setup install --dry-run --profile server` — exits 0, no filesystem changes (Docker runs the dry-run on the full profile; dry-run is safe because it performs no install steps).
-- `setup install --profile server` inside fresh container — installs only the `docker-testable` subset; each installed component's `is_installed()` returns true afterward. Skipped components are reported by name in test output.
+- `setup install --dry-run --profile server` — exits 0, no filesystem changes (dry-run is safe on the full profile; it performs no install steps).
+- `setup install --profile server` inside fresh container — installs only the `docker_testable` subset; each installed component's `is_installed()` returns true afterward.
 - `setup doctor` with no intent file and a healthy system → exits 0; profile-drift checks skipped with hint; machine-health checks run clean.
 - `setup doctor` with no intent file and a broken PATH → exits 1 (PATH is machine-health, runs regardless of intent).
 - `setup doctor --profile server` on fresh container → reports all declared-missing, exits 1.
-- `setup doctor --profile server` after install → reports the docker-skipped components as `✗` (they were declared, not installed). Test asserts the expected-skipped set matches.
-- `setup install --profile server` then `setup profile activate server` writes `~/.config/setup/active.toml`; subsequent `setup doctor` (no args) uses it.
+- `setup doctor --profile server` after install → reports the docker-skipped components as `✗` (declared, not installed). Test asserts the expected-skipped set matches.
+- **active.toml write on successful install:** `setup install --profile server` on fresh container → `~/.config/setup/active.toml` exists and contains `active_profiles = ["server"]`. Subsequent `setup doctor` (no args) uses it and produces the same profile-drift output as `setup doctor --profile server`.
+- **active.toml via profile activate:** starting from no active.toml, `setup profile activate server` (no install) writes `active_profiles = ["server"]` and does not install anything. Verifies the standalone command path.
+- **active.toml union-add:** starting from `active_profiles = ["server"]`, run `setup install --profile ai-heavy` → file now contains both, order preserved.
+- **active.toml not written on stop-on-failure:** with no `--keep-going`, inject a failure mid-install for `--profile server`; file is not modified.
 - `setup uninstall <id>` for a reversible docker-testable component — `is_installed()` returns false after.
 - `setup uninstall <ssh-keys>` — refused (non-reversible), exit non-zero; with `--force` succeeds.
 - User-override manifest — mount a test `~/.config/setup/manifest.toml` that redefines an existing profile (e.g. moves `gh` out of `workstation` and into a new user-defined `minimal` profile). Confirm `setup profile show minimal` returns the expected component list. (Override cannot add components whose IDs have no Rust implementation — startup validation failure per §11.)
 
 ### Component contract test
-A shared Rust test that iterates all registered components and, for the subset that is both `docker-testable` and `is_reversible()`, asserts: `install()` → `is_installed()` true; `uninstall()` → `is_installed()` false. Components that fail either capability are skipped with an informative note (not failed). Runs only inside Docker, gated by env flag (`SETUP_CONTRACT_TESTS=1`).
+A shared Rust test that iterates all registered components and, for the subset that is both `docker_testable` (per §4.1) and `is_reversible()`, asserts: `install()` → `is_installed()` true; `uninstall()` → `is_installed()` false. Components that fail either capability are skipped with an informative note (not failed). Runs only inside Docker, gated by env flag (`SETUP_CONTRACT_TESTS=1`).
 
 ## 11. Risks and mitigations
 
