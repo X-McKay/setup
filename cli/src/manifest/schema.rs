@@ -16,6 +16,7 @@ pub struct Manifest {
 /// Metadata describing a single component. Install/uninstall logic lives
 /// in Rust; this type is the "what exists and why" side.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ComponentSpec {
     pub id: String,
     pub display_name: String,
@@ -46,6 +47,7 @@ impl ComponentSpec {
 /// A named, composable machine shape. Extends transitively pulls another
 /// profile's components.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ProfileSpec {
     #[serde(default)]
     pub description: String,
@@ -114,18 +116,33 @@ components = ["docker", "gh"]
     }
 
     #[test]
-    fn rejects_unknown_top_level_keys() {
-        // serde by default tolerates unknown fields. We want strict mode so
-        // typos surface immediately. This test will be made to pass in the
-        // next task by adding deny_unknown_fields or a validation pass.
-        // For now, confirm the permissive baseline.
+    fn rejects_unknown_component_field() {
         let input = r#"
-garbage = "hi"
 [[components]]
 id = "x"
 display_name = "X"
+typo_field = "oops"
 "#;
-        let m: Manifest = toml::from_str(input).unwrap();
-        assert_eq!(m.components.len(), 1);
+        let err = toml::from_str::<Manifest>(input).unwrap_err();
+        assert!(
+            err.to_string().contains("typo_field") || err.to_string().contains("unknown field"),
+            "expected unknown-field error, got: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn rejects_unknown_profile_field() {
+        let input = r#"
+[profiles.x]
+typo = 1
+components = []
+"#;
+        let err = toml::from_str::<Manifest>(input).unwrap_err();
+        assert!(
+            err.to_string().contains("typo") || err.to_string().contains("unknown field"),
+            "expected unknown-field error, got: {}",
+            err
+        );
     }
 }
