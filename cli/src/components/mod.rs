@@ -7,6 +7,7 @@
 use anyhow::Result;
 
 pub mod apt;
+pub mod mise;
 pub mod registry;
 pub mod tools;
 
