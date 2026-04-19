@@ -35,6 +35,7 @@ impl Registry {
         r.register(Arc::new(super::obsidian::Obsidian));
         r.register(Arc::new(super::spotify::Spotify));
         r.register(Arc::new(super::tldr::Tldr));
+        r.register(Arc::new(super::tpm::Tpm));
         r.register(Arc::new(super::tools::Tools));
         r.register(Arc::new(super::vlc::Vlc));
         r.register(Arc::new(super::yq::Yq));
@@ -237,6 +238,11 @@ mod tests {
     #[test]
     fn neovim_is_registered() {
         assert_registered("neovim");
+    }
+
+    #[test]
+    fn tpm_is_registered() {
+        assert_registered("tpm");
     }
 
     #[test]

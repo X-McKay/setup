@@ -25,6 +25,7 @@ pub mod obsidian;
 pub mod registry;
 pub mod spotify;
 pub mod tldr;
+pub mod tpm;
 pub mod tools;
 pub mod vlc;
 pub mod yq;
