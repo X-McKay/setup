@@ -22,6 +22,7 @@ impl Registry {
         r.register(Arc::new(super::docker::Docker));
         r.register(Arc::new(super::gh::Gh));
         r.register(Arc::new(super::glow::Glow));
+        r.register(Arc::new(super::hyperfine::Hyperfine));
         r.register(Arc::new(super::just::Just));
         r.register(Arc::new(super::lazygit::Lazygit));
         r.register(Arc::new(super::mise::Mise));
@@ -165,6 +166,11 @@ mod tests {
     #[test]
     fn gh_is_registered() {
         assert_registered("gh");
+    }
+
+    #[test]
+    fn hyperfine_is_registered() {
+        assert_registered("hyperfine");
     }
 
     #[test]

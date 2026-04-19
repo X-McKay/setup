@@ -11,6 +11,7 @@ pub mod bottom;
 pub mod docker;
 pub mod gh;
 pub mod glow;
+pub mod hyperfine;
 pub mod just;
 pub mod lazygit;
 pub mod mise;
