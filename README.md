@@ -68,15 +68,6 @@ If you prefer to manage Rust yourself:
    cd cli && cargo build --release
    ```
 
-### Alternative: Bash-Only Installation
-
-For environments without Rust, use the standalone bash scripts:
-
-```bash
-./bootstrap/scripts/install_modern_cli.sh
-./bootstrap/scripts/copy_dotfiles.sh
-```
-
 ## Usage
 
 ### Interactive Mode
@@ -370,7 +361,6 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 │   ├── dotfiles/               # Dotfile templates
 │   ├── scripts/
 │   │   ├── copy_dotfiles.sh    # Fallback dotfiles script
-│   │   └── install_modern_cli.sh  # Standalone bash installer
 │   └── templates/
 │       └── justfile            # Project justfile template
 ├── tests/
