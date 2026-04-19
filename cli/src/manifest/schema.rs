@@ -15,7 +15,7 @@ pub struct Manifest {
 
 /// Metadata describing a single component. Install/uninstall logic lives
 /// in Rust; this type is the "what exists and why" side.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ComponentSpec {
     pub id: String,
