@@ -71,3 +71,9 @@ keybind = super+shift+comma=reload_config
 # Split panes (+ vertical, - horizontal)
 keybind = ctrl+shift+equal=new_split:right
 keybind = ctrl+shift+minus=new_split:down
+
+# Navigate panes with a left-hand WASD cluster on compact boards.
+keybind = ctrl+shift+w=goto_split:up
+keybind = ctrl+shift+a=goto_split:left
+keybind = ctrl+shift+s=goto_split:down
+keybind = ctrl+shift+d=goto_split:right
