@@ -215,6 +215,13 @@ check_file "$HOME/.bashrc" "bashrc synced"
 check_file "$HOME/.aliases" "aliases synced"
 check_file "$HOME/.exports" "exports synced"
 
+echo "--- Test: Drift summary/diff ---"
+printf "\n# docker drift marker\n" >> "$HOME/.config/ghostty/config"
+$SETUP_BIN drift --dotfiles --json | grep -q '"status": "differs"' && echo -e "${GREEN}[PASS]${NC} drift summary detects changed dotfile" || { echo -e "${RED}[FAIL]${NC} drift summary missed changed dotfile"; FAILED=$((FAILED+1)); }
+$SETUP_BIN drift diff --name ghostty/config | grep -q 'ghostty/config' && echo -e "${GREEN}[PASS]${NC} drift diff can target one managed dotfile" || { echo -e "${RED}[FAIL]${NC} drift diff target failed"; FAILED=$((FAILED+1)); }
+$SETUP_BIN drift sync --force
+! grep -q '# docker drift marker' "$HOME/.config/ghostty/config" && echo -e "${GREEN}[PASS]${NC} drift sync restored repo version" || { echo -e "${RED}[FAIL]${NC} drift sync did not restore repo version"; FAILED=$((FAILED+1)); }
+
 # Test 17: profile-based install and doctor/profile flows
 echo ""
 echo "--- Test: install --profile server --dry-run ---"

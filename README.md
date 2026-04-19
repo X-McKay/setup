@@ -118,9 +118,16 @@ setup doctor                       # check declared profiles vs reality
 setup doctor --profile workstation # check a specific profile
 setup doctor --verify              # also run post-install verify()
 setup doctor --warn-only           # never exit non-zero
+setup drift                        # focused summary for dotfiles + profile intent
+setup drift --json                 # machine-readable drift report for agents
+setup drift diff --name ghostty/config
+setup drift adopt --name ghostty/config
+setup drift sync --force
 ```
 
 `setup check` is deprecated and forwards to `setup doctor`.
+`setup doctor` stays read-only and broad; `setup drift` is the narrower review/reconcile
+entrypoint for managed configs and active-profile intent.
 
 ### Remove Components
 
@@ -149,6 +156,10 @@ setup dotfiles diff      # Show differences between repo and installed
 setup dotfiles list      # List managed dotfiles and their status
 setup dotfiles backup    # Backup current dotfiles before syncing
 ```
+
+For agent-assisted review flows, `setup drift --json` is the canonical machine-readable
+entrypoint. Repo-local helpers live in `.agents/skills/setup-drift/` and
+`.claude/commands/drift-review.md`.
 
 ### Update Components
 
@@ -272,7 +283,7 @@ SETUP_CONTRACT_TESTS=1 ./tests/docker/run_tests.sh
 | Profiles | `install --profile`, `profile activate/deactivate`, `profile show` |
 | Health | `doctor --warn-only`, `doctor --profile server` |
 | Overrides | `~/.config/setup/manifest.toml` merge behavior |
-| Config | Dotfiles sync |
+| Config | Dotfiles sync, drift summary/diff |
 
 ### Skipped Tests
 
@@ -348,7 +359,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 ├── bootstrap.sh                # Fresh-machine bootstrap (mise + Rust + build)
 ├── cli/                        # Rust CLI source
 │   ├── src/
-│   │   ├── commands/           # install, uninstall, doctor, list, profile, dotfiles, update
+│   │   ├── commands/           # install, uninstall, doctor, drift, list, profile, dotfiles, update
 │   │   ├── components/         # Per-component install/uninstall implementations
 │   │   ├── config/             # Configuration handling
 │   │   ├── manifest/           # Manifest schema, loader, resolver, intent
@@ -357,6 +368,11 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 │   ├── tests/
 │   │   └── contract.rs         # Gated install/uninstall contract suite
 │   └── Cargo.toml
+├── .agents/
+│   └── skills/                 # Repo-local Codex skills
+├── .claude/
+│   ├── commands/               # Repo-local Claude Code slash commands
+│   └── settings.local.json
 ├── bootstrap/
 │   ├── dotfiles/               # Dotfile templates
 │   ├── scripts/

@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 pub mod check;
 pub mod doctor;
 pub mod dotfiles;
+pub mod drift;
 pub mod install;
 pub mod interactive;
 pub mod list;
@@ -40,6 +41,9 @@ pub enum Commands {
 
     /// System health + drift report
     Doctor(doctor::DoctorArgs),
+
+    /// Review and reconcile managed config drift
+    Drift(drift::DriftArgs),
 
     /// Remove components
     Uninstall(uninstall::UninstallArgs),

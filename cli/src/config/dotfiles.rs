@@ -66,6 +66,12 @@ pub fn get_managed_dotfiles() -> Vec<(String, PathBuf, PathBuf)> {
     ]
 }
 
+pub fn get_managed_dotfile(name: &str) -> Option<(String, PathBuf, PathBuf)> {
+    get_managed_dotfiles()
+        .into_iter()
+        .find(|(managed_name, _, _)| managed_name == name)
+}
+
 fn get_repo_dotfiles_dir() -> PathBuf {
     // Try to find the repo directory
     // First check if we're running from within the repo
@@ -84,7 +90,10 @@ fn get_repo_dotfiles_dir() -> PathBuf {
     // Fall back to checking common locations
     let home = dirs::home_dir().expect("Could not find home directory");
     let candidates = [
-        home.join("git").join("setup").join("bootstrap").join("dotfiles"),
+        home.join("git")
+            .join("setup")
+            .join("bootstrap")
+            .join("dotfiles"),
         home.join(".setup").join("bootstrap").join("dotfiles"),
         home.join("setup").join("bootstrap").join("dotfiles"),
     ];
@@ -96,7 +105,10 @@ fn get_repo_dotfiles_dir() -> PathBuf {
     }
 
     // Default to ~/git/setup location (most common)
-    home.join("git").join("setup").join("bootstrap").join("dotfiles")
+    home.join("git")
+        .join("setup")
+        .join("bootstrap")
+        .join("dotfiles")
 }
 
 pub fn copy_dotfile(source: &PathBuf, target: &PathBuf) -> Result<()> {
@@ -110,6 +122,10 @@ pub fn copy_dotfile(source: &PathBuf, target: &PathBuf) -> Result<()> {
 }
 
 pub fn diff_files(source: &PathBuf, target: &PathBuf) -> Result<Option<String>> {
+    if !source.exists() {
+        return Ok(Some(format!("Source does not exist: {}", source.display())));
+    }
+
     if !target.exists() {
         return Ok(Some(format!("Target does not exist: {}", target.display())));
     }
@@ -122,15 +138,27 @@ pub fn diff_files(source: &PathBuf, target: &PathBuf) -> Result<Option<String>> 
     }
 
     // Simple line-by-line diff
+    let source_lines: Vec<_> = source_content.lines().collect();
+    let target_lines: Vec<_> = target_content.lines().collect();
     let mut diff_output = String::new();
-    for (i, (s, t)) in source_content.lines().zip(target_content.lines()).enumerate() {
-        if s != t {
-            diff_output.push_str(&format!("Line {}: \n  repo:  {}\n  home:  {}\n", i + 1, s, t));
+    for i in 0..source_lines.len().max(target_lines.len()) {
+        match (source_lines.get(i), target_lines.get(i)) {
+            (Some(s), Some(t)) if s != t => {
+                diff_output.push_str(&format!(
+                    "Line {}:\n  repo:  {}\n  home:  {}\n",
+                    i + 1,
+                    s,
+                    t
+                ));
+            }
+            (Some(s), None) => {
+                diff_output.push_str(&format!("Line {}:\n  repo only: {}\n", i + 1, s));
+            }
+            (None, Some(t)) => {
+                diff_output.push_str(&format!("Line {}:\n  home only: {}\n", i + 1, t));
+            }
+            _ => {}
         }
-    }
-
-    if diff_output.is_empty() && source_content.lines().count() != target_content.lines().count() {
-        diff_output = "Files have different number of lines".to_string();
     }
 
     Ok(Some(diff_output))
@@ -166,4 +194,56 @@ pub fn create_backup() -> Result<PathBuf> {
     }
 
     Ok(backup_dir)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_path(label: &str) -> PathBuf {
+        let suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock")
+            .as_nanos();
+        std::env::temp_dir().join(format!("setup-dotfiles-{}-{}", label, suffix))
+    }
+
+    #[test]
+    fn diff_files_reports_missing_source() {
+        let source = temp_path("missing-source");
+        let target = temp_path("existing-target");
+        fs::write(&target, "value\n").expect("write target");
+
+        let diff = diff_files(&source, &target).expect("diff");
+
+        assert_eq!(
+            diff,
+            Some(format!("Source does not exist: {}", source.display()))
+        );
+
+        fs::remove_file(&target).ok();
+    }
+
+    #[test]
+    fn diff_files_reports_extra_home_lines() {
+        let base = temp_path("extra-home-lines");
+        let source = base.join("repo");
+        let target = base.join("home");
+
+        fs::create_dir_all(&base).expect("create base");
+        fs::write(&source, "line-1\n").expect("write source");
+        fs::write(&target, "line-1\nline-2\n").expect("write target");
+
+        let diff = diff_files(&source, &target)
+            .expect("diff")
+            .expect("diff contents");
+
+        assert!(diff.contains("Line 2:"));
+        assert!(diff.contains("home only: line-2"));
+
+        fs::remove_file(&source).ok();
+        fs::remove_file(&target).ok();
+        fs::remove_dir(&base).ok();
+    }
 }

@@ -38,6 +38,7 @@ fn run_command(cmd: Commands) -> Result<()> {
         Commands::List(args) => commands::list::run(args),
         Commands::Profile(args) => commands::profile::run(args),
         Commands::Doctor(args) => commands::doctor::run(args),
+        Commands::Drift(args) => commands::drift::run(args),
         Commands::Uninstall(args) => commands::uninstall::run(args),
         Commands::Dotfiles(args) => commands::dotfiles::run(args),
         Commands::Check(args) => commands::check::run(args),
