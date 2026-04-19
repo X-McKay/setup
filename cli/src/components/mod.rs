@@ -23,6 +23,7 @@ pub mod registry;
 pub mod spotify;
 pub mod tldr;
 pub mod tools;
+pub mod vlc;
 pub mod yq;
 
 pub trait Component: Send + Sync {

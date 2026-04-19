@@ -33,6 +33,7 @@ impl Registry {
         r.register(Arc::new(super::spotify::Spotify));
         r.register(Arc::new(super::tldr::Tldr));
         r.register(Arc::new(super::tools::Tools));
+        r.register(Arc::new(super::vlc::Vlc));
         r.register(Arc::new(super::yq::Yq));
         r
     }
@@ -213,6 +214,11 @@ mod tests {
     #[test]
     fn spotify_is_registered() {
         assert_registered("spotify");
+    }
+
+    #[test]
+    fn vlc_is_registered() {
+        assert_registered("vlc");
     }
 
     #[test]
