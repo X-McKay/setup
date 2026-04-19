@@ -18,9 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `setup install --verify`
 - `setup uninstall` with `--force` and `--cascade`
 - `setup doctor` for health and drift reporting
+- `setup drift` for focused config reconciliation (`summary`, `--json`, `diff`, `sync`, `adopt`)
 - `setup list [--profile X] [--tag T]`
 - `setup profile list / show / activate / deactivate`
 - Optional `~/.config/setup/manifest.toml` user override
+- Repo-local Codex and Claude helpers for drift review workflows
 - Neovim installation with sensible default configuration
 - Tmux Plugin Manager (tpm) installation
 - SSH key generation helper (ED25519)
@@ -33,7 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Components are now Rust structs implementing a `Component` trait, dispatched by id via `Registry::build()`
 - `setup check` is deprecated and now forwards to `setup doctor`
 - Enhanced mise installation to run `mise install` from .tool-versions
+- Shared `mise` Python configuration now disables attestations only for Python precompiled downloads, matching the current `python-build-standalone` artifact gap
 - Improved apt package installation argument handling
+- Docker e2e coverage now includes managed-config drift summary/diff/sync checks
+- Ghostty config adds split-pane navigation on `Ctrl+Shift+W/A/S/D`
 
 ### Removed
 - `cli/src/system/packages/` module (install logic moved to `cli/src/components/<id>.rs`)
@@ -43,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Existing `setup install <component>` invocations still work
 - Consider `setup profile activate workstation` or `setup profile activate server` so `setup doctor` has intent to compare against
 - Run `setup doctor` after upgrading to see drift
+- Use `setup drift` when reviewing or syncing repo-managed dotfile changes over time
 
 ## [0.2.0] - 2026-01-11
 

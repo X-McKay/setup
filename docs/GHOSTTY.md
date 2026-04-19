@@ -66,6 +66,15 @@ vghost              # Alias (if configured)
 vim ~/.config/ghostty/config
 ```
 
+Because this file is repo-managed in `bootstrap/dotfiles/ghostty/config`, use the
+drift workflow when you want to review or sync local edits:
+
+```bash
+setup drift diff --name ghostty/config
+setup drift adopt --name ghostty/config   # copy home -> repo
+setup drift sync --force                  # copy repo -> home
+```
+
 ### Reloading Configuration
 
 ```
@@ -139,8 +148,17 @@ Our configuration uses `Super` (Cmd on Mac, Win key on Linux) for Ghostty action
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+d` | Split pane right (vertical divider) |
-| `Ctrl+Shift+d` | Split pane down (horizontal divider) |
+| `Ctrl+Shift+=` | Split pane right (vertical divider) |
+| `Ctrl+Shift+-` | Split pane down (horizontal divider) |
+
+### Split Navigation
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Shift+w` | Focus pane above |
+| `Ctrl+Shift+a` | Focus pane left |
+| `Ctrl+Shift+s` | Focus pane below |
+| `Ctrl+Shift+d` | Focus pane right |
 
 ### Clipboard
 
@@ -382,8 +400,9 @@ set -sa terminal-features ',xterm-256color:RGB'
 | `Super+t` | New tab |
 | `Super+w` | Close tab |
 | `Super+1-5` | Switch tabs |
-| `Ctrl+d` | Split right |
-| `Ctrl+Shift+d` | Split down |
+| `Ctrl+Shift+=` | Split right |
+| `Ctrl+Shift+-` | Split down |
+| `Ctrl+Shift+W/A/S/D` | Move between splits |
 | `Super+c/v` | Copy/Paste |
 | `Super+=/-` | Font size |
 | `Super+Shift+Enter` | Fullscreen |

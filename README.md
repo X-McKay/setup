@@ -1,6 +1,6 @@
 # Setup - Development Environment Configuration
 
-A Rust CLI tool for setting up and maintaining a development environment on Ubuntu. Includes modern CLI tools, dotfiles management, system monitoring, and backup configuration.
+A Rust CLI tool for setting up and maintaining a development environment on Ubuntu. Includes profile-aware installs, drift review for managed configs, modern CLI tools, system monitoring, and backup configuration.
 
 ## Table of Contents
 
@@ -241,7 +241,16 @@ Managed dotfiles include:
 | `.tool-versions` | Mise tool versions |
 | `.config/ghostty/config` | Ghostty terminal config |
 | `.config/lazygit/config.yml` | Lazygit config |
-| `.config/nvim/init.lua` | Neovim config (created by neovim component) |
+| `.config/mise/config.toml` | Mise settings, including Python attestation policy |
+
+Typical review loop for a repo-managed config:
+
+```bash
+setup drift --dotfiles
+setup drift diff --name ghostty/config
+setup drift adopt --name ghostty/config   # home -> repo
+setup drift sync --force                  # repo -> home
+```
 
 ## Testing
 
@@ -263,6 +272,7 @@ The Docker tests:
 - Test the docker-safe installable subset
 - Verify binaries are installed to correct locations
 - Test profile-based dry-runs and doctor/profile flows
+- Test drift summary/diff/sync for managed dotfiles
 - Test user-manifest override behavior
 
 ### Host-Side Contract Suite
