@@ -12,6 +12,7 @@ pub mod docker;
 pub mod gh;
 pub mod glow;
 pub mod hyperfine;
+pub mod jq;
 pub mod just;
 pub mod lazygit;
 pub mod mise;
