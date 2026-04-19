@@ -105,6 +105,11 @@ cd cli && cargo test -p setup
 bash tests/docker/run_tests.sh
 ```
 
+### Validate the Release Installer
+```bash
+bash -n install.sh
+```
+
 ### Test Managed Dotfile Changes
 ```bash
 setup drift --dotfiles
@@ -125,6 +130,7 @@ setup/
 ├── bootstrap/
 │   ├── dotfiles/           # Repo-managed config files synced to home
 │   └── manifest.toml       # Declarative component/profile catalog
+├── install.sh              # GitHub release installer for the published CLI
 ├── .agents/skills/         # Repo-local Codex skills
 ├── .claude/commands/       # Repo-local Claude Code commands
 ├── hooks/                  # Git hooks (commit-msg validation)

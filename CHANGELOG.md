@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `setup uninstall` with `--force` and `--cascade`
 - `setup doctor` for health and drift reporting
 - `setup drift` for focused config reconciliation (`summary`, `--json`, `diff`, `sync`, `adopt`)
+- `install.sh` for curl-based installation from GitHub Releases
 - `setup list [--profile X] [--tag T]`
 - `setup profile list / show / activate / deactivate`
 - Optional `~/.config/setup/manifest.toml` user override
@@ -41,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved apt package installation argument handling
 - Docker e2e coverage now includes managed-config drift summary/diff/sync checks
 - Ghostty config adds split-pane navigation on `Ctrl+Shift+W/A/S/D`
+- GitHub Releases now publish installer/checksum assets alongside the Linux tarball
 
 ### Removed
 - `cli/src/system/packages/` module (install logic moved to `cli/src/components/<id>.rs`)

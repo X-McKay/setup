@@ -23,23 +23,45 @@ A Rust CLI tool for setting up and maintaining a development environment on Ubun
 ## Quick Start
 
 ```bash
-# Clone the repository
+# Install the released CLI (Linux x86_64)
+curl -fsSL https://github.com/X-McKay/setup/releases/latest/download/install.sh | bash
+
+# Use the installed CLI
+setup --help
+setup install --profile workstation -y
+```
+
+Source-based development flow:
+
+```bash
 git clone https://github.com/X-McKay/setup.git
 cd setup
-
-# Bootstrap from a fresh machine (installs mise, Rust, and builds the CLI)
 ./bootstrap.sh
-
-# Run interactive mode
 ./setup.sh
-
-# Or install everything at once
-./setup.sh install --all -y
 ```
 
 ## Installation
 
-### Bootstrap (Recommended)
+### Official Release (Recommended)
+
+The GitHub release installer downloads the published `setup` tarball, verifies
+its SHA256 checksum, and installs the CLI into `~/.local/bin`.
+
+```bash
+curl -fsSL https://github.com/X-McKay/setup/releases/latest/download/install.sh | bash
+```
+
+Install a pinned release instead of the latest:
+
+```bash
+curl -fsSL https://github.com/X-McKay/setup/releases/download/v0.3.0/install.sh | \
+  bash -s -- --version v0.3.0
+```
+
+Current release artifacts target Linux `x86_64`. For source builds, unsupported
+architectures, or local development, use the bootstrap flow below.
+
+### Bootstrap From Source
 
 The bootstrap script handles everything from a fresh Ubuntu install:
 
@@ -345,7 +367,7 @@ The repository includes GitHub Actions workflows:
 
 - **Release** (`release.yml`): Runs on version tags
   - Builds release binary
-  - Creates GitHub release with tarball
+  - Publishes `install.sh`, checksums, and release tarball assets
 
 ### Pre-commit Hooks
 
@@ -366,6 +388,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 
 ```
 .
+├── install.sh                  # GitHub release installer for published binaries
 ├── bootstrap.sh                # Fresh-machine bootstrap (mise + Rust + build)
 ├── cli/                        # Rust CLI source
 │   ├── src/

@@ -6,6 +6,9 @@ name: Release
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -23,12 +26,12 @@ jobs:
         working-directory: cli
         run: cargo build --release
 
-      - name: Create tarball
+      - name: Create release assets
         run: |
           mkdir -p release
           cp cli/target/release/setup release/
-          cp README.md release/
-          tar -czvf setup-linux-x86_64.tar.gz -C release .
+          tar -czvf setup-linux-x86_64.tar.gz -C release setup
+          sha256sum setup-linux-x86_64.tar.gz install.sh > checksums.txt
 
       - name: Get version from tag
         id: version
@@ -41,9 +44,20 @@ jobs:
           body: |
             ## Setup CLI ${{ steps.version.outputs.VERSION }}
 
-            Download the tarball and extract to run the setup CLI.
+            Install this release:
+
+            ```bash
+            curl -fsSL https://github.com/X-McKay/setup/releases/download/${{ steps.version.outputs.VERSION }}/install.sh | bash -s -- --version ${{ steps.version.outputs.VERSION }}
+            ```
+
+            Manual assets:
+            - `setup-linux-x86_64.tar.gz`
+            - `checksums.txt`
+
             See CHANGELOG.md for release details.
           files: |
+            install.sh
+            checksums.txt
             setup-linux-x86_64.tar.gz
           draft: false
           prerelease: false
