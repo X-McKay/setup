@@ -1,3 +1,122 @@
-//! Component registry. Populated by Task 4.2.
+//! Component registry. Populated by `build()` at startup.
 
-#![allow(dead_code)]
+use anyhow::{anyhow, Result};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use super::Component;
+
+pub struct Registry {
+    components: HashMap<String, Arc<dyn Component>>,
+}
+
+impl Registry {
+    /// Build the full registry by wiring every component implementation.
+    /// This is the ONE place that knows about every component in the system.
+    pub fn build() -> Self {
+        let mut r = Self {
+            components: HashMap::new(),
+        };
+        // Components are registered here in Phase 6. For now the registry
+        // is empty — this is the seam.
+        let _ = &mut r;
+        r
+    }
+
+    pub fn register(&mut self, c: Arc<dyn Component>) {
+        let id = c.id().to_string();
+        if self.components.insert(id.clone(), c).is_some() {
+            panic!("duplicate component registration: {}", id);
+        }
+    }
+
+    pub fn get(&self, id: &str) -> Result<Arc<dyn Component>> {
+        self.components
+            .get(id)
+            .cloned()
+            .ok_or_else(|| anyhow!("unknown component: {}", id))
+    }
+
+    pub fn ids(&self) -> Vec<String> {
+        let mut v: Vec<_> = self.components.keys().cloned().collect();
+        v.sort();
+        v
+    }
+
+    /// Validate that every id in the manifest has a registered implementation,
+    /// and every registered implementation has a manifest entry.
+    pub fn validate_against(&self, manifest: &crate::manifest::schema::Manifest) -> Result<()> {
+        use std::collections::HashSet;
+        let reg: HashSet<_> = self.components.keys().cloned().collect();
+        let man: HashSet<_> = manifest.components.iter().map(|c| c.id.clone()).collect();
+
+        let missing_impls: Vec<_> = man.difference(&reg).cloned().collect();
+        let orphan_impls: Vec<_> = reg.difference(&man).cloned().collect();
+
+        if !missing_impls.is_empty() || !orphan_impls.is_empty() {
+            let mut msg = String::new();
+            if !missing_impls.is_empty() {
+                msg.push_str(&format!(
+                    "manifest components without Rust impl: {};\n",
+                    missing_impls.join(", ")
+                ));
+            }
+            if !orphan_impls.is_empty() {
+                msg.push_str(&format!(
+                    "Rust impls without manifest entry: {}",
+                    orphan_impls.join(", ")
+                ));
+            }
+            anyhow::bail!("registry/manifest mismatch:\n{}", msg);
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+
+    struct FakeA;
+    impl Component for FakeA {
+        fn id(&self) -> &str {
+            "a"
+        }
+        fn is_installed(&self) -> Result<bool> {
+            Ok(false)
+        }
+        fn install(&self) -> Result<()> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn register_and_get() {
+        let mut r = Registry {
+            components: HashMap::new(),
+        };
+        r.register(Arc::new(FakeA));
+        assert!(r.get("a").is_ok());
+        assert!(r.get("missing").is_err());
+    }
+
+    #[test]
+    fn ids_is_sorted() {
+        let mut r = Registry {
+            components: HashMap::new(),
+        };
+        r.register(Arc::new(FakeA));
+        assert_eq!(r.ids(), vec!["a"]);
+    }
+
+    #[test]
+    #[should_panic(expected = "duplicate")]
+    fn duplicate_registration_panics() {
+        let mut r = Registry {
+            components: HashMap::new(),
+        };
+        r.register(Arc::new(FakeA));
+        r.register(Arc::new(FakeA));
+    }
+}
