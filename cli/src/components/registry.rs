@@ -29,6 +29,7 @@ impl Registry {
         r.register(Arc::new(super::just::Just));
         r.register(Arc::new(super::lazygit::Lazygit));
         r.register(Arc::new(super::mise::Mise));
+        r.register(Arc::new(super::obsidian::Obsidian));
         r.register(Arc::new(super::tldr::Tldr));
         r.register(Arc::new(super::tools::Tools));
         r.register(Arc::new(super::yq::Yq));
@@ -201,6 +202,11 @@ mod tests {
     #[test]
     fn discord_is_registered() {
         assert_registered("discord");
+    }
+
+    #[test]
+    fn obsidian_is_registered() {
+        assert_registered("obsidian");
     }
 
     #[test]
