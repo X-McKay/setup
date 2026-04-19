@@ -17,7 +17,6 @@ A Rust CLI tool for setting up and maintaining a development environment on Ubun
 ## System Requirements
 
 - Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
-- Rust toolchain (for building from source)
 - Git
 - sudo access (for system packages)
 
@@ -28,44 +27,54 @@ A Rust CLI tool for setting up and maintaining a development environment on Ubun
 git clone https://github.com/X-McKay/setup.git
 cd setup
 
-# Build the CLI
-cd cli && cargo build --release && cd ..
+# Bootstrap from a fresh machine (installs mise, Rust, and builds the CLI)
+./bootstrap.sh
 
 # Run interactive mode
-./cli/target/release/setup
+./setup.sh
 
 # Or install everything at once
-./cli/target/release/setup install --all -y
+./setup.sh install --all -y
 ```
 
 ## Installation
 
-### Building from Source
+### Bootstrap (Recommended)
 
-1. **Install Rust** (if not already installed):
+The bootstrap script handles everything from a fresh Ubuntu install:
+
+```bash
+./bootstrap.sh
+```
+
+This will:
+1. Install system prerequisites (curl, git, build-essential, etc.)
+2. Install [mise](https://mise.jdx.dev/) version manager
+3. Install Rust and other tools via mise (from `.tool-versions`)
+4. Build the setup CLI
+
+### Alternative: Manual Rust Install
+
+If you prefer to manage Rust yourself:
+
+1. **Install Rust** (via rustup):
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    source ~/.cargo/env
    ```
 
-2. **Clone and build**:
+2. **Build the CLI**:
    ```bash
-   git clone https://github.com/X-McKay/setup.git
-   cd setup/cli
-   cargo build --release
+   cd cli && cargo build --release
    ```
 
-3. **Optional: Add to PATH**:
-   ```bash
-   sudo cp target/release/setup /usr/local/bin/
-   ```
+### Alternative: Bash-Only Installation
 
-### Alternative: Bash Installation
-
-For environments without Rust, use the standalone bash script:
+For environments without Rust, use the standalone bash scripts:
 
 ```bash
 ./bootstrap/scripts/install_modern_cli.sh
+./bootstrap/scripts/copy_dotfiles.sh
 ```
 
 ## Usage
@@ -81,16 +90,63 @@ setup
 ### Install Components
 
 ```bash
-# Install all components (non-interactive)
+# Install a profile
+setup install --profile server
+setup install --profile workstation --profile ai-heavy
+
+# Install specific components
+setup install docker mise claude-code
+
+# Preview without installing
+setup install --profile server --dry-run
+
+# Continue past failures
+setup install --profile workstation --keep-going
+
+# Roll back on first failure
+setup install --profile server --rollback-on-failure
+
+# Everything (non-interactive only)
 setup install --all -y
+```
 
-# Install specific component
-setup install mise
-setup install docker
-setup install tools
+### See What's Available
 
-# Install multiple components
-setup install apt tools mise lazygit
+```bash
+setup list                       # all components
+setup list --profile ai-heavy    # components in a profile
+setup list --tag dev             # components with a tag
+setup profile list               # known profiles
+setup profile show server        # resolved components for a profile
+```
+
+### Health and Drift
+
+```bash
+setup doctor                       # check declared profiles vs reality
+setup doctor --profile workstation # check a specific profile
+setup doctor --verify              # also run post-install verify()
+setup doctor --warn-only           # never exit non-zero
+```
+
+`setup check` is deprecated and forwards to `setup doctor`.
+
+### Remove Components
+
+```bash
+setup uninstall claude-code
+setup uninstall ssh-keys --force
+setup uninstall docker --cascade
+```
+
+### Profile Intent
+
+`~/.config/setup/active.toml` records which profiles you've selected on this machine.
+Doctor reads this when `--profile` isn't passed, so it knows what "should be here."
+
+```bash
+setup profile activate server
+setup profile deactivate server
 ```
 
 ### Manage Dotfiles
@@ -101,15 +157,6 @@ setup dotfiles sync -f   # Force sync (overwrite without prompting)
 setup dotfiles diff      # Show differences between repo and installed
 setup dotfiles list      # List managed dotfiles and their status
 setup dotfiles backup    # Backup current dotfiles before syncing
-```
-
-### Check System Status
-
-```bash
-setup check tools        # Check which tools are installed
-setup check dotfiles     # Check dotfile sync status
-setup check system       # Check system info
-setup check all          # Check everything
 ```
 
 ### Update Components
@@ -123,27 +170,10 @@ setup update dotfiles    # Sync dotfiles from repo
 
 ## Available Components
 
-| Component | Description |
-|-----------|-------------|
-| `apt` | Basic system packages (curl, git, build-essential, etc.) |
-| `tools` | Extra CLI tools (ripgrep, fd, fzf, bat, eza, delta) |
-| `mise` | Mise version manager + installs tools from ~/.tool-versions |
-| `docker` | Docker and adds user to docker group |
-| `monitoring` | System monitoring (htop, netdata, fail2ban, logwatch) + health checks |
-| `backup` | Backup utilities (rsync, timeshift) + automated backup scripts |
-| `lazygit` | Terminal UI for git |
-| `just` | Modern task runner |
-| `glow` | Terminal markdown renderer |
-| `bottom` | System monitor (btm) |
-| `gh` | GitHub CLI |
-| `hyperfine` | Command-line benchmarking tool |
-| `jq` | JSON processor |
-| `yq` | YAML processor |
-| `tldr` | Simplified man pages |
-| `neovim` | Neovim editor with sensible defaults |
-| `tpm` | Tmux Plugin Manager |
-| `ssh-keys` | Generate ED25519 SSH keys (interactive) |
-| `gpg` | Generate GPG keys for commit signing (interactive) |
+The full catalog lives in [`bootstrap/manifest.toml`](bootstrap/manifest.toml).
+Run `setup list` to see it with your local profile and tag filters applied.
+See [plans/2026-04-18-manifest-architecture-design.md](plans/2026-04-18-manifest-architecture-design.md)
+for the manifest architecture.
 
 ## Features
 
@@ -228,20 +258,29 @@ docker run --rm setup-test
 
 The Docker tests:
 - Run as a non-root user (`testuser`) to simulate real usage
-- Test all installable components
+- Test the docker-safe installable subset
 - Verify binaries are installed to correct locations
-- Test dotfiles synchronization
+- Test profile-based dry-runs and doctor/profile flows
+- Test user-manifest override behavior
+
+### Host-Side Contract Suite
+
+The cross-component contract test is opt-in because it performs real install and
+uninstall operations on the current machine.
+
+```bash
+SETUP_CONTRACT_TESTS=1 ./tests/docker/run_tests.sh
+```
 
 ### What's Tested
 
 | Category | Tests |
 |----------|-------|
 | CLI | Help, version commands |
-| APT | curl, git, wget, unzip |
-| Tools | ripgrep, fd, fzf, bat, eza, delta |
-| Utilities | jq, yq, lazygit, just |
-| Apps | glow, bottom, gh, hyperfine, tldr |
-| Dev | mise, neovim, tpm |
+| Install | APT, tools, jq, yq, lazygit, just, glow, bottom, gh, hyperfine, tldr, mise, neovim, tpm |
+| Profiles | `install --profile`, `profile activate/deactivate`, `profile show` |
+| Health | `doctor --warn-only`, `doctor --profile server` |
+| Overrides | `~/.config/setup/manifest.toml` merge behavior |
 | Config | Dotfiles sync |
 
 ### Skipped Tests
@@ -255,13 +294,16 @@ Some components require systemd or user interaction and are skipped in Docker:
 
 ### Prerequisites
 
-- Rust 1.70+
-- Docker (for running tests)
+- Rust toolchain (or `./bootstrap.sh`)
+- Docker (for container integration tests)
 - pre-commit (for git hooks)
 
 ### Setup Development Environment
 
 ```bash
+# Bootstrap toolchains the same way a fresh machine does
+./bootstrap.sh
+
 # Install pre-commit hooks
 pip install pre-commit
 pre-commit install
@@ -312,12 +354,17 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 
 ```
 .
+├── bootstrap.sh                # Fresh-machine bootstrap (mise + Rust + build)
 ├── cli/                        # Rust CLI source
 │   ├── src/
-│   │   ├── commands/           # CLI commands (install, dotfiles, check, update)
+│   │   ├── commands/           # install, uninstall, doctor, list, profile, dotfiles, update
+│   │   ├── components/         # Per-component install/uninstall implementations
 │   │   ├── config/             # Configuration handling
-│   │   ├── system/             # System operations (packages.rs)
+│   │   ├── manifest/           # Manifest schema, loader, resolver, intent
+│   │   ├── system/             # Remaining system helpers (health, etc.)
 │   │   └── ui/                 # User interface (prompts)
+│   ├── tests/
+│   │   └── contract.rs         # Gated install/uninstall contract suite
 │   └── Cargo.toml
 ├── bootstrap/
 │   ├── dotfiles/               # Dotfile templates
@@ -329,6 +376,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 ├── tests/
 │   └── docker/
 │       ├── Dockerfile          # Test container definition
+│       ├── fixtures/           # User-manifest override fixtures
 │       ├── test_installs.sh    # Integration test script
 │       └── run_tests.sh        # Test runner
 ├── .github/
