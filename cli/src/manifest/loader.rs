@@ -88,4 +88,91 @@ components = ["apt"]
         assert_eq!(m.components[0].id, "apt");
         assert!(m.profiles.contains_key("base"));
     }
+
+    #[test]
+    fn user_overrides_component_by_id() {
+        let repo = write_tmp(
+            "repo2.toml",
+            r#"
+[[components]]
+id = "apt"
+display_name = "APT (repo)"
+"#,
+        );
+        let user = write_tmp(
+            "user2.toml",
+            r#"
+[[components]]
+id = "apt"
+display_name = "APT (user)"
+"#,
+        );
+        let m = load_from(&repo, Some(&user)).unwrap();
+        assert_eq!(m.components.len(), 1);
+        assert_eq!(m.components[0].display_name, "APT (user)");
+    }
+
+    #[test]
+    fn user_adds_new_profile() {
+        let repo = write_tmp(
+            "repo3.toml",
+            r#"
+[[components]]
+id = "apt"
+display_name = "APT"
+[profiles.base]
+components = ["apt"]
+"#,
+        );
+        let user = write_tmp(
+            "user3.toml",
+            r#"
+[profiles.minimal]
+components = ["apt"]
+"#,
+        );
+        let m = load_from(&repo, Some(&user)).unwrap();
+        assert!(m.profiles.contains_key("base"));
+        assert!(m.profiles.contains_key("minimal"));
+    }
+
+    #[test]
+    fn user_cannot_reference_unknown_component() {
+        let repo = write_tmp(
+            "repo4.toml",
+            r#"
+[[components]]
+id = "apt"
+display_name = "APT"
+"#,
+        );
+        let user = write_tmp(
+            "user4.toml",
+            r#"
+[profiles.weird]
+components = ["nonexistent"]
+"#,
+        );
+        let err = load_from(&repo, Some(&user)).unwrap_err();
+        let msg = format!("{:#}", err);
+        assert!(
+            msg.contains("unknown component"),
+            "expected chained error to mention unknown component, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn missing_user_file_is_a_noop() {
+        let repo = write_tmp(
+            "repo5.toml",
+            r#"
+[[components]]
+id = "apt"
+display_name = "APT"
+"#,
+        );
+        let nonexistent = PathBuf::from("/nonexistent-setup-test-path.toml");
+        let m = load_from(&repo, Some(&nonexistent)).unwrap();
+        assert_eq!(m.components.len(), 1);
+    }
 }
