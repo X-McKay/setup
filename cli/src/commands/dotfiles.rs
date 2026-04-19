@@ -47,6 +47,19 @@ pub fn run(args: DotfilesArgs) -> Result<()> {
     }
 }
 
+/// Return a list of `(dotfile_name, differs)` pairs without printing.
+pub fn diff_summary() -> Result<Vec<(String, bool)>> {
+    let dotfiles = dotfiles_config::get_managed_dotfiles();
+    let mut out = Vec::with_capacity(dotfiles.len());
+
+    for (name, source, target) in &dotfiles {
+        let differs = dotfiles_config::diff_files(source, target)?.is_some();
+        out.push((name.clone(), differs));
+    }
+
+    Ok(out)
+}
+
 fn sync_dotfiles(force: bool) -> Result<()> {
     let dotfiles = dotfiles_config::get_managed_dotfiles();
 
@@ -67,17 +80,18 @@ fn sync_dotfiles(force: bool) -> Result<()> {
         println!("  {} {}", style("✓").green(), name);
     }
 
-    println!("\n{}", style("Dotfiles synced successfully!").green().bold());
+    println!(
+        "\n{}",
+        style("Dotfiles synced successfully!").green().bold()
+    );
     Ok(())
 }
 
 fn show_diff() -> Result<()> {
-    let dotfiles = dotfiles_config::get_managed_dotfiles();
-
     println!("{}", style("Comparing dotfiles...").cyan().bold());
 
     let mut has_diff = false;
-    for (name, source, target) in &dotfiles {
+    for (name, source, target) in &dotfiles_config::get_managed_dotfiles() {
         if let Some(diff) = dotfiles_config::diff_files(source, target)? {
             has_diff = true;
             println!("\n{} {}:", style("─").dim(), style(name).bold());
@@ -128,9 +142,7 @@ fn edit_dotfile(name: Option<String>) -> Result<()> {
         .ok_or_else(|| anyhow::anyhow!("Unknown dotfile: {}", dotfile_name))?;
 
     let editor = std::env::var("EDITOR").unwrap_or_else(|_| "vim".to_string());
-    std::process::Command::new(&editor)
-        .arg(source)
-        .status()?;
+    std::process::Command::new(&editor).arg(source).status()?;
 
     Ok(())
 }

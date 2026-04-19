@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 
 pub mod check;
+pub mod doctor;
 pub mod dotfiles;
 pub mod install;
 pub mod interactive;
@@ -28,6 +29,9 @@ pub enum Commands {
 
     /// Manage dotfiles (sync, diff, edit)
     Dotfiles(dotfiles::DotfilesArgs),
+
+    /// System health + drift report
+    Doctor(doctor::DoctorArgs),
 
     /// Remove components
     Uninstall(uninstall::UninstallArgs),
