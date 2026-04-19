@@ -275,3 +275,39 @@ fn update_intent_on_success(
     );
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn args(components: Vec<&str>, profiles: Vec<&str>, all: bool) -> InstallArgs {
+        InstallArgs {
+            components: components.into_iter().map(String::from).collect(),
+            profiles: profiles.into_iter().map(String::from).collect(),
+            all,
+            dry_run: false,
+            verify: false,
+            keep_going: false,
+            rollback_on_failure: false,
+            yes: true,
+        }
+    }
+
+    #[test]
+    fn all_conflicts_with_profile() {
+        let args = args(vec![], vec!["server"], true);
+        assert!(validate_flag_combination(&args).is_err());
+    }
+
+    #[test]
+    fn all_conflicts_with_explicit_components() {
+        let args = args(vec!["apt"], vec![], true);
+        assert!(validate_flag_combination(&args).is_err());
+    }
+
+    #[test]
+    fn profile_plus_explicit_is_ok() {
+        let args = args(vec!["apt"], vec!["server"], false);
+        assert!(validate_flag_combination(&args).is_ok());
+    }
+}
