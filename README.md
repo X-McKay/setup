@@ -196,8 +196,7 @@ setup update dotfiles    # Sync dotfiles from repo
 
 The full catalog lives in [`bootstrap/manifest.toml`](bootstrap/manifest.toml).
 Run `setup list` to see it with your local profile and tag filters applied.
-See [plans/2026-04-18-manifest-architecture-design.md](plans/2026-04-18-manifest-architecture-design.md)
-for the manifest architecture.
+See [docs/MANIFEST.md](docs/MANIFEST.md) for the manifest and profile architecture.
 
 ## Features
 

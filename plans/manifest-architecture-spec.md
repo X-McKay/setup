@@ -1,6 +1,7 @@
-# Manifest-Driven Architecture + Profiles — Design
+# Manifest-Driven Architecture + Profiles - Spec
 
-**Date:** 2026-04-18
+**Status:** implemented; durable user-facing documentation lives in [`docs/MANIFEST.md`](../docs/MANIFEST.md).
+
 **Scope:** Sub-project 1 of the 2026 refresh. Covers: declarative component manifest, user-override layer, composable profiles, component dependency graph, `--dry-run`, per-component `uninstall` (also used for `--rollback-on-failure`), `setup doctor`, full migration of existing components.
 **Out of scope (deferred):** AI tooling installers and `.claude`/`.agents` seed configs (Sub-project 2). Cross-distro package-manager abstraction (future).
 
