@@ -100,7 +100,7 @@ Each scanner is a self-contained bash script with the same contract: read no arg
 | `disk.sh` | `~/Downloads` size + week-over-week delta; files >100MB under `$HOME` (excluding `~/.cache`, `~/.local/share`, any `node_modules`, any `.git/objects`); `node_modules` / `target/` / `.venv` directories untouched 90+ days; `/tmp` files older than 30 days. |
 | `docker-k8s.sh` | `docker images -f dangling=true`, `docker volume ls -f dangling=true`, total reclaimable space from `docker system df`. For each context in `~/.kube/config`, with `kubectl --request-timeout=5s`: evicted pods, terminating pods stuck >1h. Contexts that time out are reported as a single `info` item rather than failing the scan. |
 | `system-health.sh` | `systemctl --user --failed` and `systemctl --failed`; `journalctl -p err --since "7 days ago"` count per unit; `apt list --upgradable` filtered to security updates; new listening ports vs. last week's snapshot (snapshot kept under `~/.local/state/maintenance/ports-prev.txt`). |
-| `dev-cruft.sh` | `~/.claude/sessions/` JSONLs >30 days; `~/.claude/plans/` and `~/.claude/todos/` >60 days; isolation-mode worktrees untouched 30+ days that are not the cwd of any session in the last 30 days of `sessions.log`; for each tracked git repo under `~/git/`, local branches fully merged into the repo's default branch (detected via `git rev-parse --abbrev-ref origin/HEAD`); cwds appearing in `sessions.log` (last 30 days) with lingering untracked files per `git status --porcelain`. |
+| `dev-cruft.sh` | `~/.claude/sessions/` JSONLs >30 days; `~/.claude/plans/` and `~/.claude/todos/` >60 days; isolation-mode worktrees untouched 30+ days that are not the cwd of any session in the last 30 days of `sessions.log`; for each tracked git repo under `~/git/`, local branches fully merged into the repo's default branch. Default branch detection should try `git symbolic-ref --short refs/remotes/origin/HEAD`, then fall back to `main`, then `master`; cwds appearing in `sessions.log` (last 30 days) with lingering untracked files per `git status --porcelain`. |
 | `config-drift.sh` | Size and entry count of `~/.claude/settings.json` permission lists; flags lists that exceed a threshold (e.g. >150 entries). Future: track per-entry trigger counts. |
 
 Adding a scanner: drop a new script under `scanners/`, no driver changes needed.
@@ -196,11 +196,11 @@ Description=Run workstation maintenance scan
 
 [Service]
 Type=oneshot
-ExecStart=%h/git/setup/bootstrap/scripts/maintenance/scan.sh
+ExecStart=<repo-path>/bootstrap/scripts/maintenance/scan.sh
 TimeoutStartSec=10min
 ```
 
-User-level systemd (`systemctl --user`), no root. `Persistent=true` ensures missed runs (laptop closed Sunday morning) catch up on next boot.
+User-level systemd (`systemctl --user`), no root. `install.sh` writes the installed unit with the actual repo path detected at install time, so the timer does not assume the checkout lives at `~/git/setup`. `Persistent=true` ensures missed runs (laptop closed Sunday morning) catch up on next boot.
 
 ### install.sh
 
