@@ -1,4 +1,6 @@
-# Manifest-Driven Architecture + Profiles — Implementation Plan
+# Manifest-Driven Architecture + Profiles - Implementation Plan
+
+**Status:** completed / archival. Durable user-facing documentation lives in [`docs/MANIFEST.md`](../docs/MANIFEST.md); the historical design spec is [`manifest-architecture-spec.md`](manifest-architecture-spec.md).
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,7 +10,7 @@
 
 **Tech Stack:** Rust 2021, `clap` 4 (CLI), `serde` + `toml` 0.8 (schema), `anyhow` (errors), `which` (binary probing), `dirs` (home/config paths), existing test harness (Docker + bash).
 
-**Reference spec:** `plans/2026-04-18-manifest-architecture-design.md`. Implementation is authoritative where the two differ, but any such divergence must be a deliberate choice flagged in a commit message.
+**Reference spec:** `plans/manifest-architecture-spec.md`. Implementation is authoritative where the two differ, but any such divergence must be a deliberate choice flagged in a commit message.
 
 ---
 
@@ -57,7 +59,7 @@ Write `cli/src/manifest/mod.rs`:
 ```rust
 //! Declarative manifest describing available components and profiles.
 //!
-//! See `plans/2026-04-18-manifest-architecture-design.md` for the full design.
+//! See `plans/manifest-architecture-spec.md` for the full design.
 
 pub mod schema;
 ```
@@ -3102,7 +3104,7 @@ Expected: all tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add cli/src/ 
+git add cli/src/
 git commit -m "refactor: delete legacy system/packages/ module (migrated to components/)"
 ```
 
@@ -4644,7 +4646,7 @@ Also update the "Available Components" table row-style description to a short pa
 
 The full catalog lives in [`bootstrap/manifest.toml`](bootstrap/manifest.toml).
 Run `setup list` to see it with your local profile/tag filters applied.
-See [plans/2026-04-18-manifest-architecture-design.md](plans/2026-04-18-manifest-architecture-design.md)
+See [plans/manifest-architecture-spec.md](plans/manifest-architecture-spec.md)
 for the architecture.
 ```
 
@@ -4713,7 +4715,7 @@ git commit -m "docs(changelog): document manifest + profiles release"
 
 Run through this before declaring the plan ready to execute:
 
-- [ ] **Spec coverage:** every numbered requirement in `plans/2026-04-18-manifest-architecture-design.md` §§1–12 maps to a task above.
+- [ ] **Spec coverage:** every numbered requirement in `plans/manifest-architecture-spec.md` §§1–12 maps to a task above.
 - [ ] **Placeholders:** grep the plan for "TBD", "TODO", "fill in", "similar to". Fix any hits.
 - [ ] **Type consistency:** `ComponentSpec` field names match between schema.rs, the manifest TOML, and the resolver references (id, display_name, depends_on, tags, requires_*, interactive).
 - [ ] **Command consistency:** `setup install`, `setup uninstall`, `setup doctor`, `setup list`, `setup profile`, `setup check` all match the design's CLI surface (§7).
@@ -4724,7 +4726,7 @@ Run through this before declaring the plan ready to execute:
 
 ## Execution handoff
 
-Plan complete and saved to `plans/2026-04-18-manifest-architecture-plan.md`. Two execution options:
+Plan complete and saved to `plans/manifest-architecture-plan.md`. Two execution options:
 
 1. **Subagent-Driven (recommended)** — a fresh subagent per task, two-stage review between tasks, fast iteration.
 2. **Inline Execution** — work the plan in this session, batch checkpoints for review.

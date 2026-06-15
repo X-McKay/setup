@@ -1,10 +1,8 @@
----
-title: Workstation Maintenance System
-date: 2026-05-09
-status: design — awaiting user review
----
-
 # Workstation Maintenance System
+
+**Status:** proposed / not implemented.
+
+This is a planning spec, not user-facing documentation for shipped functionality. If this system is implemented, the durable user docs should live in `docs/MAINTENANCE.md` and describe the behavior that actually shipped.
 
 A layered, AI-provider-agnostic system that scans this workstation for cleanup opportunities, configuration drift, and emerging issues; writes its findings to a versioned journal; and surfaces them through both scheduled (systemd) and on-demand (slash command) entry points.
 
@@ -98,7 +96,7 @@ Each scanner is a self-contained bash script with the same contract: read no arg
 
 | Scanner | What it checks |
 |---|---|
-| `setup-doctor.sh` | Shells out to `setup doctor` and `setup drift --dry-run`. Captures their summary lines as `info` or `warn` items. |
+| `setup-doctor.sh` | Shells out to `setup doctor` and `setup drift --json`. Captures their summary lines as `info` or `warn` items. |
 | `disk.sh` | `~/Downloads` size + week-over-week delta; files >100MB under `$HOME` (excluding `~/.cache`, `~/.local/share`, any `node_modules`, any `.git/objects`); `node_modules` / `target/` / `.venv` directories untouched 90+ days; `/tmp` files older than 30 days. |
 | `docker-k8s.sh` | `docker images -f dangling=true`, `docker volume ls -f dangling=true`, total reclaimable space from `docker system df`. For each context in `~/.kube/config`, with `kubectl --request-timeout=5s`: evicted pods, terminating pods stuck >1h. Contexts that time out are reported as a single `info` item rather than failing the scan. |
 | `system-health.sh` | `systemctl --user --failed` and `systemctl --failed`; `journalctl -p err --since "7 days ago"` count per unit; `apt list --upgradable` filtered to security updates; new listening ports vs. last week's snapshot (snapshot kept under `~/.local/state/maintenance/ports-prev.txt`). |
@@ -165,8 +163,8 @@ Hooks registered in `~/.claude/settings.json` under existing `hooks` block:
 ```json
 {
   "hooks": {
-    "SessionStart": [{ "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/session-start-nudge.sh", "timeout": 2 }] }],
-    "SessionEnd": [{ "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/session-end-cwd-log.sh", "timeout": 2 }] }]
+    "SessionStart": [{ "type": "command", "command": "bash ~/.claude/hooks/session-start-nudge.sh", "timeout": 2 }],
+    "SessionEnd": [{ "type": "command", "command": "bash ~/.claude/hooks/session-end-cwd-log.sh", "timeout": 2 }]
   }
 }
 ```

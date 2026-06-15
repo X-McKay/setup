@@ -1,6 +1,6 @@
 //! Declarative manifest describing available components and profiles.
 //!
-//! See `plans/2026-04-18-manifest-architecture-design.md` for the full design.
+//! See `docs/MANIFEST.md` for the user-facing manifest and profile documentation.
 
 pub mod loader;
 pub mod intent;
