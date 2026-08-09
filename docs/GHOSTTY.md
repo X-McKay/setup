@@ -160,6 +160,15 @@ Our configuration uses `Super` (Cmd on Mac, Win key on Linux) for Ghostty action
 | `Ctrl+Shift+s` | Focus pane below |
 | `Ctrl+Shift+d` | Focus pane right |
 
+### Split Resizing
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Alt+Up` | Resize pane upward |
+| `Ctrl+Alt+Down` | Resize pane downward |
+| `Ctrl+Alt+Left` | Resize pane leftward |
+| `Ctrl+Alt+Right` | Resize pane rightward |
+
 ### Clipboard
 
 | Shortcut | Action |
