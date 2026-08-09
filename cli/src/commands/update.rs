@@ -96,7 +96,7 @@ pub fn run(args: UpdateArgs) -> Result<()> {
 
     // Update each component
     for (idx, component) in components.iter().enumerate() {
-        overall_pb.set_message(format!("{}", component.display_name()));
+        overall_pb.set_message(component.display_name().to_string());
 
         match update_component_with_progress(&mp, component) {
             Ok(_) => {

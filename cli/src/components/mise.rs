@@ -6,11 +6,11 @@
 //! Uninstall removes the setup-managed `~/.local/bin/mise` binary. It does
 //! not remove installed runtimes, caches, or config that mise may manage.
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use std::fs;
 
-use super::util::{path_to_str, run_command};
 use super::Component;
+use super::util::{path_to_str, run_command};
 
 pub struct Mise;
 

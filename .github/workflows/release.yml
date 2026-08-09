@@ -47,7 +47,9 @@ jobs:
             Install this release:
 
             ```bash
-            curl -fsSL https://github.com/X-McKay/setup/releases/download/${{ steps.version.outputs.VERSION }}/install.sh | bash -s -- --version ${{ steps.version.outputs.VERSION }}
+            VERSION="${{ steps.version.outputs.VERSION }}"
+            curl -fsSL "https://github.com/X-McKay/setup/releases/download/${VERSION}/install.sh" | \
+              bash -s -- --version "${VERSION}"
             ```
 
             Manual assets:

@@ -30,26 +30,28 @@ pub fn repo_manifest_path() -> Result<PathBuf> {
         return Ok(PathBuf::from(env_path));
     }
 
-    if let Ok(cwd) = std::env::current_dir() {
-        if let Some(found) = find_repo_manifest_from(&cwd) {
+    if let Ok(cwd) = std::env::current_dir()
+        && let Some(found) = find_repo_manifest_from(&cwd)
+    {
+        return Ok(found);
+    }
+
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(parent) = exe.parent()
+    {
+        let share = parent
+            .join("..")
+            .join("share")
+            .join("setup")
+            .join("manifest.toml");
+        if share.exists() {
+            return Ok(share);
+        }
+        if let Some(found) = find_repo_manifest_from(parent) {
             return Ok(found);
         }
     }
-
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(parent) = exe.parent() {
-            let share = parent.join("..").join("share").join("setup").join("manifest.toml");
-            if share.exists() {
-                return Ok(share);
-            }
-            if let Some(found) = find_repo_manifest_from(parent) {
-                return Ok(found);
-            }
-        }
-    }
-    anyhow::bail!(
-        "could not locate bootstrap/manifest.toml. Set SETUP_MANIFEST to override."
-    )
+    anyhow::bail!("could not locate bootstrap/manifest.toml. Set SETUP_MANIFEST to override.")
 }
 
 /// Convenience: locate both paths and load.
@@ -71,14 +73,14 @@ pub fn load_from(repo: &Path, user: Option<&Path>) -> Result<Manifest> {
     let mut manifest: Manifest =
         toml::from_str(&repo_text).with_context(|| format!("parsing {}", repo.display()))?;
 
-    if let Some(u) = user {
-        if u.exists() {
-            let user_text = std::fs::read_to_string(u)
-                .with_context(|| format!("reading {}", u.display()))?;
-            let user_manifest: Manifest =
-                toml::from_str(&user_text).with_context(|| format!("parsing {}", u.display()))?;
-            manifest = merge(manifest, user_manifest);
-        }
+    if let Some(u) = user
+        && u.exists()
+    {
+        let user_text =
+            std::fs::read_to_string(u).with_context(|| format!("reading {}", u.display()))?;
+        let user_manifest: Manifest =
+            toml::from_str(&user_text).with_context(|| format!("parsing {}", u.display()))?;
+        manifest = merge(manifest, user_manifest);
     }
 
     manifest
@@ -233,9 +235,10 @@ display_name = "APT"
             PathBuf::from("../bootstrap/manifest.toml"),
             PathBuf::from("bootstrap/manifest.toml"),
         ];
-        let found = candidates.iter().find(|p| p.exists()).expect(
-            "bootstrap/manifest.toml not found; run from repo root or cli/",
-        );
+        let found = candidates
+            .iter()
+            .find(|p| p.exists())
+            .expect("bootstrap/manifest.toml not found; run from repo root or cli/");
         let m = load_from(found, None).expect("repo manifest should load");
         assert!(!m.components.is_empty());
         assert!(m.profiles.contains_key("base"));

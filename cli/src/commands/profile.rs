@@ -45,7 +45,10 @@ pub fn run(args: ProfileArgs) -> Result<()> {
                 std::slice::from_ref(&name),
                 &[],
             )?;
-            println!("{}", style(format!("Components in profile {}:", name)).bold());
+            println!(
+                "{}",
+                style(format!("Components in profile {}:", name)).bold()
+            );
             for id in &set {
                 println!("  {}", id);
             }

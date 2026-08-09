@@ -18,10 +18,9 @@ fn main() -> Result<()> {
     if let (Ok(manifest), registry) = (
         manifest::loader::load(),
         components::registry::Registry::build(),
-    ) {
-        if let Err(e) = registry.validate_against(&manifest) {
-            eprintln!("warning: manifest/registry drift:\n{}\n", e);
-        }
+    ) && let Err(e) = registry.validate_against(&manifest)
+    {
+        eprintln!("warning: manifest/registry drift:\n{}\n", e);
     }
 
     let cli = Cli::parse();

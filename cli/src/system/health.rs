@@ -9,11 +9,7 @@ pub struct CommandStatus {
 pub fn check_command(cmd: &str) -> CommandStatus {
     let installed = which::which(cmd).is_ok();
 
-    let version = if installed {
-        get_version(cmd)
-    } else {
-        None
-    };
+    let version = if installed { get_version(cmd) } else { None };
 
     CommandStatus { installed, version }
 }
@@ -63,7 +59,9 @@ fn extract_version(line: &str) -> String {
             .unwrap_or(false)
         {
             // Remove any trailing characters like newlines
-            return word.trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '.').to_string();
+            return word
+                .trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '.')
+                .to_string();
         }
     }
 

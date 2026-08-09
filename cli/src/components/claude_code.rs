@@ -4,11 +4,11 @@
 //!
 //! Uninstall removes the global npm package used by the current installer.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::process::Command;
 
-use super::util::run_command;
 use super::Component;
+use super::util::run_command;
 
 pub struct ClaudeCode;
 

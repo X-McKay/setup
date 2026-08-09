@@ -9,8 +9,8 @@
 use anyhow::{Context, Result};
 use std::fs;
 
-use super::util::{apt_install, run_command, run_sudo};
 use super::Component;
+use super::util::{apt_install, run_command, run_sudo};
 
 pub struct Monitoring;
 

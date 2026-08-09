@@ -25,6 +25,11 @@ jobs:
       - name: Install pre-commit
         run: pip install pre-commit
 
+      - name: Install shfmt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shfmt
+
       - name: Run pre-commit checks
         run: pre-commit run --all-files
 

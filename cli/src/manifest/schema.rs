@@ -57,7 +57,10 @@ impl Manifest {
                 anyhow::bail!("component has empty id");
             }
             if !is_kebab_case(&c.id) {
-                anyhow::bail!("component has invalid id: {:?} (must be lowercase kebab-case)", c.id);
+                anyhow::bail!(
+                    "component has invalid id: {:?} (must be lowercase kebab-case)",
+                    c.id
+                );
             }
             if !seen.insert(c.id.clone()) {
                 anyhow::bail!("duplicate component id: {:?}", c.id);
@@ -95,8 +98,11 @@ impl Manifest {
             OnStack,
             Done,
         }
-        let mut marks: std::collections::HashMap<&str, Mark> =
-            self.profiles.keys().map(|k| (k.as_str(), Mark::Unvisited)).collect();
+        let mut marks: std::collections::HashMap<&str, Mark> = self
+            .profiles
+            .keys()
+            .map(|k| (k.as_str(), Mark::Unvisited))
+            .collect();
 
         fn dfs<'a>(
             node: &'a str,
@@ -135,7 +141,12 @@ impl Manifest {
         }
 
         for start in self.profiles.keys() {
-            if marks.get(start.as_str()).copied().unwrap_or(Mark::Unvisited) == Mark::Unvisited {
+            if marks
+                .get(start.as_str())
+                .copied()
+                .unwrap_or(Mark::Unvisited)
+                == Mark::Unvisited
+            {
                 let mut path: Vec<&str> = Vec::new();
                 dfs(start.as_str(), &self.profiles, &mut marks, &mut path)?;
             }
@@ -147,7 +158,8 @@ impl Manifest {
 
 fn is_kebab_case(s: &str) -> bool {
     !s.is_empty()
-        && s.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        && s.chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
         && !s.starts_with('-')
         && !s.ends_with('-')
 }

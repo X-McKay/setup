@@ -1,7 +1,7 @@
 //! Resolve a user selection (profile names + explicit component ids)
 //! into an ordered install plan.
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::collections::{BTreeSet, HashSet};
 
 use super::schema::Manifest;
@@ -140,16 +140,15 @@ pub struct Plan {
     pub auto_pulled: BTreeSet<String>,
 }
 
-pub fn resolve(
-    manifest: &Manifest,
-    profiles: &[String],
-    explicit: &[String],
-) -> Result<Plan> {
+pub fn resolve(manifest: &Manifest, profiles: &[String], explicit: &[String]) -> Result<Plan> {
     let seeds = expand_selection(manifest, profiles, explicit)?;
     let full = pull_in_dependencies(manifest, &seeds)?;
     let auto_pulled: BTreeSet<String> = full.difference(&seeds).cloned().collect();
     let ordered = topo_sort(manifest, &full)?;
-    Ok(Plan { ordered, auto_pulled })
+    Ok(Plan {
+        ordered,
+        auto_pulled,
+    })
 }
 
 #[cfg(test)]
@@ -186,10 +185,26 @@ mod tests {
         );
         Manifest {
             components: vec![
-                ComponentSpec { id: "apt".into(), display_name: "APT".into(), ..Default::default() },
-                ComponentSpec { id: "mise".into(), display_name: "Mise".into(), ..Default::default() },
-                ComponentSpec { id: "docker".into(), display_name: "Docker".into(), ..Default::default() },
-                ComponentSpec { id: "claude-code".into(), display_name: "Claude Code".into(), ..Default::default() },
+                ComponentSpec {
+                    id: "apt".into(),
+                    display_name: "APT".into(),
+                    ..Default::default()
+                },
+                ComponentSpec {
+                    id: "mise".into(),
+                    display_name: "Mise".into(),
+                    ..Default::default()
+                },
+                ComponentSpec {
+                    id: "docker".into(),
+                    display_name: "Docker".into(),
+                    ..Default::default()
+                },
+                ComponentSpec {
+                    id: "claude-code".into(),
+                    display_name: "Claude Code".into(),
+                    ..Default::default()
+                },
             ],
             profiles,
         }
@@ -208,7 +223,10 @@ mod tests {
         let got = expand_selection(&m, &["server".into()], &[]).unwrap();
         assert_eq!(
             got,
-            ["apt", "mise", "docker"].iter().map(|s| s.to_string()).collect()
+            ["apt", "mise", "docker"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect()
         );
     }
 
@@ -231,7 +249,10 @@ mod tests {
         let got = expand_selection(&m, &["base".into()], &["docker".into()]).unwrap();
         assert_eq!(
             got,
-            ["apt", "mise", "docker"].iter().map(|s| s.to_string()).collect()
+            ["apt", "mise", "docker"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect()
         );
     }
 
@@ -253,8 +274,11 @@ mod tests {
     fn selection_auto_pulls_transitive_deps() {
         let mut m = mk_manifest();
         // docker depends on apt
-        m.components.iter_mut().find(|c| c.id == "docker").unwrap().depends_on =
-            vec!["apt".into()];
+        m.components
+            .iter_mut()
+            .find(|c| c.id == "docker")
+            .unwrap()
+            .depends_on = vec!["apt".into()];
         // Select docker alone — apt must be auto-pulled.
         let ids = expand_selection(&m, &[], &["docker".into()]).unwrap();
         let plan = pull_in_dependencies(&m, &ids).unwrap();
@@ -265,10 +289,15 @@ mod tests {
     #[test]
     fn topo_sort_respects_deps() {
         let mut m = mk_manifest();
-        m.components.iter_mut().find(|c| c.id == "docker").unwrap().depends_on =
-            vec!["apt".into(), "mise".into()];
-        let seeds: BTreeSet<String> =
-            ["apt", "mise", "docker"].iter().map(|s| s.to_string()).collect();
+        m.components
+            .iter_mut()
+            .find(|c| c.id == "docker")
+            .unwrap()
+            .depends_on = vec!["apt".into(), "mise".into()];
+        let seeds: BTreeSet<String> = ["apt", "mise", "docker"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
         let ordered = topo_sort(&m, &seeds).unwrap();
         let pos = |id: &str| ordered.iter().position(|x| x == id).unwrap();
         assert!(pos("apt") < pos("docker"));
@@ -278,10 +307,16 @@ mod tests {
     #[test]
     fn topo_sort_detects_cycle() {
         let mut m = mk_manifest();
-        m.components.iter_mut().find(|c| c.id == "apt").unwrap().depends_on =
-            vec!["mise".into()];
-        m.components.iter_mut().find(|c| c.id == "mise").unwrap().depends_on =
-            vec!["apt".into()];
+        m.components
+            .iter_mut()
+            .find(|c| c.id == "apt")
+            .unwrap()
+            .depends_on = vec!["mise".into()];
+        m.components
+            .iter_mut()
+            .find(|c| c.id == "mise")
+            .unwrap()
+            .depends_on = vec!["apt".into()];
         let seeds: BTreeSet<String> = ["apt", "mise"].iter().map(|s| s.to_string()).collect();
         let err = topo_sort(&m, &seeds).unwrap_err();
         assert!(err.to_string().contains("cycle"));
@@ -307,7 +342,11 @@ mod resolve_tests {
         );
         let m = Manifest {
             components: vec![
-                ComponentSpec { id: "apt".into(), display_name: "APT".into(), ..Default::default() },
+                ComponentSpec {
+                    id: "apt".into(),
+                    display_name: "APT".into(),
+                    ..Default::default()
+                },
                 ComponentSpec {
                     id: "docker".into(),
                     display_name: "Docker".into(),

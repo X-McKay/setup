@@ -238,15 +238,15 @@ fn check_installed_not_declared(
         if active.contains(&cs.id) {
             continue;
         }
-        if let Ok(c) = registry.get(&cs.id) {
-            if c.is_installed().unwrap_or(false) {
-                report.drift_findings.push(Finding {
-                    severity: Severity::Info,
-                    subject: cs.id.clone(),
-                    message: "installed, not in active profile".into(),
-                    fix_hint: None,
-                });
-            }
+        if let Ok(c) = registry.get(&cs.id)
+            && c.is_installed().unwrap_or(false)
+        {
+            report.drift_findings.push(Finding {
+                severity: Severity::Info,
+                subject: cs.id.clone(),
+                message: "installed, not in active profile".into(),
+                fix_hint: None,
+            });
         }
     }
 }
@@ -257,17 +257,16 @@ fn check_verify_installed(
     report: &mut Report,
 ) {
     for cs in &manifest.components {
-        if let Ok(c) = registry.get(&cs.id) {
-            if c.is_installed().unwrap_or(false) {
-                if let Err(e) = c.verify() {
-                    report.machine_findings.push(Finding {
-                        severity: Severity::Broken,
-                        subject: cs.id.clone(),
-                        message: format!("verify failed: {}", e),
-                        fix_hint: None,
-                    });
-                }
-            }
+        if let Ok(c) = registry.get(&cs.id)
+            && c.is_installed().unwrap_or(false)
+            && let Err(e) = c.verify()
+        {
+            report.machine_findings.push(Finding {
+                severity: Severity::Broken,
+                subject: cs.id.clone(),
+                message: format!("verify failed: {}", e),
+                fix_hint: None,
+            });
         }
     }
 }
@@ -314,11 +313,7 @@ fn compute_exit(r: &Report, warn_only: bool) -> i32 {
         .iter()
         .chain(r.machine_findings.iter())
         .any(|f| f.severity == Severity::Missing || f.severity == Severity::Broken);
-    if any_fail {
-        1
-    } else {
-        0
-    }
+    if any_fail { 1 } else { 0 }
 }
 
 #[cfg(test)]

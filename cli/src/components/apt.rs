@@ -9,8 +9,8 @@
 
 use anyhow::Result;
 
-use super::util::{apt_install, run_sudo};
 use super::Component;
+use super::util::{apt_install, run_sudo};
 
 pub struct Apt;
 

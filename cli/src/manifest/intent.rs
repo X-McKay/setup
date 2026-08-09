@@ -47,7 +47,11 @@ pub fn write(path: &Path, intent: &Intent) -> Result<()> {
 /// deduplicating entries already present.
 pub fn union_add(intent: &mut Intent, profiles: &[String]) {
     for profile in profiles {
-        if !intent.active_profiles.iter().any(|existing| existing == profile) {
+        if !intent
+            .active_profiles
+            .iter()
+            .any(|existing| existing == profile)
+        {
             intent.active_profiles.push(profile.clone());
         }
     }

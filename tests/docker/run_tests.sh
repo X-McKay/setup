@@ -12,8 +12,8 @@ if [ "${SETUP_CONTRACT_TESTS:-0}" = "1" ]; then
   (
     cd "$PROJECT_ROOT/cli"
     SETUP_CONTRACT_TESTS=1 \
-    SETUP_MANIFEST="$PROJECT_ROOT/bootstrap/manifest.toml" \
-    cargo test --test contract -- --nocapture
+      SETUP_MANIFEST="$PROJECT_ROOT/bootstrap/manifest.toml" \
+      cargo test --test contract -- --nocapture
   )
   echo ""
 else

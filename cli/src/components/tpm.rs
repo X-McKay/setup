@@ -6,11 +6,11 @@
 //! Uninstall removes only the TPM checkout directory and leaves any tmux
 //! config edits in place for manual cleanup.
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use std::fs;
 
-use super::util::{path_to_str, run_command};
 use super::Component;
+use super::util::{path_to_str, run_command};
 
 pub struct Tpm;
 

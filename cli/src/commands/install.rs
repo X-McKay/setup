@@ -67,7 +67,11 @@ pub fn run(args: InstallArgs) -> Result<()> {
         println!(
             "{} auto-pulled deps: {}",
             style("ℹ").cyan(),
-            plan.auto_pulled.iter().cloned().collect::<Vec<_>>().join(", ")
+            plan.auto_pulled
+                .iter()
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(", ")
         );
     }
 
@@ -170,7 +174,11 @@ fn run_plan(
         match outcome {
             Ok(()) => {
                 installed.push(id.clone());
-                mp.println(format!("{} {}", style("✓").green().bold(), style(id).green()))?;
+                mp.println(format!(
+                    "{} {}",
+                    style("✓").green().bold(),
+                    style(id).green()
+                ))?;
                 if verify {
                     match component.verify() {
                         Ok(()) => {}

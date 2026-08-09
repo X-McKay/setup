@@ -66,16 +66,17 @@ pub fn run(args: UninstallArgs) -> Result<()> {
             continue;
         }
 
-        if !args.cascade && !args.force {
-            if let Some(blockers) = find_dependents_that_are_installed(&manifest, &registry, &id)? {
-                println!(
-                    "{} {} has installed dependents: {}. Use --cascade or --force.",
-                    style("✗").red().bold(),
-                    id,
-                    blockers.join(", ")
-                );
-                continue;
-            }
+        if !args.cascade
+            && !args.force
+            && let Some(blockers) = find_dependents_that_are_installed(&manifest, &registry, &id)?
+        {
+            println!(
+                "{} {} has installed dependents: {}. Use --cascade or --force.",
+                style("✗").red().bold(),
+                id,
+                blockers.join(", ")
+            );
+            continue;
         }
 
         match c.uninstall() {

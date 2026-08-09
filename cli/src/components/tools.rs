@@ -8,8 +8,8 @@
 
 use anyhow::Result;
 
-use super::util::{apt_install, ensure_bin_dir, path_to_str, run_command, run_sudo};
 use super::Component;
+use super::util::{apt_install, ensure_bin_dir, path_to_str, run_command, run_sudo};
 
 pub struct Tools;
 

@@ -6,12 +6,12 @@
 //! Uninstall remains manual-only. The tool refuses to automate GPG key
 //! deletion because it is destructive user material.
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::fs;
 use std::process::Command;
 
-use super::util::{apt_install, run_command};
 use super::Component;
+use super::util::{apt_install, run_command};
 
 pub struct Gpg;
 
@@ -50,11 +50,11 @@ fn setup_gpg() -> Result<()> {
     }
 
     let existing = run_command("gpg", &["--list-secret-keys", "--keyid-format=long"]);
-    if let Ok(ref output) = existing {
-        if !output.trim().is_empty() {
-            println!("GPG key already exists");
-            return Ok(());
-        }
+    if let Ok(ref output) = existing
+        && !output.trim().is_empty()
+    {
+        println!("GPG key already exists");
+        return Ok(());
     }
 
     let name = run_command("git", &["config", "--global", "user.name"])
@@ -118,12 +118,11 @@ Expire-Date: 2y
 
 fn extract_gpg_key_id(output: &str) -> Option<String> {
     for line in output.lines() {
-        if line.starts_with("sec") {
-            if let Some(key_part) = line.split('/').nth(1) {
-                if let Some(key_id) = key_part.split_whitespace().next() {
-                    return Some(key_id.to_string());
-                }
-            }
+        if line.starts_with("sec")
+            && let Some(key_part) = line.split('/').nth(1)
+            && let Some(key_id) = key_part.split_whitespace().next()
+        {
+            return Some(key_id.to_string());
         }
     }
     None

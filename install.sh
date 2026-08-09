@@ -58,20 +58,20 @@ detect_platform() {
   local os arch
 
   case "$(uname -s)" in
-    Linux) os="linux" ;;
-    *)
-      error "unsupported operating system: $(uname -s)"
-      exit 1
-      ;;
+  Linux) os="linux" ;;
+  *)
+    error "unsupported operating system: $(uname -s)"
+    exit 1
+    ;;
   esac
 
   case "$(uname -m)" in
-    x86_64 | amd64) arch="x86_64" ;;
-    aarch64 | arm64) arch="aarch64" ;;
-    *)
-      error "unsupported architecture: $(uname -m)"
-      exit 1
-      ;;
+  x86_64 | amd64) arch="x86_64" ;;
+  aarch64 | arm64) arch="aarch64" ;;
+  *)
+    error "unsupported architecture: $(uname -m)"
+    exit 1
+    ;;
   esac
 
   printf '%s %s\n' "$os" "$arch"
@@ -122,31 +122,31 @@ verify_checksum() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --version)
-      VERSION=${2:?missing value for --version}
-      shift 2
-      ;;
-    --install-dir)
-      INSTALL_DIR=${2:?missing value for --install-dir}
-      shift 2
-      ;;
-    --repo)
-      REPO=${2:?missing value for --repo}
-      shift 2
-      ;;
-    --no-verify)
-      VERIFY_CHECKSUMS=0
-      shift
-      ;;
-    -h | --help)
-      usage
-      exit 0
-      ;;
-    *)
-      error "unknown argument: $1"
-      usage
-      exit 1
-      ;;
+  --version)
+    VERSION=${2:?missing value for --version}
+    shift 2
+    ;;
+  --install-dir)
+    INSTALL_DIR=${2:?missing value for --install-dir}
+    shift 2
+    ;;
+  --repo)
+    REPO=${2:?missing value for --repo}
+    shift 2
+    ;;
+  --no-verify)
+    VERIFY_CHECKSUMS=0
+    shift
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    error "unknown argument: $1"
+    usage
+    exit 1
+    ;;
   esac
 done
 
@@ -196,9 +196,9 @@ info "Installed: $INSTALL_DIR/setup"
 "$INSTALL_DIR/setup" --version || true
 
 case ":$PATH:" in
-  *":$INSTALL_DIR:"*) ;;
-  *)
-    warn "$INSTALL_DIR is not on PATH"
-    printf 'Add this to your shell config:\n  export PATH="%s:$PATH"\n' "$INSTALL_DIR"
-    ;;
+*":$INSTALL_DIR:"*) ;;
+*)
+  warn "$INSTALL_DIR is not on PATH"
+  printf "Add this to your shell config:\n  export PATH=\"%s:\$PATH\"\n" "$INSTALL_DIR"
+  ;;
 esac

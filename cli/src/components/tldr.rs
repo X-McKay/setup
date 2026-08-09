@@ -7,8 +7,8 @@
 
 use anyhow::Result;
 
-use super::util::{ensure_bin_dir, get_arch, run_command, run_sudo};
 use super::Component;
+use super::util::{ensure_bin_dir, get_arch, run_command, run_sudo};
 
 pub struct Tldr;
 

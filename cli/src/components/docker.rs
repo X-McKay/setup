@@ -8,8 +8,8 @@
 
 use anyhow::Result;
 
-use super::util::{run_command, run_sudo};
 use super::Component;
+use super::util::{run_command, run_sudo};
 
 pub struct Docker;
 

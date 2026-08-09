@@ -69,11 +69,9 @@ fn sync_dotfiles(force: bool) -> Result<()> {
     );
 
     for (name, source, target) in &dotfiles {
-        if target.exists() && !force {
-            if !prompts::confirm_overwrite(name)? {
-                println!("  {} {} (skipped)", style("→").yellow(), name);
-                continue;
-            }
+        if target.exists() && !force && !prompts::confirm_overwrite(name)? {
+            println!("  {} {} (skipped)", style("→").yellow(), name);
+            continue;
         }
 
         dotfiles_config::copy_dotfile(source, target)?;

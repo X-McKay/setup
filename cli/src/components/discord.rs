@@ -4,12 +4,12 @@
 //!
 //! Uninstall removes the snap package.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::path::Path;
 use std::process::Command;
 
-use super::util::run_sudo;
 use super::Component;
+use super::util::run_sudo;
 
 pub struct Discord;
 

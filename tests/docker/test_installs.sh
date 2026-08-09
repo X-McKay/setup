@@ -216,11 +216,23 @@ check_file "$HOME/.aliases" "aliases synced"
 check_file "$HOME/.exports" "exports synced"
 
 echo "--- Test: Drift summary/diff ---"
-printf "\n# docker drift marker\n" >> "$HOME/.config/ghostty/config"
-$SETUP_BIN drift --dotfiles --json | grep -q '"status": "differs"' && echo -e "${GREEN}[PASS]${NC} drift summary detects changed dotfile" || { echo -e "${RED}[FAIL]${NC} drift summary missed changed dotfile"; FAILED=$((FAILED+1)); }
-$SETUP_BIN drift diff --name ghostty/config | grep -q 'ghostty/config' && echo -e "${GREEN}[PASS]${NC} drift diff can target one managed dotfile" || { echo -e "${RED}[FAIL]${NC} drift diff target failed"; FAILED=$((FAILED+1)); }
+printf "\n# docker drift marker\n" >>"$HOME/.config/ghostty/config"
+if $SETUP_BIN drift --dotfiles --json | grep -q '"status": "differs"'; then
+  pass "drift summary detects changed dotfile"
+else
+  fail "drift summary missed changed dotfile"
+fi
+if $SETUP_BIN drift diff --name ghostty/config | grep -q 'ghostty/config'; then
+  pass "drift diff can target one managed dotfile"
+else
+  fail "drift diff target failed"
+fi
 $SETUP_BIN drift sync --force
-! grep -q '# docker drift marker' "$HOME/.config/ghostty/config" && echo -e "${GREEN}[PASS]${NC} drift sync restored repo version" || { echo -e "${RED}[FAIL]${NC} drift sync did not restore repo version"; FAILED=$((FAILED+1)); }
+if ! grep -q '# docker drift marker' "$HOME/.config/ghostty/config"; then
+  pass "drift sync restored repo version"
+else
+  fail "drift sync did not restore repo version"
+fi
 
 # Test 17: profile-based install and doctor/profile flows
 echo ""
@@ -238,9 +250,17 @@ echo "--- Test: profile activate / deactivate ---"
 export SETUP_INTENT="$HOME/.config/setup/active.toml"
 rm -f "$SETUP_INTENT"
 $SETUP_BIN profile activate server
-grep -q 'server' "$SETUP_INTENT" && echo -e "${GREEN}[PASS]${NC} activate wrote server" || { echo -e "${RED}[FAIL]${NC} activate did not write server"; FAILED=$((FAILED+1)); }
+if grep -q 'server' "$SETUP_INTENT"; then
+  pass "activate wrote server"
+else
+  fail "activate did not write server"
+fi
 $SETUP_BIN profile deactivate server
-! grep -q 'server' "$SETUP_INTENT" && echo -e "${GREEN}[PASS]${NC} deactivate removed server" || { echo -e "${RED}[FAIL]${NC} deactivate did not remove"; FAILED=$((FAILED+1)); }
+if ! grep -q 'server' "$SETUP_INTENT"; then
+  pass "deactivate removed server"
+else
+  fail "deactivate did not remove"
+fi
 unset SETUP_INTENT
 
 echo ""
@@ -251,9 +271,21 @@ echo ""
 echo "--- Test: user-manifest override ---"
 mkdir -p "$HOME/.config/setup"
 cp /setup/tests/docker/fixtures/user-manifest.toml "$HOME/.config/setup/manifest.toml"
-$SETUP_BIN profile show workstation | grep -q 'lazygit' && echo -e "${GREEN}[PASS]${NC} override workstation has lazygit" || { echo -e "${RED}[FAIL]${NC} override workstation missing lazygit"; FAILED=$((FAILED+1)); }
-$SETUP_BIN profile show workstation | grep -q 'gh' && { echo -e "${RED}[FAIL]${NC} override workstation still has gh"; FAILED=$((FAILED+1)); } || echo -e "${GREEN}[PASS]${NC} override workstation excludes gh"
-$SETUP_BIN profile show minimal | grep -q 'apt' && echo -e "${GREEN}[PASS]${NC} new minimal profile works" || { echo -e "${RED}[FAIL]${NC} new minimal profile missing"; FAILED=$((FAILED+1)); }
+if $SETUP_BIN profile show workstation | grep -q 'lazygit'; then
+  pass "override workstation has lazygit"
+else
+  fail "override workstation missing lazygit"
+fi
+if $SETUP_BIN profile show workstation | grep -q 'gh'; then
+  fail "override workstation still has gh"
+else
+  pass "override workstation excludes gh"
+fi
+if $SETUP_BIN profile show minimal | grep -q 'apt'; then
+  pass "new minimal profile works"
+else
+  fail "new minimal profile missing"
+fi
 rm -f "$HOME/.config/setup/manifest.toml"
 
 # Skipped tests (require user input or special setup)

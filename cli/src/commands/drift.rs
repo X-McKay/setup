@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use clap::{Args, Subcommand};
 use console::style;
 use serde::Serialize;
@@ -335,15 +335,15 @@ fn collect_installed_not_declared(
         if active.contains(&spec.id) {
             continue;
         }
-        if let Ok(component) = registry.get(&spec.id) {
-            if component.is_installed().unwrap_or(false) {
-                findings.push(ProfileFinding {
-                    severity: ProfileSeverity::Extra,
-                    component: spec.id.clone(),
-                    message: "installed, not in active profile".into(),
-                    fix_hint: None,
-                });
-            }
+        if let Ok(component) = registry.get(&spec.id)
+            && component.is_installed().unwrap_or(false)
+        {
+            findings.push(ProfileFinding {
+                severity: ProfileSeverity::Extra,
+                component: spec.id.clone(),
+                message: "installed, not in active profile".into(),
+                fix_hint: None,
+            });
         }
     }
 }

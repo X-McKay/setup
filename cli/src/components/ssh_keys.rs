@@ -6,11 +6,11 @@
 //! Uninstall deletes the generated keypair. This is destructive user
 //! material, so the component is not automatically reversible.
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use std::fs;
 
-use super::util::{path_to_str, run_command};
 use super::Component;
+use super::util::{path_to_str, run_command};
 
 pub struct SshKeys;
 

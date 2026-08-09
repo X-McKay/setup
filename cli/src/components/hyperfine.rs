@@ -6,14 +6,14 @@
 //! Uninstall removes the apt package when available and also deletes the
 //! local fallback binary if it exists.
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use std::fs;
 use std::process::Command;
 
+use super::Component;
 use super::util::{
     ensure_bin_dir, fallback_versions, fetch_github_version, get_arch, run_command, run_sudo,
 };
-use super::Component;
 
 pub struct Hyperfine;
 

@@ -9,8 +9,8 @@
 use anyhow::{Context, Result};
 use std::fs;
 
-use super::util::{ensure_bin_dir, run_command, run_sudo};
 use super::Component;
+use super::util::{ensure_bin_dir, run_command, run_sudo};
 
 pub struct Neovim;
 
@@ -29,21 +29,19 @@ impl Component for Neovim {
 }
 
 fn install_neovim() -> Result<()> {
-    if which::which("nvim").is_err() {
-        if run_sudo("apt", &["install", "-y", "neovim"]).is_err() {
-            let bin_dir = ensure_bin_dir()?;
-            run_command(
-                "sh",
-                &[
-                    "-c",
-                    &format!(
-                        "curl -Lo {}/nvim https://github.com/neovim/neovim/releases/latest/download/nvim.appimage && chmod +x {}/nvim",
-                        bin_dir.display(),
-                        bin_dir.display()
-                    ),
-                ],
-            )?;
-        }
+    if which::which("nvim").is_err() && run_sudo("apt", &["install", "-y", "neovim"]).is_err() {
+        let bin_dir = ensure_bin_dir()?;
+        run_command(
+            "sh",
+            &[
+                "-c",
+                &format!(
+                    "curl -Lo {}/nvim https://github.com/neovim/neovim/releases/latest/download/nvim.appimage && chmod +x {}/nvim",
+                    bin_dir.display(),
+                    bin_dir.display()
+                ),
+            ],
+        )?;
     }
 
     let home = dirs::home_dir().context("Could not find home directory")?;

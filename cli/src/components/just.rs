@@ -5,11 +5,11 @@
 //!
 //! Uninstall removes only that setup-managed binary.
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::fs;
 
-use super::util::{ensure_bin_dir, run_command};
 use super::Component;
+use super::util::{ensure_bin_dir, run_command};
 
 pub struct Just;
 

@@ -1,6 +1,6 @@
 //! Component registry. Populated by `build()` at startup.
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 use std::sync::Arc;
 

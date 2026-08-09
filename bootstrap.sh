@@ -54,7 +54,7 @@ else
   # Ensure rust is in the existing .tool-versions
   if ! grep -q '^rust ' "$HOME/.tool-versions"; then
     info "Adding rust to existing .tool-versions..."
-    echo "rust latest" >> "$HOME/.tool-versions"
+    echo "rust latest" >>"$HOME/.tool-versions"
   fi
 fi
 

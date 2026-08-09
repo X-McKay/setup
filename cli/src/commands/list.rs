@@ -22,7 +22,8 @@ pub fn run(args: ListArgs) -> Result<()> {
     let manifest = loader::load().context("loading manifest")?;
 
     let in_profile: Option<BTreeSet<String>> = if let Some(p) = &args.profile {
-        let set = crate::manifest::resolver::expand_selection(&manifest, std::slice::from_ref(p), &[])?;
+        let set =
+            crate::manifest::resolver::expand_selection(&manifest, std::slice::from_ref(p), &[])?;
         Some(set)
     } else {
         None
@@ -30,15 +31,15 @@ pub fn run(args: ListArgs) -> Result<()> {
 
     println!("{}", style("Components:").bold());
     for c in &manifest.components {
-        if let Some(ref set) = in_profile {
-            if !set.contains(&c.id) {
-                continue;
-            }
+        if let Some(ref set) = in_profile
+            && !set.contains(&c.id)
+        {
+            continue;
         }
-        if let Some(ref t) = args.tag {
-            if !c.tags.contains(t) {
-                continue;
-            }
+        if let Some(ref t) = args.tag
+            && !c.tags.contains(t)
+        {
+            continue;
         }
 
         println!(
