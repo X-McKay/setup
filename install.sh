@@ -59,6 +59,7 @@ detect_platform() {
 
   case "$(uname -s)" in
   Linux) os="linux" ;;
+  Darwin) os="macos" ;;
   *)
     error "unsupported operating system: $(uname -s)"
     exit 1
@@ -103,6 +104,17 @@ download_asset() {
   fi
 }
 
+sha256_check_cmd() {
+  # GNU coreutils on Linux; shasum ships with macOS.
+  if command -v sha256sum >/dev/null 2>&1; then
+    printf 'sha256sum -c\n'
+  elif command -v shasum >/dev/null 2>&1; then
+    printf 'shasum -a 256 -c\n'
+  else
+    return 1
+  fi
+}
+
 verify_checksum() {
   local tmpdir=$1
   local asset_name=$2
@@ -116,7 +128,7 @@ verify_checksum() {
 
   (
     cd "$tmpdir"
-    sha256sum -c "$match_file"
+    $(sha256_check_cmd) "$match_file"
   )
 }
 
@@ -155,8 +167,9 @@ INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
 require_cmd curl
 require_cmd tar
 require_cmd install
-if [[ "$VERIFY_CHECKSUMS" -eq 1 ]]; then
-  require_cmd sha256sum
+if [[ "$VERIFY_CHECKSUMS" -eq 1 ]] && ! sha256_check_cmd >/dev/null; then
+  error "required command not found: sha256sum or shasum"
+  exit 1
 fi
 
 read -r os arch <<<"$(detect_platform)"

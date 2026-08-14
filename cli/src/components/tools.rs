@@ -9,7 +9,8 @@
 use anyhow::Result;
 
 use super::Component;
-use super::util::{apt_install, ensure_bin_dir, path_to_str, run_command, run_sudo};
+use super::util::{apt_install, brew_install, ensure_bin_dir, path_to_str, run_command, run_sudo};
+use crate::system::platform::Platform;
 
 pub struct Tools;
 
@@ -28,7 +29,20 @@ impl Component for Tools {
     }
 
     fn install(&self) -> Result<()> {
-        install_extra_tools()
+        match Platform::current()? {
+            Platform::Linux => install_extra_tools(),
+            Platform::MacOs => brew_install(&[
+                "ripgrep",
+                "fd",
+                "fzf",
+                "tree",
+                "htop",
+                "ncdu",
+                "bat",
+                "eza",
+                "git-delta",
+            ]),
+        }
     }
 }
 

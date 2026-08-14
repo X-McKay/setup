@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bootstrap - Get from a fresh Ubuntu machine to a working setup CLI
+# Bootstrap - Get from a fresh Ubuntu or macOS machine to a working setup CLI
 #
 # This script installs mise (version manager), uses it to install Rust and
 # other tools defined in .tool-versions, then builds the setup CLI.
@@ -24,8 +24,25 @@ error() { echo -e "${RED}==>${NC} $1"; }
 # 1. Install system prerequisites
 # --------------------------------------------------------------------------
 info "Installing system prerequisites..."
-sudo apt-get update -qq
-sudo apt-get install -y -qq curl git build-essential pkg-config libssl-dev >/dev/null
+case "$(uname -s)" in
+Linux)
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq curl git build-essential pkg-config libssl-dev >/dev/null
+  ;;
+Darwin)
+  # curl and git ship with the Xcode Command Line Tools; the compiler
+  # toolchain comes from the same package.
+  if ! xcode-select -p &>/dev/null; then
+    info "Installing Xcode Command Line Tools (follow the GUI prompt)..."
+    xcode-select --install
+    until xcode-select -p &>/dev/null; do sleep 5; done
+  fi
+  ;;
+*)
+  error "Unsupported OS: $(uname -s) (supported: Linux, Darwin)"
+  exit 1
+  ;;
+esac
 
 # --------------------------------------------------------------------------
 # 2. Install mise

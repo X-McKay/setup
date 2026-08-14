@@ -11,7 +11,8 @@ use std::fs;
 use std::process::Command;
 
 use super::Component;
-use super::util::{apt_install, run_command};
+use super::util::{apt_install, brew_install, run_command};
+use crate::system::platform::Platform;
 
 pub struct Gpg;
 
@@ -46,7 +47,10 @@ impl Component for Gpg {
 
 fn setup_gpg() -> Result<()> {
     if which::which("gpg").is_err() {
-        apt_install(&["gnupg"])?;
+        match Platform::current()? {
+            Platform::Linux => apt_install(&["gnupg"])?,
+            Platform::MacOs => brew_install(&["gnupg"])?,
+        }
     }
 
     let existing = run_command("gpg", &["--list-secret-keys", "--keyid-format=long"]);

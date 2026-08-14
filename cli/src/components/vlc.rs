@@ -5,10 +5,12 @@
 //! Uninstall removes the snap package.
 
 use anyhow::{Context, Result, bail};
+use std::path::Path;
 use std::process::Command;
 
 use super::Component;
-use super::util::run_sudo;
+use super::util::{brew_install_cask, brew_uninstall_if_present, run_sudo};
+use crate::system::platform::Platform;
 
 pub struct Vlc;
 
@@ -18,7 +20,7 @@ impl Component for Vlc {
     }
 
     fn is_installed(&self) -> Result<bool> {
-        Ok(which::which("vlc").is_ok())
+        Ok(which::which("vlc").is_ok() || Path::new("/Applications/VLC.app").exists())
     }
 
     fn install(&self) -> Result<()> {
@@ -26,6 +28,7 @@ impl Component for Vlc {
     }
 
     fn uninstall(&self) -> Result<()> {
+        brew_uninstall_if_present("vlc", true)?;
         if which::which("snap").is_ok() {
             let status = Command::new("sudo")
                 .args(["snap", "remove", "vlc"])
@@ -44,6 +47,9 @@ fn install_vlc() -> Result<()> {
         return Ok(());
     }
 
-    run_sudo("snap", &["install", "vlc"])?;
+    match Platform::current()? {
+        Platform::Linux => run_sudo("snap", &["install", "vlc"]).map(|_| ())?,
+        Platform::MacOs => brew_install_cask("vlc")?,
+    }
     Ok(())
 }

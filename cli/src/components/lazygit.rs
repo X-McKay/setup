@@ -9,7 +9,11 @@ use anyhow::{Result, anyhow};
 use std::fs;
 
 use super::Component;
-use super::util::{ensure_bin_dir, fallback_versions, fetch_github_version, run_command};
+use super::util::{
+    brew_install, brew_uninstall_if_present, ensure_bin_dir, fallback_versions,
+    fetch_github_version, run_command,
+};
+use crate::system::platform::Platform;
 
 pub struct Lazygit;
 
@@ -27,6 +31,7 @@ impl Component for Lazygit {
     }
 
     fn uninstall(&self) -> Result<()> {
+        brew_uninstall_if_present("lazygit", false)?;
         let bin = dirs::home_dir()
             .ok_or_else(|| anyhow!("no home dir"))?
             .join(".local/bin/lazygit");
@@ -40,6 +45,10 @@ impl Component for Lazygit {
 fn install_lazygit() -> Result<()> {
     if which::which("lazygit").is_ok() {
         return Ok(());
+    }
+
+    if Platform::current()? == Platform::MacOs {
+        return brew_install(&["lazygit"]);
     }
 
     let bin_dir = ensure_bin_dir()?;

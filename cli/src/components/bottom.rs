@@ -12,8 +12,10 @@ use std::process::Command;
 
 use super::Component;
 use super::util::{
-    ensure_bin_dir, fallback_versions, fetch_github_version, get_arch, run_command, run_sudo,
+    brew_install, brew_uninstall_if_present, ensure_bin_dir, fallback_versions,
+    fetch_github_version, get_arch, run_command, run_sudo,
 };
+use crate::system::platform::Platform;
 
 pub struct Bottom;
 
@@ -31,6 +33,7 @@ impl Component for Bottom {
     }
 
     fn uninstall(&self) -> Result<()> {
+        brew_uninstall_if_present("bottom", false)?;
         if which::which("apt").is_ok() {
             let status = Command::new("sudo")
                 .args(["apt", "remove", "-y", "bottom"])
@@ -54,6 +57,10 @@ impl Component for Bottom {
 fn install_bottom() -> Result<()> {
     if which::which("btm").is_ok() {
         return Ok(());
+    }
+
+    if Platform::current()? == Platform::MacOs {
+        return brew_install(&["bottom"]);
     }
 
     if run_sudo("apt", &["install", "-y", "bottom"]).is_ok() {

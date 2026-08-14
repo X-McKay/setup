@@ -14,7 +14,14 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x86_64
+          - os: macos-latest
+            target: macos-aarch64
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v5
@@ -26,12 +33,33 @@ jobs:
         working-directory: cli
         run: cargo build --release
 
-      - name: Create release assets
+      - name: Create release tarball
         run: |
           mkdir -p release
           cp cli/target/release/setup release/
-          tar -czvf setup-linux-x86_64.tar.gz -C release setup
-          sha256sum setup-linux-x86_64.tar.gz install.sh > checksums.txt
+          tar -czvf "setup-${{ matrix.target }}.tar.gz" -C release setup
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup-${{ matrix.target }}
+          path: setup-${{ matrix.target }}.tar.gz
+          if-no-files-found: error
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: sha256sum setup-*.tar.gz install.sh > checksums.txt
 
       - name: Get version from tag
         id: version
@@ -44,7 +72,7 @@ jobs:
           body: |
             ## Setup CLI ${{ steps.version.outputs.VERSION }}
 
-            Install this release:
+            Install this release (Linux x86_64 or macOS arm64):
 
             ```bash
             VERSION="${{ steps.version.outputs.VERSION }}"
@@ -54,6 +82,7 @@ jobs:
 
             Manual assets:
             - `setup-linux-x86_64.tar.gz`
+            - `setup-macos-aarch64.tar.gz`
             - `checksums.txt`
 
             See CHANGELOG.md for release details.
@@ -61,6 +90,7 @@ jobs:
             install.sh
             checksums.txt
             setup-linux-x86_64.tar.gz
+            setup-macos-aarch64.tar.gz
           draft: false
           prerelease: false
         env:

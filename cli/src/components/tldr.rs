@@ -8,7 +8,8 @@
 use anyhow::Result;
 
 use super::Component;
-use super::util::{ensure_bin_dir, get_arch, run_command, run_sudo};
+use super::util::{brew_install, ensure_bin_dir, get_arch, run_command, run_sudo};
+use crate::system::platform::Platform;
 
 pub struct Tldr;
 
@@ -28,6 +29,13 @@ impl Component for Tldr {
 
 fn install_tldr() -> Result<()> {
     if which::which("tldr").is_ok() {
+        return Ok(());
+    }
+
+    if Platform::current()? == Platform::MacOs {
+        // tealdeer provides the same `tldr` binary the Linux fallback uses.
+        brew_install(&["tealdeer"])?;
+        let _ = run_command("tldr", &["--update"]);
         return Ok(());
     }
 

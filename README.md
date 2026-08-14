@@ -1,6 +1,6 @@
 # Setup - Development Environment Configuration
 
-A Rust CLI tool for setting up and maintaining a development environment on Ubuntu. Includes profile-aware installs, drift review for managed configs, modern CLI tools, system monitoring, and backup configuration.
+A Rust CLI tool for setting up and maintaining a development environment on Ubuntu and macOS. Includes profile-aware installs, drift review for managed configs, modern CLI tools, system monitoring, and backup configuration.
 
 ## Table of Contents
 
@@ -16,14 +16,25 @@ A Rust CLI tool for setting up and maintaining a development environment on Ubun
 
 ## System Requirements
 
+Linux:
+
 - Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
 - Git
 - sudo access (for system packages)
 
+macOS:
+
+- macOS 14 (Sonoma) or newer
+- [Homebrew](https://brew.sh) (used in place of apt/snap)
+- Xcode Command Line Tools (`xcode-select --install`)
+
+A few components are Linux-only (`monitoring`, `backup`); `setup list` marks
+them and profile installs skip them automatically on macOS.
+
 ## Quick Start
 
 ```bash
-# Install the released CLI (Linux x86_64)
+# Install the released CLI (Linux x86_64 or macOS arm64)
 curl -fsSL https://github.com/X-McKay/setup/releases/latest/download/install.sh | bash
 
 # Use the installed CLI
@@ -58,12 +69,13 @@ curl -fsSL https://github.com/X-McKay/setup/releases/download/v0.3.0/install.sh 
   bash -s -- --version v0.3.0
 ```
 
-Current release artifacts target Linux `x86_64`. For source builds, unsupported
-architectures, or local development, use the bootstrap flow below.
+Current release artifacts target Linux `x86_64` and macOS `arm64`. For source
+builds, unsupported architectures, or local development, use the bootstrap flow
+below.
 
 ### Bootstrap From Source
 
-The bootstrap script handles everything from a fresh Ubuntu install:
+The bootstrap script handles everything from a fresh Ubuntu or macOS install:
 
 ```bash
 ./bootstrap.sh

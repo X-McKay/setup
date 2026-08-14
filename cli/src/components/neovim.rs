@@ -10,7 +10,8 @@ use anyhow::{Context, Result};
 use std::fs;
 
 use super::Component;
-use super::util::{ensure_bin_dir, run_command, run_sudo};
+use super::util::{brew_install, ensure_bin_dir, run_command, run_sudo};
+use crate::system::platform::Platform;
 
 pub struct Neovim;
 
@@ -29,7 +30,11 @@ impl Component for Neovim {
 }
 
 fn install_neovim() -> Result<()> {
-    if which::which("nvim").is_err() && run_sudo("apt", &["install", "-y", "neovim"]).is_err() {
+    if which::which("nvim").is_err() && Platform::current()? == Platform::MacOs {
+        brew_install(&["neovim"])?;
+    } else if which::which("nvim").is_err()
+        && run_sudo("apt", &["install", "-y", "neovim"]).is_err()
+    {
         let bin_dir = ensure_bin_dir()?;
         run_command(
             "sh",

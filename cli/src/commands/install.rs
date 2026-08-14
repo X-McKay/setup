@@ -6,6 +6,7 @@ use std::time::Duration;
 
 use crate::components::registry::Registry;
 use crate::manifest::{intent, loader, resolver};
+use crate::system::platform::Platform;
 use crate::ui::prompts;
 
 #[derive(Args)]
@@ -51,12 +52,40 @@ pub fn run(args: InstallArgs) -> Result<()> {
         .validate_against(&manifest)
         .context("manifest/registry drift at install time")?;
 
+    let platform = Platform::current()?;
     let plan = if args.all {
-        let all_ids: Vec<String> = manifest.components.iter().map(|c| c.id.clone()).collect();
-        resolver::resolve(&manifest, &[], &all_ids)?
+        // --all means "everything installable here" — skip other-platform
+        // components rather than erroring on them.
+        let all_ids: Vec<String> = manifest
+            .components
+            .iter()
+            .filter(|c| c.supports(platform))
+            .map(|c| c.id.clone())
+            .collect();
+        let mut plan = resolver::resolve(&manifest, &[], &all_ids, platform)?;
+        plan.skipped_platform = manifest
+            .components
+            .iter()
+            .filter(|c| !c.supports(platform))
+            .map(|c| c.id.clone())
+            .collect();
+        plan
     } else {
-        resolver::resolve(&manifest, &args.profiles, &args.components)?
+        resolver::resolve(&manifest, &args.profiles, &args.components, platform)?
     };
+
+    if !plan.skipped_platform.is_empty() {
+        println!(
+            "{} skipped (not supported on {}): {}",
+            style("ℹ").cyan(),
+            platform,
+            plan.skipped_platform
+                .iter()
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
 
     if plan.ordered.is_empty() {
         println!("{}", style("No components selected.").yellow());

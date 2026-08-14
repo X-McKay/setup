@@ -9,7 +9,8 @@ use std::path::Path;
 use std::process::Command;
 
 use super::Component;
-use super::util::run_sudo;
+use super::util::{brew_install_cask, brew_uninstall_if_present, run_sudo};
+use crate::system::platform::Platform;
 
 pub struct Discord;
 
@@ -19,7 +20,8 @@ impl Component for Discord {
     }
 
     fn is_installed(&self) -> Result<bool> {
-        Ok(Path::new("/snap/bin/discord").exists())
+        Ok(Path::new("/snap/bin/discord").exists()
+            || Path::new("/Applications/Discord.app").exists())
     }
 
     fn install(&self) -> Result<()> {
@@ -27,6 +29,7 @@ impl Component for Discord {
     }
 
     fn uninstall(&self) -> Result<()> {
+        brew_uninstall_if_present("discord", true)?;
         if which::which("snap").is_ok() {
             let status = Command::new("sudo")
                 .args(["snap", "remove", "discord"])
@@ -45,6 +48,9 @@ fn install_discord() -> Result<()> {
         return Ok(());
     }
 
-    run_sudo("snap", &["install", "discord"])?;
+    match Platform::current()? {
+        Platform::Linux => run_sudo("snap", &["install", "discord"]).map(|_| ())?,
+        Platform::MacOs => brew_install_cask("discord")?,
+    }
     Ok(())
 }

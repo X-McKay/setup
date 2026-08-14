@@ -9,7 +9,8 @@ use std::path::Path;
 use std::process::Command;
 
 use super::Component;
-use super::util::run_sudo;
+use super::util::{brew_install_cask, brew_uninstall_if_present, run_sudo};
+use crate::system::platform::Platform;
 
 pub struct Chromium;
 
@@ -19,7 +20,9 @@ impl Component for Chromium {
     }
 
     fn is_installed(&self) -> Result<bool> {
-        Ok(which::which("chromium").is_ok() || Path::new("/snap/bin/chromium").exists())
+        Ok(which::which("chromium").is_ok()
+            || Path::new("/snap/bin/chromium").exists()
+            || Path::new("/Applications/Chromium.app").exists())
     }
 
     fn install(&self) -> Result<()> {
@@ -27,6 +30,7 @@ impl Component for Chromium {
     }
 
     fn uninstall(&self) -> Result<()> {
+        brew_uninstall_if_present("chromium", true)?;
         if which::which("snap").is_ok() {
             let status = Command::new("sudo")
                 .args(["snap", "remove", "chromium"])
@@ -45,6 +49,9 @@ fn install_chromium() -> Result<()> {
         return Ok(());
     }
 
-    run_sudo("snap", &["install", "chromium"])?;
+    match Platform::current()? {
+        Platform::Linux => run_sudo("snap", &["install", "chromium"]).map(|_| ())?,
+        Platform::MacOs => brew_install_cask("chromium")?,
+    }
     Ok(())
 }

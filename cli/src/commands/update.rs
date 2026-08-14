@@ -4,7 +4,8 @@ use console::style;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::Duration;
 
-use crate::components::util::{run_command, run_sudo};
+use crate::components::util::{ensure_brew, run_command, run_sudo};
+use crate::system::platform::Platform;
 use crate::ui::prompts;
 
 #[derive(Args)]
@@ -185,9 +186,19 @@ fn update_component_with_progress(mp: &MultiProgress, component: &UpdateComponen
 }
 
 fn update_system() -> Result<()> {
-    run_sudo("apt", &["update"])?;
-    run_sudo("apt", &["upgrade", "-y"])?;
-    run_sudo("apt", &["autoremove", "-y"])?;
+    match Platform::current()? {
+        Platform::Linux => {
+            run_sudo("apt", &["update"])?;
+            run_sudo("apt", &["upgrade", "-y"])?;
+            run_sudo("apt", &["autoremove", "-y"])?;
+        }
+        Platform::MacOs => {
+            ensure_brew()?;
+            run_command("brew", &["update"])?;
+            run_command("brew", &["upgrade"])?;
+            run_command("brew", &["cleanup"])?;
+        }
+    }
     Ok(())
 }
 

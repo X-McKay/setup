@@ -43,13 +43,20 @@ pub fn run(args: ListArgs) -> Result<()> {
         }
 
         println!(
-            "  {} {} {}",
+            "  {} {} {}{}",
             style(&c.id).cyan(),
             style(format!("({})", c.display_name)).dim(),
             if c.tags.is_empty() {
                 String::new()
             } else {
                 style(format!("[{}]", c.tags.join(","))).dim().to_string()
+            },
+            if c.platforms.is_empty() {
+                String::new()
+            } else {
+                style(format!(" ({}-only)", c.platforms.join("/")))
+                    .yellow()
+                    .to_string()
             }
         );
     }

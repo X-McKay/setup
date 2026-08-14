@@ -34,6 +34,10 @@ pub struct ComponentSpec {
     pub requires_privileged: bool,
     #[serde(default)]
     pub interactive: bool,
+    /// Platforms this component can install on ("linux", "macos").
+    /// Empty means all platforms.
+    #[serde(default)]
+    pub platforms: Vec<String>,
 }
 
 impl ComponentSpec {
@@ -41,6 +45,12 @@ impl ComponentSpec {
     /// harness? True iff none of the capability flags that block Docker are set.
     pub fn docker_testable(&self) -> bool {
         !self.requires_systemd && !self.requires_privileged && !self.interactive
+    }
+
+    /// Whether this component can be installed on the given platform.
+    /// An empty `platforms` list means the component is platform-agnostic.
+    pub fn supports(&self, platform: crate::system::platform::Platform) -> bool {
+        self.platforms.is_empty() || self.platforms.iter().any(|p| p == platform.manifest_key())
     }
 }
 
@@ -64,6 +74,15 @@ impl Manifest {
             }
             if !seen.insert(c.id.clone()) {
                 anyhow::bail!("duplicate component id: {:?}", c.id);
+            }
+            for p in &c.platforms {
+                if p != "linux" && p != "macos" {
+                    anyhow::bail!(
+                        "component {:?} lists unknown platform {:?} (known: linux, macos)",
+                        c.id,
+                        p
+                    );
+                }
             }
         }
 
@@ -180,6 +199,53 @@ pub struct ProfileSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::system::platform::Platform;
+
+    #[test]
+    fn empty_platforms_supports_all() {
+        let c = ComponentSpec {
+            id: "x".into(),
+            ..Default::default()
+        };
+        assert!(c.supports(Platform::Linux));
+        assert!(c.supports(Platform::MacOs));
+    }
+
+    #[test]
+    fn linux_only_component_rejects_macos() {
+        let c = ComponentSpec {
+            id: "x".into(),
+            platforms: vec!["linux".into()],
+            ..Default::default()
+        };
+        assert!(c.supports(Platform::Linux));
+        assert!(!c.supports(Platform::MacOs));
+    }
+
+    #[test]
+    fn unknown_platform_value_is_rejected() {
+        let input = r#"
+[[components]]
+id = "x"
+display_name = "X"
+platforms = ["windows"]
+"#;
+        let m: Manifest = toml::from_str(input).unwrap();
+        let err = m.validate().unwrap_err();
+        assert!(err.to_string().contains("unknown platform"));
+    }
+
+    #[test]
+    fn valid_platforms_pass_validation() {
+        let input = r#"
+[[components]]
+id = "x"
+display_name = "X"
+platforms = ["linux", "macos"]
+"#;
+        let m: Manifest = toml::from_str(input).unwrap();
+        m.validate().unwrap();
+    }
 
     #[test]
     fn parses_minimal_component() {
