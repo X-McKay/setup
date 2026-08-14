@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- macOS (Apple Silicon) support: components install via Homebrew formulae/casks, with platform detection in `system::platform`
+- `platforms` field in the component manifest; profile installs skip components unsupported on the current platform and `setup list` marks them
+- macOS runner in the CI build/test matrix
+- `setup-macos-aarch64.tar.gz` release artifact; `install.sh` detects Darwin and falls back to `shasum -a 256`
+- `bootstrap.sh` handles macOS prerequisites via the Xcode Command Line Tools
+
+### Changed
+- `apt` component renamed in display to "Core System Packages"; on macOS it installs equivalents via Homebrew
+- `setup update` uses `brew update/upgrade/cleanup` on macOS
+- `monitoring` and `backup` components are marked Linux-only
+- Intent file path is `~/.config/setup/active.toml` on all platforms (previously resolved to `~/Library/Application Support` on macOS)
+- Doctor/system info uses `sw_vers`, BSD `df`, and `vm_stat` fallbacks on macOS
+
 ## [0.3.0] - 2026-04-19
 
 ### Added

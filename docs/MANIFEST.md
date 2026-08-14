@@ -23,6 +23,7 @@ requires_sudo = true
 requires_systemd = true
 requires_privileged = true
 interactive = false
+platforms = ["linux", "macos"]
 ```
 
 Common fields:
@@ -38,8 +39,11 @@ Common fields:
 | `requires_systemd` | Component needs systemd and is skipped in the Docker test harness. |
 | `requires_privileged` | Component needs host or privileged-container access. |
 | `interactive` | Component may prompt or require auth, so it is not included in non-interactive `--all` installs. |
+| `platforms` | Platforms the component supports: `"linux"`, `"macos"`. Empty or omitted means all platforms. |
 
 Docker testability is derived from the capability flags. A component is Docker-testable when it does not require systemd, privileged access, or interactivity.
+
+Platform support is enforced at plan time: profile components that do not support the current platform are skipped with a notice, while explicitly requested components fail with an error. `setup list` marks platform-limited components (e.g. `(linux-only)`).
 
 ## Profiles
 
@@ -55,10 +59,11 @@ components = ["ghostty", "docker", "lazygit", "tpm", "neovim", "gh", "chromium",
 Profile resolution:
 
 1. Expand every requested profile, including transitive `extends`.
-2. Add explicitly named components, if any.
-3. Pull in transitive component dependencies from `depends_on`.
-4. Validate that every ID exists in both the manifest and Rust registry.
-5. Install in deterministic topological order.
+2. Add explicitly named components, if any (these must support the current platform).
+3. Drop profile-derived components that do not support the current platform, reporting them as skipped.
+4. Pull in transitive component dependencies from `depends_on`.
+5. Validate that every ID exists in both the manifest and Rust registry.
+6. Install in deterministic topological order.
 
 ## User Overrides
 

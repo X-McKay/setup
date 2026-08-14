@@ -59,6 +59,8 @@ type(scope): description
 
 Define the component id, display name, tags, dependencies, and capability flags
 (`requires_sudo`, `requires_systemd`, `requires_privileged`, `interactive`).
+If the component only works on one OS, set `platforms` (e.g. `["linux"]`);
+omit it for components that install on both Linux and macOS.
 Profiles should reference the manifest id, not the Rust type name.
 
 ### 2. Implement the component (`cli/src/components/<id>.rs`)
@@ -68,8 +70,12 @@ Create a unit struct that implements the `Component` trait from
 
 Minimum methods:
 - `id()` must match the manifest id exactly
-- `is_installed()` should be a cheap, reliable probe
-- `install()` must be idempotent
+- `is_installed()` should be a cheap, reliable probe on every supported
+  platform (on macOS, GUI apps should also probe `/Applications/<Name>.app`)
+- `install()` must be idempotent; branch on
+  `crate::system::platform::Platform::current()` when Linux and macOS need
+  different install paths (use the `brew_install`/`brew_install_cask` helpers
+  in `components/util.rs` for Homebrew)
 - override `uninstall()`, `verify()`, `dry_run()`, or `is_reversible()` only when needed
 
 ### 3. Register the implementation (`cli/src/components/registry.rs`)

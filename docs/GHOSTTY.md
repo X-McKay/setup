@@ -32,11 +32,21 @@ Your configuration is at `~/.config/ghostty/config`.
 
 ## Installation
 
-### From Package Manager (Recommended)
+### Via the Setup CLI (Recommended)
+
+```bash
+# Installs via snap on Linux, Homebrew cask on macOS
+setup install ghostty
+```
+
+### From Package Manager
 
 ```bash
 # Ubuntu/Debian (if available in repos)
 sudo apt install ghostty
+
+# macOS
+brew install --cask ghostty
 
 # Or download the latest release from:
 # https://github.com/ghostty-org/ghostty/releases
