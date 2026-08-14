@@ -79,6 +79,54 @@ pub fn apt_install(packages: &[&str]) -> Result<()> {
     Ok(())
 }
 
+/// Fail with an actionable message when Homebrew is missing on macOS.
+pub fn ensure_brew() -> Result<()> {
+    if which::which("brew").is_ok() {
+        Ok(())
+    } else {
+        anyhow::bail!(
+            "Homebrew is required to install this component on macOS — install it from https://brew.sh"
+        )
+    }
+}
+
+/// Install Homebrew formulae (no sudo; brew refuses to run as root).
+pub fn brew_install(packages: &[&str]) -> Result<()> {
+    ensure_brew()?;
+    let mut args = vec!["install"];
+    args.extend(packages);
+    run_command("brew", &args)?;
+    Ok(())
+}
+
+/// Install a Homebrew cask (GUI applications).
+pub fn brew_install_cask(name: &str) -> Result<()> {
+    ensure_brew()?;
+    run_command("brew", &["install", "--cask", name])?;
+    Ok(())
+}
+
+/// Uninstall a Homebrew formula or cask if brew manages it; no-op otherwise.
+pub fn brew_uninstall_if_present(name: &str, cask: bool) -> Result<()> {
+    if which::which("brew").is_err() {
+        return Ok(());
+    }
+    let list_args: &[&str] = if cask {
+        &["list", "--cask", name]
+    } else {
+        &["list", name]
+    };
+    if run_command("brew", list_args).is_ok() {
+        let un_args: &[&str] = if cask {
+            &["uninstall", "--cask", name]
+        } else {
+            &["uninstall", name]
+        };
+        run_command("brew", un_args)?;
+    }
+    Ok(())
+}
+
 /// Get the user bin directory (`~/.local/bin`), creating it if needed.
 pub fn ensure_bin_dir() -> Result<PathBuf> {
     let home = dirs::home_dir().context("Could not find home directory")?;

@@ -34,7 +34,11 @@ jobs:
         run: pre-commit run --all-files
 
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v5

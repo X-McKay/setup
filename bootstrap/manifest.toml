@@ -6,8 +6,8 @@
 
 [[components]]
 id = "apt"
-display_name = "Basic APT Packages"
-description = "Core system packages (curl, git, build-essential, etc.)"
+display_name = "Core System Packages"
+description = "Core system packages (apt on Linux, Homebrew + Xcode CLT on macOS)"
 tags = ["core"]
 requires_sudo = true
 
@@ -95,35 +95,35 @@ tags = ["cli"]
 [[components]]
 id = "chromium"
 display_name = "Chromium"
-description = "Web browser (snap)"
+description = "Web browser (snap on Linux, Homebrew cask on macOS)"
 tags = ["gui"]
 requires_sudo = true
 
 [[components]]
 id = "discord"
 display_name = "Discord"
-description = "Chat client (snap)"
+description = "Chat client (snap on Linux, Homebrew cask on macOS)"
 tags = ["gui"]
 requires_sudo = true
 
 [[components]]
 id = "obsidian"
 display_name = "Obsidian"
-description = "Note-taking app (snap)"
+description = "Note-taking app (snap on Linux, Homebrew cask on macOS)"
 tags = ["gui"]
 requires_sudo = true
 
 [[components]]
 id = "spotify"
 display_name = "Spotify"
-description = "Music streaming (snap)"
+description = "Music streaming (snap on Linux, Homebrew cask on macOS)"
 tags = ["gui"]
 requires_sudo = true
 
 [[components]]
 id = "vlc"
 display_name = "VLC"
-description = "Media player (snap)"
+description = "Media player (snap on Linux, Homebrew cask on macOS)"
 tags = ["gui"]
 requires_sudo = true
 
@@ -163,6 +163,7 @@ depends_on = ["apt"]
 tags = ["ops"]
 requires_sudo = true
 requires_systemd = true
+platforms = ["linux"]
 
 [[components]]
 id = "backup"
@@ -172,6 +173,7 @@ depends_on = ["apt"]
 tags = ["ops"]
 requires_sudo = true
 requires_systemd = true
+platforms = ["linux"]
 
 [[components]]
 id = "ssh-keys"

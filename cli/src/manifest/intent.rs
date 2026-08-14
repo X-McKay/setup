@@ -16,11 +16,15 @@ pub struct Intent {
 
 /// Default intent file location: `~/.config/setup/active.toml`.
 /// Overridable via `SETUP_INTENT` for tests.
+///
+/// Deliberately `~/.config` on every platform (not `dirs::config_dir()`,
+/// which is `~/Library/Application Support` on macOS) so intent lives next
+/// to the rest of this tool's config.
 pub fn default_path() -> Option<PathBuf> {
     if let Ok(env_path) = std::env::var("SETUP_INTENT") {
         return Some(PathBuf::from(env_path));
     }
-    dirs::config_dir().map(|d| d.join("setup").join("active.toml"))
+    dirs::home_dir().map(|d| d.join(".config").join("setup").join("active.toml"))
 }
 
 /// Read intent from `path`. Missing files are treated as empty intent.

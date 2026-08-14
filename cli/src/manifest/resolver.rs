@@ -5,6 +5,7 @@ use anyhow::{Result, bail};
 use std::collections::{BTreeSet, HashSet};
 
 use super::schema::Manifest;
+use crate::system::platform::Platform;
 
 /// Parse CLI selection and return the deduplicated set of component ids.
 ///
@@ -133,21 +134,58 @@ pub fn topo_sort(manifest: &Manifest, ids: &BTreeSet<String>) -> Result<Vec<Stri
 }
 
 /// End-to-end: given a user selection, produce the ordered install plan.
-/// Returns the ordered list of component ids, and the set that was
-/// auto-pulled as transitive deps (for reporting).
+/// Returns the ordered list of component ids, the set that was auto-pulled
+/// as transitive deps, and profile components skipped because they do not
+/// support the current platform (all for reporting).
+#[derive(Debug)]
 pub struct Plan {
     pub ordered: Vec<String>,
     pub auto_pulled: BTreeSet<String>,
+    pub skipped_platform: BTreeSet<String>,
 }
 
-pub fn resolve(manifest: &Manifest, profiles: &[String], explicit: &[String]) -> Result<Plan> {
+pub fn resolve(
+    manifest: &Manifest,
+    profiles: &[String],
+    explicit: &[String],
+    platform: Platform,
+) -> Result<Plan> {
     let seeds = expand_selection(manifest, profiles, explicit)?;
+
+    // Components the user named directly must support this platform;
+    // profile-derived ones are silently dropped (and reported).
+    let supports = |id: &String| {
+        manifest
+            .components
+            .iter()
+            .find(|c| c.id == *id)
+            .is_some_and(|c| c.supports(platform))
+    };
+    for id in explicit {
+        if !supports(id) {
+            bail!("component {:?} is not supported on {}", id, platform);
+        }
+    }
+    let (seeds, skipped_platform): (BTreeSet<String>, BTreeSet<String>) =
+        seeds.into_iter().partition(supports);
+
     let full = pull_in_dependencies(manifest, &seeds)?;
+    for id in &full {
+        if !supports(id) {
+            bail!(
+                "dependency {:?} of the selected components is not supported on {}",
+                id,
+                platform
+            );
+        }
+    }
+
     let auto_pulled: BTreeSet<String> = full.difference(&seeds).cloned().collect();
     let ordered = topo_sort(manifest, &full)?;
     Ok(Plan {
         ordered,
         auto_pulled,
+        skipped_platform,
     })
 }
 
@@ -356,8 +394,75 @@ mod resolve_tests {
             ],
             profiles,
         };
-        let plan = resolve(&m, &["x".into()], &[]).unwrap();
+        let plan = resolve(&m, &["x".into()], &[], Platform::Linux).unwrap();
         assert_eq!(plan.ordered, vec!["apt", "docker"]);
         assert_eq!(plan.auto_pulled, ["apt".to_string()].into_iter().collect());
+        assert!(plan.skipped_platform.is_empty());
+    }
+
+    fn platform_manifest() -> Manifest {
+        let mut profiles = BTreeMap::new();
+        profiles.insert(
+            "srv".into(),
+            ProfileSpec {
+                description: String::new(),
+                extends: vec![],
+                components: vec!["portable".into(), "linux-only".into()],
+            },
+        );
+        Manifest {
+            components: vec![
+                ComponentSpec {
+                    id: "portable".into(),
+                    display_name: "Portable".into(),
+                    ..Default::default()
+                },
+                ComponentSpec {
+                    id: "linux-only".into(),
+                    display_name: "Linux Only".into(),
+                    platforms: vec!["linux".into()],
+                    ..Default::default()
+                },
+            ],
+            profiles,
+        }
+    }
+
+    #[test]
+    fn profile_skips_unsupported_platform_components() {
+        let m = platform_manifest();
+        let plan = resolve(&m, &["srv".into()], &[], Platform::MacOs).unwrap();
+        assert_eq!(plan.ordered, vec!["portable"]);
+        assert_eq!(
+            plan.skipped_platform,
+            ["linux-only".to_string()].into_iter().collect()
+        );
+    }
+
+    #[test]
+    fn explicit_unsupported_component_fails() {
+        let m = platform_manifest();
+        let err = resolve(&m, &[], &["linux-only".into()], Platform::MacOs).unwrap_err();
+        assert!(err.to_string().contains("not supported on macos"));
+    }
+
+    #[test]
+    fn unsupported_dependency_fails() {
+        let mut m = platform_manifest();
+        m.components
+            .iter_mut()
+            .find(|c| c.id == "portable")
+            .unwrap()
+            .depends_on = vec!["linux-only".into()];
+        let err = resolve(&m, &[], &["portable".into()], Platform::MacOs).unwrap_err();
+        assert!(err.to_string().contains("not supported on macos"));
+    }
+
+    #[test]
+    fn linux_keeps_everything() {
+        let m = platform_manifest();
+        let plan = resolve(&m, &["srv".into()], &[], Platform::Linux).unwrap();
+        assert_eq!(plan.ordered, vec!["linux-only", "portable"]);
+        assert!(plan.skipped_platform.is_empty());
     }
 }

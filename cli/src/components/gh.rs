@@ -9,7 +9,8 @@
 use anyhow::Result;
 
 use super::Component;
-use super::util::run_command;
+use super::util::{brew_install, run_command};
+use crate::system::platform::Platform;
 
 pub struct Gh;
 
@@ -30,6 +31,10 @@ impl Component for Gh {
 fn install_gh() -> Result<()> {
     if which::which("gh").is_ok() {
         return Ok(());
+    }
+
+    if Platform::current()? == Platform::MacOs {
+        return brew_install(&["gh"]);
     }
 
     run_command(

@@ -95,7 +95,7 @@ pub fn get_system_info() -> Result<SystemInfo> {
 }
 
 fn get_os_info() -> String {
-    // Try to read /etc/os-release
+    // Linux: read /etc/os-release
     if let Ok(content) = std::fs::read_to_string("/etc/os-release") {
         for line in content.lines() {
             if line.starts_with("PRETTY_NAME=") {
@@ -107,39 +107,105 @@ fn get_os_info() -> String {
         }
     }
 
-    "Linux".to_string()
+    // macOS: sw_vers
+    if let Ok(output) = Command::new("sw_vers").args(["-productVersion"]).output()
+        && output.status.success()
+    {
+        let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if !version.is_empty() {
+            return format!("macOS {}", version);
+        }
+    }
+
+    std::env::consts::OS.to_string()
 }
 
 fn get_resource_info() -> (String, String, String) {
-    // Get disk free space
+    // Get disk free space. GNU df supports --output=avail; BSD/macOS df does
+    // not, so fall back to parsing the standard 4th column.
     let disk_free = Command::new("df")
         .args(["-h", "/", "--output=avail"])
         .output()
         .ok()
+        .filter(|o| o.status.success())
         .and_then(|o| {
             let s = String::from_utf8_lossy(&o.stdout);
             s.lines().nth(1).map(|l| l.trim().to_string())
         })
+        .or_else(|| {
+            let o = Command::new("df").args(["-h", "/"]).output().ok()?;
+            let s = String::from_utf8_lossy(&o.stdout);
+            let line = s.lines().nth(1)?;
+            line.split_whitespace().nth(3).map(|v| v.to_string())
+        })
         .unwrap_or_else(|| "unknown".to_string());
 
-    // Get memory info
-    let (mem_total, mem_used) = Command::new("free")
-        .args(["-h"])
-        .output()
-        .ok()
-        .and_then(|o| {
-            let s = String::from_utf8_lossy(&o.stdout);
-            for line in s.lines() {
-                if line.starts_with("Mem:") {
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() >= 3 {
-                        return Some((parts[1].to_string(), parts[2].to_string()));
-                    }
-                }
-            }
-            None
-        })
+    // Get memory info: `free` on Linux, sysctl/vm_stat on macOS.
+    let (mem_total, mem_used) = linux_memory_info()
+        .or_else(macos_memory_info)
         .unwrap_or_else(|| ("unknown".to_string(), "unknown".to_string()));
 
     (disk_free, mem_total, mem_used)
+}
+
+fn linux_memory_info() -> Option<(String, String)> {
+    let o = Command::new("free").args(["-h"]).output().ok()?;
+    let s = String::from_utf8_lossy(&o.stdout);
+    for line in s.lines() {
+        if line.starts_with("Mem:") {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 3 {
+                return Some((parts[1].to_string(), parts[2].to_string()));
+            }
+        }
+    }
+    None
+}
+
+fn macos_memory_info() -> Option<(String, String)> {
+    let total_bytes: u64 = Command::new("sysctl")
+        .args(["-n", "hw.memsize"])
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8_lossy(&o.stdout).trim().parse().ok())?;
+
+    // Approximate "used" from vm_stat pages (active + wired + compressed).
+    let used = Command::new("vm_stat").output().ok().and_then(|o| {
+        let s = String::from_utf8_lossy(&o.stdout);
+        let page_size: u64 = s
+            .lines()
+            .next()?
+            .split("page size of ")
+            .nth(1)?
+            .split_whitespace()
+            .next()?
+            .parse()
+            .ok()?;
+        let mut pages: u64 = 0;
+        for line in s.lines() {
+            let counted = line.starts_with("Pages active")
+                || line.starts_with("Pages wired down")
+                || line.starts_with("Pages occupied by compressor");
+            if counted {
+                let n: u64 = line
+                    .split(':')
+                    .nth(1)?
+                    .trim()
+                    .trim_end_matches('.')
+                    .parse()
+                    .ok()?;
+                pages += n;
+            }
+        }
+        Some(format_gib(pages * page_size))
+    });
+
+    Some((
+        format_gib(total_bytes),
+        used.unwrap_or_else(|| "unknown".to_string()),
+    ))
+}
+
+fn format_gib(bytes: u64) -> String {
+    format!("{:.1}Gi", bytes as f64 / (1024.0 * 1024.0 * 1024.0))
 }

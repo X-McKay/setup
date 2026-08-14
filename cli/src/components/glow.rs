@@ -11,7 +11,11 @@ use std::fs;
 use std::process::Command;
 
 use super::Component;
-use super::util::{ensure_bin_dir, fallback_versions, fetch_github_version, run_command, run_sudo};
+use super::util::{
+    brew_install, brew_uninstall_if_present, ensure_bin_dir, fallback_versions,
+    fetch_github_version, run_command, run_sudo,
+};
+use crate::system::platform::Platform;
 
 pub struct Glow;
 
@@ -29,6 +33,7 @@ impl Component for Glow {
     }
 
     fn uninstall(&self) -> Result<()> {
+        brew_uninstall_if_present("glow", false)?;
         if which::which("apt").is_ok() {
             let status = Command::new("sudo")
                 .args(["apt", "remove", "-y", "glow"])
@@ -52,6 +57,10 @@ impl Component for Glow {
 fn install_glow() -> Result<()> {
     if which::which("glow").is_ok() {
         return Ok(());
+    }
+
+    if Platform::current()? == Platform::MacOs {
+        return brew_install(&["glow"]);
     }
 
     if run_sudo("apt", &["install", "-y", "glow"]).is_ok() {

@@ -7,9 +7,11 @@
 //! membership changes safely is deferred to the later uninstall phase work.
 
 use anyhow::Result;
+use std::path::Path;
 
 use super::Component;
-use super::util::{run_command, run_sudo};
+use super::util::{brew_install_cask, run_command, run_sudo};
+use crate::system::platform::Platform;
 
 pub struct Docker;
 
@@ -19,11 +21,16 @@ impl Component for Docker {
     }
 
     fn is_installed(&self) -> Result<bool> {
-        Ok(which::which("docker").is_ok())
+        // Docker Desktop on macOS only puts `docker` on PATH after first
+        // launch, so also probe the app bundle.
+        Ok(which::which("docker").is_ok() || Path::new("/Applications/Docker.app").exists())
     }
 
     fn install(&self) -> Result<()> {
-        install_docker()
+        match Platform::current()? {
+            Platform::Linux => install_docker(),
+            Platform::MacOs => brew_install_cask("docker"),
+        }
     }
 }
 

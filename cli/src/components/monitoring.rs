@@ -29,6 +29,12 @@ impl Component for Monitoring {
 }
 
 fn install_monitoring() -> Result<()> {
+    // Belt-and-braces: the manifest marks this component linux-only, so the
+    // resolver never schedules it on macOS.
+    if crate::system::platform::Platform::current()? != crate::system::platform::Platform::Linux {
+        anyhow::bail!("monitoring is only supported on Linux (systemd services)");
+    }
+
     let packages = [
         "htop", "iotop", "nethogs", "sysstat", "netdata", "logwatch", "fail2ban",
     ];

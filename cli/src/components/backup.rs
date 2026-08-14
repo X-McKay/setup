@@ -33,6 +33,12 @@ impl Component for Backup {
 }
 
 fn install_backup() -> Result<()> {
+    // Belt-and-braces: the manifest marks this component linux-only, so the
+    // resolver never schedules it on macOS.
+    if crate::system::platform::Platform::current()? != crate::system::platform::Platform::Linux {
+        anyhow::bail!("backup is only supported on Linux (apt packages, timeshift)");
+    }
+
     let packages = ["rsync", "rdiff-backup", "duplicity", "timeshift"];
 
     run_sudo("apt", &["update"])?;
