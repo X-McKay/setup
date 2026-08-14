@@ -35,7 +35,10 @@ mouse-hide-while-typing = true
 copy-on-select = clipboard
 
 # Shell integration ----------------------
-shell-integration = bash
+# detect matches whatever shell actually runs (bash on Linux; on macOS,
+# whatever the login shell is) instead of forcing bash integration onto
+# a non-bash shell, which breaks the session launch.
+shell-integration = detect
 
 # ----------------------------------------
 # Keybindings
